@@ -19,6 +19,10 @@ dst="$repo_root/examples/$name"
 
 cp -r "$src" "$dst"
 
+# Strip build outputs the template may have on disk (gitignored, but a copied
+# CMake cache poisons the new example's out-of-source build).
+rm -rf "$dst/cpp/build" "$dst/go/bin" "$dst/rust/target"
+
 if [[ -f "$dst/go/go.mod" ]]; then
   sed -i "s|_template|$name|g" "$dst/go/go.mod"
 else
