@@ -1,0 +1,15 @@
+# Manifest of runnable examples — one entry per directory under examples/.
+#
+# Fields:
+#   id:       directory name under examples/ (e.g. 02-hello-syscall)
+#   langs:    languages implemented; subset of [cpp, go, rust]
+#   mode:     local    — build and run on the host
+#             vm       — run the built binary inside a lab VM (TARGET set)
+#             vm-peer  — needs two lab VMs talking to each other
+#   requires: optional prerequisites, e.g. [lgtm] for the observability stack
+#   timeout:  per-language verification budget in seconds
+examples:
+  - id: _template
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 180

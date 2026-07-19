@@ -1,0 +1,85 @@
+# Static validation plus per-language template smoke builds.
+#
+# What CI can and cannot verify: these jobs only run scripts/validate.py and
+# build the hello-syscall templates. They CANNOT run the demos that need a
+# KVM/libvirt VM, root privileges, or the LGTM stack — none of that exists on
+# GitHub-hosted runners. The authoritative gate for the book remains a host
+# run of scripts/test-all-examples.py against the real VM lab.
+
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Needed for validate.py's Lua syntax pass; non-fatal so a transient
+      # apt outage doesn't block the whole workflow (validate.py skips the
+      # pass when lua5.4 is absent).
+      - name: Install Lua 5.4 (best effort)
+        run: sudo apt-get update && sudo apt-get install -y lua5.4 || echo "lua5.4 install failed; Lua syntax pass will be skipped"
+
+      - name: Run validate.py
+        run: python3 scripts/validate.py
+
+  smoke-go:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: examples/_template/go/go.mod
+
+      - name: Build Go template
+        working-directory: examples/_template/go
+        run: go build ./...
+
+  smoke-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.97.1"
+
+      - name: Build Rust template
+        working-directory: examples/_template/rust
+        run: cargo build --release
+
+  smoke-cpp:
+    runs-on: ubuntu-latest
+    # Match the book's primary toolchain (Fedora GCC) rather than Ubuntu's.
+    container: fedora:44
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Install toolchain
+        run: dnf install -y gcc-c++ cmake ninja-build
+
+      - name: Build C++ template
+        working-directory: examples/_template/cpp
+        run: |
+          cmake --preset release
+          cmake --build --preset release
