@@ -1,0 +1,88 @@
+#cloud-config
+# cloud-init user-data template for the linux-systems-programming lab guests
+# (systems-target / systems-peer). Placeholders __HOSTNAME__ and __SSH_PUBKEY__
+# are filled by provision-vm.sh.
+hostname: __HOSTNAME__
+fqdn: __HOSTNAME__.lab
+
+users:
+  - name: fedora
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: [wheel]
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      - __SSH_PUBKEY__
+
+# Grow the root filesystem to fill the overlay disk.
+growpart:
+  mode: auto
+  devices: ['/']
+
+package_update: true
+
+# --- Toolset -----------------------------------------------------------------
+# Observation-first: this book uses eBPF as tooling (bcc/bpftrace/bpftool), not
+# as a build target, so there is no clang/llvm/libbpf-devel build chain here.
+# The guest can BUILD all three languages locally for demos that must compile
+# in-VM (privilege, namespaces, glibc-parity fallback).
+packages:
+  # observation tooling (the point of the lab)
+  - kernel-headers
+  - bcc-tools
+  - bpftrace
+  - bpftool
+  - libbpf-tools          # precompiled CO-RE tools: opensnoop, execsnoop, biolatency...
+  - perf
+  - kernel-tools          # turbostat / cpupower
+  - strace
+  - ltrace
+  - gdb
+  - gdb-gdbserver
+  - valgrind
+  - sysstat
+  # analysis suites (Chapter 45; PCP runs from its container image, not here)
+  - cockpit
+  - cockpit-podman
+  - systemtap
+  - systemtap-runtime
+  # per-language toolchains for in-VM builds
+  - gcc
+  - gcc-c++
+  - clang
+  - cmake
+  - ninja-build
+  - golang
+  - rust
+  - cargo
+  - lua
+  # containers ON the guest (container/cgroup chapters)
+  - podman
+  - podman-compose
+  - crun
+  # networking (two-host demos + inspection)
+  - nmap-ncat
+  - socat
+  - iproute
+  - iputils
+  - tcpdump
+  - curl
+  # utility
+  - jq
+  - git
+  - tar
+
+# Installed ON DEMAND, not here — keep the base lean; a demo may lazily
+# `dnf install` what it alone needs, then re-snapshot 'lab-ready' to bake it in.
+# Candidates for this book: fio (block-IO load), cyclictest/rt-tests (ch 24/40),
+# numactl (ch 40).
+
+runcmd:
+  # Enable the Cockpit socket so the web console is reachable at :9090.
+  - [ systemctl, enable, --now, cockpit.socket ]
+  # Readiness stamp: bpftrace works and which kernel we're on.
+  - [ bash, -c, "bpftrace --version > /var/log/lab-ready 2>&1 || echo 'bpftrace: MISSING' > /var/log/lab-ready" ]
+  - [ bash, -c, "uname -r >> /var/log/lab-ready" ]
+  - [ bash, -c, "touch /var/lib/cloud/lab-provisioned" ]
+
+final_message: "lab guest __HOSTNAME__ is up after $UPTIME seconds"

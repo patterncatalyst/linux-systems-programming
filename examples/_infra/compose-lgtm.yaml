@@ -1,0 +1,39 @@
+# compose-lgtm.yaml
+#
+# Shared observability backend for the book's examples: the Grafana LGTM
+# all-in-one image (Grafana + Loki + Tempo + Mimir + Prometheus + the
+# OpenTelemetry Collector) as a single container on the host.
+#
+# Start/stop:
+#   podman compose -f examples/_infra/compose-lgtm.yaml up -d
+#   podman compose -f examples/_infra/compose-lgtm.yaml down
+#
+# Access after startup:
+#   Grafana UI:  http://localhost:3000
+#   OTLP gRPC:   localhost:4317
+#   OTLP HTTP:   http://localhost:4318
+
+services:
+  lgtm:
+    image: docker.io/grafana/otel-lgtm:0.8.1
+    container_name: lsp-lgtm
+    ports:
+      - "3000:3000"      # Grafana UI
+      - "4317:4317"      # OTLP gRPC
+      - "4318:4318"      # OTLP HTTP
+    mem_limit: 2g
+    environment:
+      # Anonymous admin access keeps local demos friction-free. Never ship this.
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s   # the all-in-one image takes a while on first boot
+
+networks:
+  default:
+    name: lsp-observability
