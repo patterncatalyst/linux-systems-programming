@@ -113,3 +113,19 @@ examples:
     langs: [cpp, go, rust]
     mode: local
     timeout: 360
+  - id: 28-gdb-and-remote-debugging
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 300
+  - id: 29-valgrind-sanitizers-miri
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 360
+  - id: 30-ebpf-observation-toolkit
+    langs: [cpp, go, rust]
+    mode: vm
+    timeout: 360
+  - id: 31-per-language-toolbelts
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 360

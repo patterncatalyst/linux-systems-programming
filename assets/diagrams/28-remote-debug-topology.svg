@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 540" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="20" width="1000" height="230" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">host (this session — verified)</text>
+<rect x="20" y="280" width="1000" height="230" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="300" font-size="12" font-weight="700" fill="#1d1d1d">systems-target VM — documented, not run this session</text>
+<rect x="50" y="60" width="210" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="155.0" y="88.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">app crash</text>
+<text x="155.0" y="105.0" font-size="11.5" fill="#555555" text-anchor="middle">SIGSEGV, exit 139</text>
+<rect x="50" y="140" width="210" height="70" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="155.0" y="165.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">systemd-coredump</text>
+<text x="155.0" y="182.5" font-size="11.5" fill="#555555" text-anchor="middle">core_pattern=&#x27;|...systemd-coredump&#x27;</text>
+<text x="155.0" y="197.5" font-size="11.5" fill="#555555" text-anchor="middle">coredumpctl dump -&gt; core.app</text>
+<rect x="300" y="100" width="210" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="405.0" y="133.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">gdb app core.app</text>
+<text x="405.0" y="150.0" font-size="11.5" fill="#555555" text-anchor="middle">bt full names every frame</text>
+<rect x="590" y="60" width="220" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="700.0" y="85.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">gdb (client)</text>
+<text x="700.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">target remote</text>
+<text x="700.0" y="117.5" font-size="11.5" fill="#555555" text-anchor="middle">systems-target:2345</text>
+<rect x="830" y="60" width="170" height="90" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="915.0" y="88.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">CLion</text>
+<text x="915.0" y="105.0" font-size="11.5" fill="#555555" text-anchor="middle">Remote GDB Server</text>
+<text x="915.0" y="120.0" font-size="11.5" fill="#555555" text-anchor="middle">run config</text>
+<text x="915.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">(unverified)</text>
+<rect x="590" y="320" width="220" height="70" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="700.0" y="353.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">gdbserver :2345</text>
+<text x="700.0" y="370.0" font-size="11.5" fill="#555555" text-anchor="middle">--once app crash</text>
+<rect x="590" y="420" width="220" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="700.0" y="448.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">app (crash target)</text>
+<text x="700.0" y="465.0" font-size="11.5" fill="#555555" text-anchor="middle">child process, PTRACE&#x27;d</text>
+<path d="M155,120 L155,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M260,165 L300,140" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="286.0" y="146.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">core.app</text>
+<text x="286.0" y="146.5" font-size="11" fill="#b8650a" text-anchor="middle">core.app</text>
+<path d="M700,130 L700,320" fill="none" stroke="#b8650a" stroke-width="2" marker-start="url(#am)" marker-end="url(#am)"/>
+<text x="706.0" y="219.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">gdb remote serial protocol, TCP:2345</text>
+<text x="706.0" y="219.0" font-size="11" fill="#b8650a" text-anchor="middle">gdb remote serial protocol, TCP:2345</text>
+<path d="M830,100 L810,95" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M700,390 L700,420" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="50" y="235" font-size="11" fill="#1d1d1d" text-anchor="start">Left: the local path this chapter&#x27;s evidence is built on -- app crashes, systemd-coredump</text>
+<text x="50" y="250" font-size="11" fill="#1d1d1d" text-anchor="start">catches it, coredumpctl extracts core.app, gdb opens the core file directly.</text>
+<text x="590" y="235" font-size="11" fill="#1d1d1d" text-anchor="start">Right: the remote path -- gdbserver attaches on the VM, the host&#x27;s gdb drives it over</text>
+<text x="590" y="250" font-size="11" fill="#1d1d1d" text-anchor="start">TCP with &#x27;target remote&#x27;. No systems-target VM was up this session; not run here.</text>
+<text x="590" y="500" font-size="10.5" fill="#666666" text-anchor="start">gdbserver is preinstalled on the lab VM image (not on this host).</text>
+</svg>

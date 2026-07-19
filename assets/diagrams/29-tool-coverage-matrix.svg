@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1230 670" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="0" y="0" width="1210" height="650" rx="12" fill="#fbfbfb" stroke="#ddd"/>
+<rect x="20" y="20" width="150" height="40" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="95.0" y="45.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">defect</text>
+<rect x="170" y="20" width="340" height="40" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="340.0" y="45.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">C++ (no protection compiled in)</text>
+<rect x="510" y="20" width="340" height="40" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="680.0" y="45.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Go (GC + runtime checks)</text>
+<rect x="850" y="20" width="340" height="40" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="1020.0" y="45.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Rust (borrow checker)</text>
+<rect x="20" y="70" width="150" height="98" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="95.0" y="124.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">leak</text>
+<rect x="170" y="70" width="340" height="98" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="340.0" y="117.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">valgrind memcheck: CAUGHT</text>
+<text x="340.0" y="134.0" font-size="11.5" fill="#555555" text-anchor="middle">&quot;4,096 bytes ... definitely lost&quot;</text>
+<rect x="510" y="70" width="340" height="98" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="680.0" y="109.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">self-detected: leaked=1 goroutine</text>
+<text x="680.0" y="126.5" font-size="11.5" fill="#555555" text-anchor="middle">valgrind: CONFUSED (630 errors,</text>
+<text x="680.0" y="141.5" font-size="11.5" fill="#555555" text-anchor="middle">0 real signal -- see below)</text>
+<rect x="850" y="70" width="340" height="98" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="1020.0" y="117.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">valgrind: CAUGHT (65,536B lost)</text>
+<text x="1020.0" y="134.0" font-size="11.5" fill="#555555" text-anchor="middle">+ miri (nightly): &quot;memory leaked&quot;</text>
+<rect x="20" y="178" width="150" height="98" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="95.0" y="232.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">uninit</text>
+<rect x="170" y="178" width="340" height="98" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="340.0" y="217.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">valgrind memcheck: CAUGHT</text>
+<text x="340.0" y="234.5" font-size="11.5" fill="#555555" text-anchor="middle">&quot;uninitialised value(s)&quot;</text>
+<text x="340.0" y="249.5" font-size="11.5" fill="#555555" text-anchor="middle">ASan alone: MISS (needs MSan)</text>
+<rect x="510" y="178" width="340" height="98" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="680.0" y="225.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">prevented: every value zeroed</text>
+<text x="680.0" y="242.0" font-size="11.5" fill="#dddddd" text-anchor="middle">exit 64, no tool needed</text>
+<rect x="850" y="178" width="340" height="98" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="1020.0" y="225.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">prevented: no unsafe value</text>
+<text x="1020.0" y="242.0" font-size="11.5" fill="#dddddd" text-anchor="middle">exit 64, no tool needed</text>
+<rect x="20" y="286" width="150" height="98" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="95.0" y="340.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">uaf</text>
+<rect x="170" y="286" width="340" height="98" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="340.0" y="325.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">valgrind: CAUGHT (Invalid write,</text>
+<text x="340.0" y="342.5" font-size="11.5" fill="#555555" text-anchor="middle">&quot;freed&quot;) + ASan: CAUGHT</text>
+<text x="340.0" y="357.5" font-size="11.5" fill="#555555" text-anchor="middle">&quot;heap-use-after-free&quot;</text>
+<rect x="510" y="286" width="340" height="98" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="680.0" y="333.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">prevented: GC won&#x27;t free a</text>
+<text x="680.0" y="350.0" font-size="11.5" fill="#dddddd" text-anchor="middle">live reference; exit 64</text>
+<rect x="850" y="286" width="340" height="98" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="1020.0" y="333.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">prevented: borrow checker;</text>
+<text x="1020.0" y="350.0" font-size="11.5" fill="#dddddd" text-anchor="middle">unsafe+miri: CAUGHT (below)</text>
+<rect x="20" y="394" width="150" height="98" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="95.0" y="448.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">overflow</text>
+<rect x="170" y="394" width="340" height="98" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="340.0" y="433.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">valgrind: CAUGHT (&quot;0 bytes after</text>
+<text x="340.0" y="450.5" font-size="11.5" fill="#555555" text-anchor="middle">a block&quot;) + ASan: CAUGHT</text>
+<text x="340.0" y="465.5" font-size="11.5" fill="#555555" text-anchor="middle">&quot;heap-buffer-overflow&quot;</text>
+<rect x="510" y="394" width="340" height="98" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="680.0" y="441.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">prevented: slice/array bounds</text>
+<text x="680.0" y="458.0" font-size="11.5" fill="#dddddd" text-anchor="middle">check panics; exit 64</text>
+<rect x="850" y="394" width="340" height="98" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="1020.0" y="441.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">prevented: bounds-checked or</text>
+<text x="1020.0" y="458.0" font-size="11.5" fill="#dddddd" text-anchor="middle">rejected at compile time</text>
+<rect x="20" y="502" width="150" height="98" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="95.0" y="556.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">race</text>
+<rect x="170" y="502" width="340" height="98" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="340.0" y="541.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">memcheck: not its job (untested)</text>
+<text x="340.0" y="558.5" font-size="11.5" fill="#555555" text-anchor="middle">helgrind: CAUGHT (&quot;Possible</text>
+<text x="340.0" y="573.5" font-size="11.5" fill="#555555" text-anchor="middle">data race&quot;) + TSan: CAUGHT</text>
+<rect x="510" y="502" width="340" height="98" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="680.0" y="549.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">go -race: CAUGHT</text>
+<text x="680.0" y="566.0" font-size="11.5" fill="#555555" text-anchor="middle">&quot;WARNING: DATA RACE&quot;, exit 66</text>
+<rect x="850" y="502" width="340" height="98" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="1020.0" y="549.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">prevented: Send/Sync rules</text>
+<text x="1020.0" y="566.0" font-size="11.5" fill="#dddddd" text-anchor="middle">reject the unsync&#x27;d share</text>
+<text x="20" y="630" font-size="11.5" fill="#1d1d1d" text-anchor="start">amber = a tool run this session caught the defect  ·  dark = the language prevents it outright, no tool needed  ·  plain = a real blind spot this session measured</text>
+<text x="20" y="648" font-size="11" fill="#666666" text-anchor="start">Every cell is backed by a command in &quot;Build, run, observe&quot; / &quot;Cross-check&quot; -- none of this is asserted from memory.</text>
+</svg>
