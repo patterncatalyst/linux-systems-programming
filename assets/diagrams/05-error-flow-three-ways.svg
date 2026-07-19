@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 560" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="30" width="840" height="110" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">kernel</text>
+<rect x="20" y="155" width="840" height="385" rx="12" fill="#fcfcfc" stroke="#ddd"/>
+<text x="32" y="175" font-size="12" font-weight="700" fill="#1d1d1d">user space</text>
+<rect x="350" y="55" width="180" height="60" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="440.0" y="83.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">write(2) on /dev/full</text>
+<text x="440.0" y="100.0" font-size="11.5" fill="#555555" text-anchor="middle">returns -ENOSPC</text>
+<rect x="350" y="170" width="180" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="440.0" y="198.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">errno = 28</text>
+<text x="440.0" y="215.0" font-size="11.5" fill="#555555" text-anchor="middle">ENOSPC — the ABI</text>
+<rect x="60" y="275" width="200" height="64" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="160.0" y="305.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">std::expected&lt;T,</text>
+<text x="160.0" y="322.0" font-size="11.5" fill="#555555" text-anchor="middle">std::error_code&gt;</text>
+<rect x="60" y="375" width="200" height="64" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="160.0" y="405.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Failure</text>
+<text x="160.0" y="422.0" font-size="11.5" fill="#555555" text-anchor="middle">message + exit_code</text>
+<rect x="340" y="275" width="200" height="64" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="440.0" y="305.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">error (unix.Errno)</text>
+<text x="440.0" y="322.0" font-size="11.5" fill="#555555" text-anchor="middle">an ordinary value</text>
+<rect x="340" y="375" width="200" height="64" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="440.0" y="405.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">*opError</text>
+<text x="440.0" y="422.0" font-size="11.5" fill="#555555" text-anchor="middle">Unwrap → errors.Is/As</text>
+<rect x="620" y="275" width="200" height="64" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="720.0" y="305.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Result&lt;T, Errno&gt;</text>
+<text x="720.0" y="322.0" font-size="11.5" fill="#555555" text-anchor="middle">rustix</text>
+<rect x="620" y="375" width="200" height="64" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="720.0" y="405.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">CopyError::Write</text>
+<text x="720.0" y="422.0" font-size="11.5" fill="#555555" text-anchor="middle">thiserror + exit_code()</text>
+<rect x="250" y="485" width="380" height="50" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="440.0" y="508.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">exit 3</text>
+<text x="440.0" y="525.0" font-size="11.5" fill="#dddddd" text-anchor="middle">copyx: write /dev/full: No space left on device</text>
+<path d="M440,115 L440,170" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="510.0" y="145.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">rax = -28 → errno</text>
+<text x="510.0" y="145.5" font-size="11" fill="#555" text-anchor="middle">rax = -28 → errno</text>
+<path d="M380,230 L180,275" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M440,230 L440,275" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M500,230 L700,275" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M160,339 L160,375" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="115.0" y="360.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">map phase</text>
+<text x="115.0" y="360.0" font-size="11" fill="#555" text-anchor="middle">map phase</text>
+<path d="M440,339 L440,375" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="470.0" y="360.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">wrap</text>
+<text x="470.0" y="360.0" font-size="11" fill="#555" text-anchor="middle">wrap</text>
+<path d="M720,339 L720,375" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="762.0" y="360.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">map_err</text>
+<text x="762.0" y="360.0" font-size="11" fill="#555" text-anchor="middle">map_err</text>
+<path d="M160,439 L320,485" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M440,439 L440,485" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M720,439 L560,485" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="160" y="265" font-size="11" fill="#1d1d1d" text-anchor="middle" font-weight="700">C++23</text>
+<text x="440" y="265" font-size="11" fill="#1d1d1d" text-anchor="middle" font-weight="700">Go</text>
+<text x="720" y="265" font-size="11" fill="#1d1d1d" text-anchor="middle" font-weight="700">Rust</text>
+<text x="440" y="22" font-size="11" fill="#1d1d1d" text-anchor="middle" font-weight="700">one failure, three spellings, one contract</text>
+</svg>

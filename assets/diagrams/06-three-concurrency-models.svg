@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 922 470" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="48" width="286" height="358" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="68" font-size="12" font-weight="700" fill="#1d1d1d">C++23 — what the standard gives</text>
+<rect x="318" y="48" width="286" height="358" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="330" y="68" font-size="12" font-weight="700" fill="#1d1d1d">Go — the GMP runtime</text>
+<rect x="616" y="48" width="286" height="358" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="628" y="68" font-size="12" font-weight="700" fill="#1d1d1d">Rust — ownership-checked</text>
+<rect x="68" y="76" width="190" height="50" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="163.0" y="99.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">main thread</text>
+<text x="163.0" y="116.0" font-size="11.5" fill="#555555" text-anchor="middle">walks the tree, push()</text>
+<rect x="68" y="158" width="190" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="163.0" y="178.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">TaskQueue</text>
+<text x="163.0" y="195.5" font-size="11.5" fill="#555555" text-anchor="middle">mutex + deque</text>
+<text x="163.0" y="210.5" font-size="11.5" fill="#555555" text-anchor="middle">condition_variable_any</text>
+<rect x="68" y="250" width="190" height="50" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="163.0" y="273.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">4 × std::jthread</text>
+<text x="163.0" y="290.0" font-size="11.5" fill="#555555" text-anchor="middle">pop(stop_token)</text>
+<rect x="68" y="332" width="190" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="163.0" y="352.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">watcher jthread</text>
+<text x="163.0" y="369.5" font-size="11.5" fill="#555555" text-anchor="middle">sigtimedwait(SIGINT)</text>
+<text x="163.0" y="384.5" font-size="11.5" fill="#555555" text-anchor="middle">stop_source</text>
+<rect x="366" y="76" width="190" height="50" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="461.0" y="99.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">walker goroutine</text>
+<text x="461.0" y="116.0" font-size="11.5" fill="#555555" text-anchor="middle">filepath.WalkDir, send</text>
+<rect x="366" y="158" width="190" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="461.0" y="178.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">chan string</text>
+<text x="461.0" y="195.5" font-size="11.5" fill="#555555" text-anchor="middle">unbuffered</text>
+<text x="461.0" y="210.5" font-size="11.5" fill="#555555" text-anchor="middle">results chan back</text>
+<rect x="366" y="250" width="190" height="50" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="461.0" y="273.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">4 × goroutines</text>
+<text x="461.0" y="290.0" font-size="11.5" fill="#555555" text-anchor="middle">select Done first</text>
+<rect x="366" y="332" width="190" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="461.0" y="352.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">signal.NotifyContext</text>
+<text x="461.0" y="369.5" font-size="11.5" fill="#555555" text-anchor="middle">SIGINT cancels ctx</text>
+<text x="461.0" y="384.5" font-size="11.5" fill="#555555" text-anchor="middle">ctx.Done()</text>
+<rect x="664" y="76" width="190" height="50" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="759.0" y="99.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">main thread</text>
+<text x="759.0" y="116.0" font-size="11.5" fill="#555555" text-anchor="middle">recursive walk, send</text>
+<rect x="664" y="158" width="190" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="759.0" y="178.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">mpsc channel</text>
+<text x="759.0" y="195.5" font-size="11.5" fill="#555555" text-anchor="middle">Arc&lt;Mutex&lt;Receiver&gt;&gt;</text>
+<text x="759.0" y="210.5" font-size="11.5" fill="#555555" text-anchor="middle">results mpsc back</text>
+<rect x="664" y="250" width="190" height="50" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="759.0" y="273.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">4 × scoped threads</text>
+<text x="759.0" y="290.0" font-size="11.5" fill="#555555" text-anchor="middle">thread::scope joins</text>
+<rect x="664" y="332" width="190" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="759.0" y="352.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">signal-hook flag</text>
+<text x="759.0" y="369.5" font-size="11.5" fill="#555555" text-anchor="middle">SIGINT sets shared</text>
+<text x="759.0" y="384.5" font-size="11.5" fill="#555555" text-anchor="middle">AtomicBool</text>
+<path d="M163,126 L163,158" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="169.0" y="136.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">paths</text>
+<text x="169.0" y="136.0" font-size="11" fill="#555" text-anchor="middle">paths</text>
+<path d="M163,218 L163,250" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M163,332 L163,300" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<text x="169.0" y="310.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">request_stop()</text>
+<text x="169.0" y="310.0" font-size="11" fill="#b8650a" text-anchor="middle">request_stop()</text>
+<path d="M461,126 L461,158" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="467.0" y="136.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">paths</text>
+<text x="467.0" y="136.0" font-size="11" fill="#555" text-anchor="middle">paths</text>
+<path d="M461,218 L461,250" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M461,332 L461,300" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<text x="467.0" y="310.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">context cancelled</text>
+<text x="467.0" y="310.0" font-size="11" fill="#b8650a" text-anchor="middle">context cancelled</text>
+<path d="M759,126 L759,158" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="765.0" y="136.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">paths</text>
+<text x="765.0" y="136.0" font-size="11" fill="#555" text-anchor="middle">paths</text>
+<path d="M759,218 L759,250" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M759,332 L759,300" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<text x="765.0" y="310.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">flag polled</text>
+<text x="765.0" y="310.0" font-size="11" fill="#b8650a" text-anchor="middle">flag polled</text>
+<text x="461" y="30" font-size="11" fill="#1d1d1d" text-anchor="middle" font-weight="700">one program shape, three vocabularies — byte-identical stdout</text>
+<text x="461" y="442" font-size="11" fill="#1d1d1d" text-anchor="middle">same kernel threads underneath — /proc/&lt;pid&gt;/task while hashing: C++ 6, Go 10, Rust 5</text>
+</svg>
