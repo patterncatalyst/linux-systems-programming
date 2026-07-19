@@ -11,6 +11,11 @@ understand what their code asks of the kernel. Every hands-on chapter ships a
 runnable example implemented idiomatically in all three languages, presented in
 switchable code tabs, and every example doubles as a standalone demo.
 
+{% include excalidraw.html
+   file="00-course-map"
+   alt="Course map: four journey stages - Foundations, Core systems, Operating context, and Mastery - shown as bands containing the fourteen parts with their chapter ranges, and the six artifacts fwatch, shmkv, chatterd, pmon, bugfarm, and sysagent along the bottom, each with an arrow to the part where it grows."
+   caption="Figure 0.1 — the course at a glance." %}
+
 Two threads run through the whole book and never stop:
 
 - **Errors, three ways** — how `errno` becomes `std::expected`, a wrapped Go
@@ -49,7 +54,7 @@ artifacts that grow chapter by chapter:
 | **Debugging** | gdb and remote debugging, valgrind vs sanitizers vs miri, eBPF observation tools, per-language toolbelts | 28–31 |
 | **Containers and Virtualization** | namespaces and cgroups, seccomp and Landlock, our programs in containers, KVM and the isolation spectrum | 32–35 |
 | **Observability** | /proc and /sys by hand, the USE method, OpenTelemetry into Grafana/Loki/Tempo/Mimir | 36–38 |
-| **Performance and Low Latency** | honest benchmarking, pinned-core fast paths, the capstone fleet | 39–41 |
+| **Performance and Low Latency** | benchmarking without self-deception, pinned-core fast paths, the capstone fleet | 39–41 |
 | **Deep Dives** | embedding Lua, Rust macros for systems code, the Go runtime | 42–44 |
 | **Appendices: Tooling** | Cockpit, SystemTap, and PCP; the C++, Go, and Rust toolboxes | 45–48 |
 
@@ -64,4 +69,9 @@ experimental ever runs un-snapshotted on your workstation.
 
 > **Note** — every example section carries a verification status. A demo is
 > marked *verified* only when it has produced its claimed observable effect on
-> the stated environment — never merely because it compiled.
+> the stated environment — never merely because it compiled. That claim is
+> enforced by machinery, not habit: the runner, `scripts/test-all-examples.py`,
+> builds each example in all three languages and then executes the example's own
+> Lua `verify.lua` harness, which must observe the behavior to report a PASS. If
+> the VM lab or the LGTM stack an example depends on is down, the runner reports
+> a SKIP — never a false PASS.

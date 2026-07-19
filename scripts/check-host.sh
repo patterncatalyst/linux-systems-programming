@@ -158,7 +158,15 @@ else
 fi
 
 # ── Lua / Python ─────────────────────────────────────────────────────────
-check_version "lua >= 5.4" lua -v 5 4 lua
+# The verify harness runs under lua 5.4 (CI) but falls back to luajit locally,
+# so either interpreter satisfies the hard requirement.
+if command -v lua >/dev/null 2>&1; then
+    check_version "lua >= 5.4" lua -v 5 4 lua
+elif command -v luajit >/dev/null 2>&1; then
+    record warn "lua >= 5.4" "luajit $(luajit -v 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1) only — verify harness falls back to it; install lua for 5.4 parity with CI" "sudo dnf install -y lua"
+else
+    record fail "lua >= 5.4" "neither lua nor luajit installed" "sudo dnf install -y lua"
+fi
 
 if command -v python3 >/dev/null 2>&1; then
     record ok "python3" "$(python3 --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"

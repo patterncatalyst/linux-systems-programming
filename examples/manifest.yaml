@@ -13,3 +13,7 @@ examples:
     langs: [cpp, go, rust]
     mode: local
     timeout: 180
+  - id: 01-hello-syscalls
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 180

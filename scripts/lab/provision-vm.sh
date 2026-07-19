@@ -3,7 +3,7 @@
 # provision-vm.sh — provision a Fedora KVM guest via cloud-init for a
 # systems-programming / kernel test lab.
 #
-#   export LAB_PREFIX=myproject          # names everything (default: lab)
+#   export LAB_PREFIX=myproject          # names everything (default: systems)
 #   ./provision-vm.sh "$LAB_PREFIX-target"   # the deploy target
 #   ./provision-vm.sh "$LAB_PREFIX-peer"     # optional 2nd host for networking tests
 #
@@ -99,7 +99,7 @@ ok "domain $VM_NAME created"
 echo
 echo "Wait ~60s for cloud-init, then find its IP:"
 echo "    ./vm-ip.sh $VM_NAME"
-echo "confirm it's ready (expect 'BTF: present'):"
+echo "confirm it's ready (expect a bpftrace version + kernel release):"
 echo "    ssh fedora@\$(./vm-ip.sh $VM_NAME) 'cat /var/log/lab-ready'"
 echo "then snapshot the tooled baseline:"
 echo "    ./snapshot-vm.sh $VM_NAME"
