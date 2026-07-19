@@ -1,0 +1,35 @@
+{%- comment -%}
+  Multi-language code tabs.
+
+  Emits an empty marker; assets/js/codetabs.js absorbs the next N fenced
+  code blocks (N = number of pipe-separated labels) into an accessible
+  tab group. Because the code blocks stay ordinary Markdown fences, Rouge
+  still highlights them at build time — no plugin required.
+
+  Usage (place the marker, then one fenced block per label, IN THIS ORDER):
+
+      {% raw %}{% include codetabs.html langs="Spring Boot|Quarkus|.NET|Python|C++|Go" %}{% endraw %}
+
+      ```java
+      // Spring Boot
+      ```
+      ```java
+      // Quarkus
+      ```
+      ```csharp
+      // .NET
+      ```
+      ```python
+      # Python
+      ```
+      ```cpp
+      // C++
+      ```
+      ```go
+      // Go
+      ```
+
+  Fewer labels are fine for language-specific chapters. Selecting a tab
+  syncs every group on the page and is remembered across pages.
+{%- endcomment -%}
+<div class="codetabs" data-langs="{{ include.langs }}"></div>

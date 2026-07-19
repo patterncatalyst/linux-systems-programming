@@ -1,0 +1,23 @@
+# Jekyll
+_site/
+.jekyll-cache/
+.jekyll-metadata
+vendor/
+Gemfile.lock
+
+# Example build outputs
+examples/**/build/
+examples/**/bin/
+examples/**/target/
+examples/**/CMakeUserPresets.json
+
+# Editors / IDE
+.idea/
+*.iml
+
+# Python
+__pycache__/
+*.pyc
+
+# Reports
+reports/

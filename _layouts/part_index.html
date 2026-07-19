@@ -1,0 +1,89 @@
+---
+layout: default
+---
+
+{%- comment -%}
+  Part landing page. Lists the docs whose `part` matches this page's
+  `part_name`, sorted by `order`, as a card grid — the second level of the
+  two-level navigation (Home → Part → Chapter).
+{%- endcomment -%}
+{%- assign part_docs = site.docs | where: "part", page.part_name | sort: "order" -%}
+{%- assign parts_sorted = site.parts | sort: "order" -%}
+
+<article class="doc-page">
+  <div class="doc-page__inner">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ '/' | relative_url }}">Home</a>
+      <span class="breadcrumb__sep">/</span>
+      <span class="breadcrumb__current">{{ page.title }}</span>
+    </nav>
+
+    <header class="tutorial__header" style="grid-template-columns: 1fr;">
+      <div class="tutorial__title-group">
+        <div class="tutorial__chips" style="margin-bottom:var(--space-3);">
+          <span class="chip chip--accent">Part {{ page.order }}</span>
+          <span class="chip">{{ part_docs.size }} chapter{% if part_docs.size != 1 %}s{% endif %}</span>
+        </div>
+        <h1>{{ page.title }}</h1>
+        {%- if page.blurb -%}
+          <p class="hero__lead" style="font-size:1.05rem;margin-bottom:0;">{{ page.blurb }}</p>
+        {%- endif -%}
+      </div>
+    </header>
+
+    <div class="tutorial__body">
+      {%- if part_docs.size == 0 -%}
+        <div class="callout">
+          <p class="callout__title">Coming soon</p>
+          <p>The chapters for this part haven’t shipped yet. See the
+          <a href="{{ '/plans/iteration-plan/' | relative_url }}">roadmap</a>
+          for what’s planned and which iteration delivers it.</p>
+        </div>
+      {%- else -%}
+        <div class="cards">
+          {%- for doc in part_docs -%}
+          <a class="card" href="{{ doc.url | relative_url }}">
+            <div class="card__eyebrow">
+              {% if doc.order == 0 %}Overview{% else %}Chapter {{ doc.order }}{% endif %}
+            </div>
+            <h3 class="card__title">{{ doc.title }}</h3>
+            {%- if doc.description -%}
+              <p class="card__desc">{{ doc.description }}</p>
+            {%- endif -%}
+            <div class="card__meta">
+              {%- if doc.duration -%}<span>{{ doc.duration }}</span>{%- endif -%}
+              <span>Read →</span>
+            </div>
+          </a>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+
+      {%- comment -%} Prev/next part navigation {%- endcomment -%}
+      {%- for p in parts_sorted -%}
+        {%- if p.url == page.url -%}{%- assign pidx = forloop.index0 -%}{%- endif -%}
+      {%- endfor -%}
+      {%- assign prev_p_i = pidx | minus: 1 -%}
+      {%- assign next_p_i = pidx | plus: 1 -%}
+      <nav class="pager" aria-label="Part navigation" style="margin-top:var(--space-7);">
+        {%- if pidx > 0 -%}
+          {%- assign prev_p = parts_sorted[prev_p_i] -%}
+          <a class="pager__link pager__link--prev" href="{{ prev_p.url | relative_url }}">
+            <span class="pager__dir">← Previous part</span>
+            <span class="pager__title">{{ prev_p.title }}</span>
+          </a>
+        {%- else -%}<span></span>{%- endif -%}
+        {%- assign last_i = parts_sorted.size | minus: 1 -%}
+        {%- if pidx < last_i -%}
+          {%- assign next_p = parts_sorted[next_p_i] -%}
+          <a class="pager__link pager__link--next" href="{{ next_p.url | relative_url }}">
+            <span class="pager__dir">Next part →</span>
+            <span class="pager__title">{{ next_p.title }}</span>
+          </a>
+        {%- else -%}<span></span>{%- endif -%}
+      </nav>
+
+    </div>
+  </div>
+</article>

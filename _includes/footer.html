@@ -1,0 +1,32 @@
+<footer class="site-footer" role="contentinfo">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h4>{{ site.title | default: "Tutorial" }}</h4>
+        <p>{{ site.description | default: "A technical tutorial." }}</p>
+      </div>
+      <div class="footer-col">
+        <h4>Tutorial</h4>
+        <ul>
+          <li><a href="{{ '/docs/00-outline/' | relative_url }}">Outline</a></li>
+          <li><a href="{{ '/docs/01-prerequisites/' | relative_url }}">Prerequisites</a></li>
+          <li><a href="{{ '/docs/02-lab-setup/' | relative_url }}">Lab setup</a></li>
+          <li><a href="{{ '/plans/iteration-plan/' | relative_url }}">Roadmap</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Reference</h4>
+        <ul>
+          <li><a href="https://aya-rs.dev/" rel="noopener">Aya project ↗</a></li>
+          <li><a href="https://ebpf.io/get-started" rel="noopener">ebpf.io ↗</a></li>
+          <li><a href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}" rel="noopener">View on GitHub ↗</a></li>
+          <li><a href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}/issues" rel="noopener">Issues ↗</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-meta">
+      <span>Open source · {{ site.license | default: "Apache 2.0" }}</span>
+      <span>Last built {{ site.time | date: "%Y-%m-%d" }}</span>
+    </div>
+  </div>
+</footer>

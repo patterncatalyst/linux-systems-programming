@@ -1,0 +1,15 @@
+<header class="site-header" role="banner">
+  <div class="site-header__inner">
+    <a class="brand" href="{{ '/' | relative_url }}">
+      <span class="brand__mark" aria-hidden="true">{{ site.brand_emoji | default: "🐝" }}</span>
+      <span>{{ site.title | default: "Tutorial" }}</span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="{{ '/docs/00-outline/' | relative_url }}"
+         {% if page.url contains '/docs/' %}aria-current="page"{% endif %}>Tutorial</a>
+      <a href="{{ '/docs/01-prerequisites/' | relative_url }}">Prerequisites</a>
+      <a href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}"
+         rel="noopener">GitHub ↗</a>
+    </nav>
+  </div>
+</header>

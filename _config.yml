@@ -1,0 +1,90 @@
+# ────────────────────────────────────────────────────────────────────────────
+# Project: your-site
+# Site identity, GitHub link target, and baseurl. Build configuration below
+# generally doesn't need changes.
+# ────────────────────────────────────────────────────────────────────────────
+
+# Site identity
+title: "Linux Systems Programming"
+description: "A chaptered guide to Linux systems programming in modern C++, Go, and Rust — processes, I/O, memory, IPC, networking, concurrency, debugging, containers, and observability, with runnable examples in all three languages."
+brand_emoji: "🐧"   # Single emoji that appears next to the title in the header
+
+# GitHub identity for header link and example sourcing
+github_username: "patterncatalyst"
+github_repo: "linux-systems-programming"
+
+# baseurl
+# - On user/org Pages site (USERNAME.github.io): set to ""
+# - On project Pages site (USERNAME.github.io/PROJECT): set to "/PROJECT"
+# - For local dev override at runtime: bundle exec jekyll serve --baseurl ""
+baseurl: "/linux-systems-programming"
+
+# url is set at deploy time; leave blank for GitHub Pages auto-detection
+url: ""
+
+license: "Apache 2.0"   # or your choice
+
+# ────────────────────────────────────────────────────────────────────────────
+# Build configuration — generally don't change these.
+# ────────────────────────────────────────────────────────────────────────────
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+permalink: pretty
+
+# Collections — _docs and _plans are not Jekyll defaults; this enables them.
+collections:
+  docs:
+    output: true
+    permalink: /docs/:name/
+  plans:
+    output: true
+    permalink: /plans/:name/
+  example_pages:
+    output: true
+    permalink: /examples/:name/
+  parts:
+    output: true
+    permalink: /parts/:name/
+
+# Default front-matter — saves typing `layout: tutorial` on every doc.
+defaults:
+  - scope:
+      path: ""
+      type: docs
+    values:
+      layout: tutorial
+      sectionid: docs
+  - scope:
+      path: ""
+      type: plans
+    values:
+      layout: plan
+  - scope:
+      path: ""
+      type: example_pages
+    values:
+      layout: tutorial
+      sectionid: examples
+  - scope:
+      path: ""
+      type: parts
+    values:
+      layout: part_index
+      sectionid: docs
+
+# Files that Jekyll should not process or include in the built site.
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor/
+  - node_modules/
+  - examples/   # ← important: trailing slash; runnable code lives here, not site content
+  - scripts/
+  - README.md
+  - LICENSE
+  - PRD.md
+  - CONTRIBUTING.md

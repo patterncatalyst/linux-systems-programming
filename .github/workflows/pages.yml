@@ -1,0 +1,70 @@
+# Build the Jekyll site on every push and pull request; deploy to GitHub Pages
+# only from main. Uses the Jekyll version pinned in the Gemfile, not GitHub
+# Pages' built-in Jekyll 3.10.
+#
+# One-time setup: Settings → Pages → Build and deployment → Source: GitHub
+# Actions. After that, every push to main builds AND deploys automatically;
+# pushes to other branches and PRs build only (a green/red validation signal),
+# with no deploy.
+
+name: Build and deploy site
+
+on:
+  push:
+    branches: ["**"]      # build on a push to ANY branch
+  pull_request:
+    branches: [main]      # build on PRs targeting main
+  workflow_dispatch:      # allow manual runs from the Actions UI
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Don't cancel an in-flight deploy; queue instead.
+concurrency:
+  group: "pages-${{ github.ref }}"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true     # caches Gemfile.lock deps automatically
+
+      - name: Configure GitHub Pages
+        id: pages
+        uses: actions/configure-pages@v6
+
+      - name: Build with Jekyll
+        # --baseurl renders absolute URLs under /<repo-name>/ for project Pages.
+        run: |
+          bundle exec jekyll build \
+            --baseurl "${{ steps.pages.outputs.base_path }}"
+        env:
+          JEKYLL_ENV: production
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        # actions/configure-pages already points this at _site/.
+
+  deploy:
+    needs: build
+    # Deploy ONLY when this is a push to main — never from PRs or feature
+    # branches. Those still run the build job above as a validation check.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,77 @@
+---
+layout: default
+title: Home
+---
+
+<section class="hero">
+  <div class="container">
+    <span class="hero__eyebrow">Rust · Aya · eBPF · Fedora 44</span>
+    <h1 class="hero__title">{{ site.title }}</h1>
+    <p class="hero__lead">{{ site.description }}</p>
+    <div class="hero__cta">
+      <a class="btn btn--primary"
+         href="{{ '/docs/00-outline/' | relative_url }}">Start the tutorial →</a>
+      <a class="btn btn--secondary"
+         href="{{ '/docs/01-prerequisites/' | relative_url }}">Set up the lab</a>
+      <a class="btn btn--secondary"
+         href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}"
+         rel="noopener">View on GitHub ↗</a>
+    </div>
+  </div>
+</section>
+
+<section class="section-tight">
+  <div class="container">
+    <div class="stats">
+      <div class="stat"><span class="stat__value">🦀</span><span class="stat__label">Kernel &amp; user space, both in Rust with Aya</span></div>
+      <div class="stat"><span class="stat__value">VM</span><span class="stat__label">Deploy to a Fedora 44 KVM target — never to your laptop kernel</span></div>
+      <div class="stat"><span class="stat__value">📊</span><span class="stat__label">Output to Grafana via OpenTelemetry (Tempo + Mimir + Loki)</span></div>
+      <div class="stat"><span class="stat__value">🐍</span><span class="stat__label">Client load drivers in Python 3.14, all in Podman</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-heading">What this tutorial is</h2>
+    <p class="section-sub">
+      A chapter-based, hands-on path to writing real eBPF programs in Rust
+      with <a href="https://aya-rs.dev/">Aya</a>. You build each program on
+      your Fedora 44 laptop, deploy it to a disposable Fedora 44 KVM virtual
+      machine (so a bad program never touches your working kernel), drive load
+      from Python 3.14 clients running in Podman, and watch traces, metrics,
+      and logs land in Grafana through OpenTelemetry. It assumes you have read
+      <em>The Rust Programming Language</em> — this is not a Rust tutorial.
+      All container images are UBI-based; all kernel tooling (bpftool, bpftrace,
+      bcc) comes from Fedora/Red&nbsp;Hat repositories.
+    </p>
+
+    {%- comment -%}
+      Two-level navigation: the homepage shows one card per Part. Each Part
+      card links to its own page (the _parts collection) which lists that
+      part's chapters. New chapters appear under their part automatically;
+      new parts appear here just by adding a file to _parts/.
+    {%- endcomment -%}
+    <div class="cards">
+      {% assign parts_sorted = site.parts | sort: "order" %}
+      {% for part in parts_sorted %}
+      {% assign part_docs = site.docs | where: "part", part.part_name %}
+      <a class="card" href="{{ part.url | relative_url }}">
+        <div class="card__eyebrow">Part {{ part.order }}</div>
+        <h3 class="card__title">{{ part.title }}</h3>
+        {% if part.blurb %}
+        <p class="card__desc">{{ part.blurb }}</p>
+        {% endif %}
+        <div class="card__meta">
+          {% if part_docs.size > 0 %}
+            <span>{{ part_docs.size }} chapter{% if part_docs.size != 1 %}s{% endif %}</span>
+          {% else %}
+            <span>Coming soon</span>
+          {% endif %}
+          <span>Explore →</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
