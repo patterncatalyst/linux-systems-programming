@@ -1,0 +1,13 @@
+[package]
+name = "pmon"
+version = "1.0.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+nix = { version = "0.31", features = ["poll", "process", "signal"] }
+signal-hook = "0.4"

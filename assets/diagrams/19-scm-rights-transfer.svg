@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 500" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="40" width="350" height="130" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">pmon supervise — fd table (pid 2622904)</text>
+<rect x="590" y="40" width="350" height="130" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="602" y="60" font-size="12" font-weight="700" fill="#1d1d1d">pmctl — fd table (pid 2623753)</text>
+<rect x="20" y="250" width="920" height="230" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="270" font-size="12" font-weight="700" fill="#1d1d1d">kernel — shared, system-wide</text>
+<rect x="60" y="85" width="270" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="195.0" y="113.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">slot 3  (sender)</text>
+<text x="195.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">close-on-exec: set at open (O_CLOEXEC)</text>
+<rect x="630" y="85" width="270" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="765.0" y="113.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">slot 4  (receiver — new, lowest free)</text>
+<text x="765.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">close-on-exec: set by MSG_CMSG_CLOEXEC</text>
+<rect x="330" y="280" width="300" height="70" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="480.0" y="305.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">one open file description</text>
+<text x="480.0" y="322.5" font-size="11.5" fill="#dddddd" text-anchor="middle">pos: 47   flags: 02102002</text>
+<text x="480.0" y="337.5" font-size="11.5" fill="#dddddd" text-anchor="middle">O_RDWR|O_APPEND|O_CLOEXEC|O_LARGEFILE</text>
+<rect x="330" y="395" width="300" height="58" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="480.0" y="422.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">inode 95934 — pmon.log</text>
+<text x="480.0" y="439.0" font-size="11.5" fill="#555555" text-anchor="middle">47 bytes: both /proc fdinfo agree, pos: 47</text>
+<rect x="40" y="300" width="250" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="165.0" y="320.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">sendmsg(5, …)</text>
+<text x="165.0" y="337.5" font-size="11.5" fill="#555555" text-anchor="middle">cmsg SOL_SOCKET SCM_RIGHTS</text>
+<text x="165.0" y="352.5" font-size="11.5" fill="#555555" text-anchor="middle">cmsg_data=[3]</text>
+<rect x="670" y="300" width="250" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="795.0" y="320.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">recvmsg(3, …, MSG_CMSG_CLOEXEC)</text>
+<text x="795.0" y="337.5" font-size="11.5" fill="#555555" text-anchor="middle">cmsg SOL_SOCKET SCM_RIGHTS</text>
+<text x="795.0" y="352.5" font-size="11.5" fill="#555555" text-anchor="middle">cmsg_data=[4] — kernel picked 4</text>
+<path d="M195,145 L400,280" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="267.5" y="206.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">points at</text>
+<text x="267.5" y="206.5" font-size="11" fill="#555" text-anchor="middle">points at</text>
+<path d="M765,145 L560,280" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="692.5" y="206.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">points at</text>
+<text x="692.5" y="206.5" font-size="11" fill="#555" text-anchor="middle">points at</text>
+<path d="M480,350 L480,395" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="590.0" y="366.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">one offset, one set of flags</text>
+<text x="590.0" y="366.5" font-size="11" fill="#555" text-anchor="middle">one offset, one set of flags</text>
+<path d="M165,300 L165,145" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="157.0" y="216.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">fd 3 named in cmsg</text>
+<text x="157.0" y="216.5" font-size="11" fill="#555" text-anchor="middle">fd 3 named in cmsg</text>
+<path d="M290,330 L330,315" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="316.0" y="344.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">names slot 3</text>
+<text x="316.0" y="344.5" font-size="11" fill="#b8650a" text-anchor="middle">names slot 3</text>
+<path d="M630,315 L670,330" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="656.0" y="344.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">delivers a reference</text>
+<text x="656.0" y="344.5" font-size="11" fill="#b8650a" text-anchor="middle">delivers a reference</text>
+<path d="M795,300 L795,145" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<text x="805.0" y="216.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">kernel installs new slot</text>
+<text x="805.0" y="216.5" font-size="11" fill="#b8650a" text-anchor="middle">kernel installs new slot</text>
+<text x="40" y="30" font-size="12" fill="#1d1d1d" text-anchor="start" font-weight="700">SCM_RIGHTS: the fd number does not travel — a reference to the open file description does</text>
+<text x="40" y="225" font-size="11" fill="#555555" text-anchor="start">ch07&#x27;s three layers: per-process slot (cloexec bit lives here) → shared description (pos, flags) → inode</text>
+<text x="640" y="480" font-size="11" fill="#b8650a" text-anchor="start">numbers from the chapter&#x27;s held-open run</text>
+</svg>

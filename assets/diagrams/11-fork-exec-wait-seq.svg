@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 570" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="60" width="430" height="470" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="80" font-size="12" font-weight="700" fill="#1d1d1d">parent — pmon</text>
+<rect x="490" y="60" width="430" height="470" rx="12" fill="#eef7ee" stroke="#ddd"/>
+<text x="502" y="80" font-size="12" font-weight="700" fill="#1d1d1d">child → the command</text>
+<rect x="60" y="95" width="350" height="56" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="235.0" y="121.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pipe2(O_CLOEXEC)</text>
+<text x="235.0" y="138.0" font-size="11.5" fill="#555555" text-anchor="middle">self-pipe: exec verdict travels here</text>
+<rect x="60" y="175" width="350" height="56" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="235.0" y="201.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">fork()  →  clone(SIGCHLD)</text>
+<text x="235.0" y="218.0" font-size="11.5" fill="#dddddd" text-anchor="middle">COW: pages shared until either side writes</text>
+<rect x="530" y="175" width="350" height="56" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="705.0" y="201.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">same program, pid of its own</text>
+<text x="705.0" y="218.0" font-size="11.5" fill="#555555" text-anchor="middle">fd table copied — pipe write end inherited</text>
+<rect x="530" y="265" width="350" height="56" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="705.0" y="291.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">execvp(CMD)</text>
+<text x="705.0" y="308.0" font-size="11.5" fill="#555555" text-anchor="middle">success: O_CLOEXEC closes the pipe end</text>
+<rect x="60" y="265" width="350" height="56" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="235.0" y="291.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">read(pipe)</text>
+<text x="235.0" y="308.0" font-size="11.5" fill="#555555" text-anchor="middle">EOF = exec happened · 4 bytes = errno</text>
+<rect x="530" y="355" width="350" height="56" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="705.0" y="381.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">CMD runs … then exits or is killed</text>
+<text x="705.0" y="398.0" font-size="11.5" fill="#555555" text-anchor="middle">status 0/1/42 · or SIGTERM/SIGKILL</text>
+<rect x="60" y="355" width="350" height="56" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="235.0" y="381.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">waitpid / wait4(&amp;status, &amp;rusage)</text>
+<text x="235.0" y="398.0" font-size="11.5" fill="#555555" text-anchor="middle">blocks; reaps the zombie</text>
+<rect x="60" y="445" width="350" height="56" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="235.0" y="471.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">report + mirror the fate</text>
+<text x="235.0" y="488.0" font-size="11.5" fill="#dddddd" text-anchor="middle">status s → exit s · signal n → exit 128+n</text>
+<path d="M235,151 L235,175" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M410,203 L530,203" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="476.0" y="195.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">returns 0 in the child</text>
+<text x="476.0" y="195.0" font-size="11" fill="#555" text-anchor="middle">returns 0 in the child</text>
+<path d="M235,231 L235,265" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="295.0" y="252.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">returns child pid</text>
+<text x="295.0" y="252.0" font-size="11" fill="#555" text-anchor="middle">returns child pid</text>
+<path d="M705,231 L705,265" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M530,293 L410,293" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="476.0" y="285.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">EOF (success)  /  errno then _exit(127)</text>
+<text x="476.0" y="285.0" font-size="11" fill="#555" text-anchor="middle">EOF (success)  /  errno then _exit(127)</text>
+<path d="M705,321 L705,355" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M235,321 L235,355" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M530,383 L410,383" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="476.0" y="375.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">zombie until reaped · SIGCHLD</text>
+<text x="476.0" y="375.0" font-size="11" fill="#b8650a" text-anchor="middle">zombie until reaped · SIGCHLD</text>
+<path d="M235,411 L235,445" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="20" y="30" font-size="13" fill="#1d1d1d" text-anchor="start" font-weight="700">pmon’s lifecycle: fork → exec → wait, with a CLOEXEC self-pipe carrying the exec verdict</text>
+<text x="20" y="555" font-size="11" fill="#555555" text-anchor="start">Go’s os/exec and Rust’s Command run this same sequence internally — strace shows clone(CLONE_VM|CLONE_PIDFD|CLONE_VFORK|SIGCHLD) and clone3({CLONE_VM|CLONE_VFORK|CLONE_CLEAR_SIGHAND})</text>
+</svg>

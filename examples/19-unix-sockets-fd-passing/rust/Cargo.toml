@@ -1,0 +1,12 @@
+[package]
+name = "pmon"
+version = "0.5.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+nix = { version = "0.31", features = ["socket", "signal", "process", "uio"] }

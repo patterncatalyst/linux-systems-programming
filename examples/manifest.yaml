@@ -45,3 +45,43 @@ examples:
     langs: [cpp, go, rust]
     mode: local
     timeout: 300
+  - id: 11-process-lifecycle
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 180
+  - id: 12-signals-and-safe-handling
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 240
+  - id: 13-pidfd-modern-process-mgmt
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 240
+  - id: 14-identity-and-privilege
+    langs: [cpp, go, rust]
+    mode: vm
+    timeout: 300
+  - id: 15-virtual-memory
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 240
+  - id: 16-mmap-and-shared-mappings
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 240
+  - id: 17-allocators-and-gc-runtimes
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 300
+  - id: 18-pipes-fifos-splice
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 240
+  - id: 19-unix-sockets-fd-passing
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 240
+  - id: 20-shared-memory-coordination
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 300

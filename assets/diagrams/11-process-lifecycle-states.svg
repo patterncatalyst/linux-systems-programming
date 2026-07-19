@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 410" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="60" width="570" height="300" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="80" font-size="12" font-weight="700" fill="#1d1d1d">alive — address space, threads, fds</text>
+<rect x="610" y="60" width="310" height="300" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="622" y="80" font-size="12" font-weight="700" fill="#1d1d1d">after exit — only the task record</text>
+<rect x="40" y="150" width="130" height="64" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="105.0" y="180.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">fork / clone3</text>
+<text x="105.0" y="197.0" font-size="11.5" fill="#dddddd" text-anchor="middle">returns twice</text>
+<rect x="230" y="100" width="150" height="64" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="305.0" y="130.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Running  R</text>
+<text x="305.0" y="147.0" font-size="11.5" fill="#555555" text-anchor="middle">on a CPU</text>
+<rect x="230" y="250" width="150" height="64" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="305.0" y="280.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Sleeping  S</text>
+<text x="305.0" y="297.0" font-size="11.5" fill="#555555" text-anchor="middle">blocked in a syscall</text>
+<rect x="440" y="250" width="130" height="64" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="505.0" y="280.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Stopped  T</text>
+<text x="505.0" y="297.0" font-size="11.5" fill="#555555" text-anchor="middle">job control</text>
+<rect x="640" y="100" width="250" height="84" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="765.0" y="125.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Zombie  Z</text>
+<text x="765.0" y="142.0" font-size="11.5" fill="#555555" text-anchor="middle">&lt;defunct&gt; in ps f</text>
+<text x="765.0" y="157.0" font-size="11.5" fill="#555555" text-anchor="middle">exit status + rusage only</text>
+<text x="765.0" y="172.0" font-size="11.5" fill="#555555" text-anchor="middle">VmRSS gone, rss field 0</text>
+<rect x="660" y="260" width="210" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="765.0" y="288.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">reaped — pid table slot free</text>
+<text x="765.0" y="305.0" font-size="11.5" fill="#555555" text-anchor="middle">status copied to the parent</text>
+<path d="M170,165 L230,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="206.0" y="144.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">child starts</text>
+<text x="206.0" y="144.5" font-size="11" fill="#555" text-anchor="middle">child starts</text>
+<path d="M290,164 L290,250" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="246.0" y="211.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">read / sleep</text>
+<text x="246.0" y="211.0" font-size="11" fill="#555" text-anchor="middle">read / sleep</text>
+<path d="M320,250 L320,164" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="354.0" y="211.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">wakeup</text>
+<text x="354.0" y="211.0" font-size="11" fill="#555" text-anchor="middle">wakeup</text>
+<path d="M380,270 L440,270" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="416.0" y="262.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">SIGSTOP</text>
+<text x="416.0" y="262.0" font-size="11" fill="#555" text-anchor="middle">SIGSTOP</text>
+<path d="M440,300 L380,300" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="416.0" y="314.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">SIGCONT</text>
+<text x="416.0" y="314.0" font-size="11" fill="#555" text-anchor="middle">SIGCONT</text>
+<path d="M380,132 L640,132" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="516.0" y="124.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">exit(2) / fatal signal</text>
+<text x="516.0" y="124.0" font-size="11" fill="#b8650a" text-anchor="middle">exit(2) / fatal signal</text>
+<path d="M765,184 L765,260" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="773.0" y="226.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">parent wait4 / waitid</text>
+<text x="773.0" y="226.0" font-size="11" fill="#b8650a" text-anchor="middle">parent wait4 / waitid</text>
+<text x="20" y="30" font-size="13" fill="#1d1d1d" text-anchor="start" font-weight="700">Process states as ps STAT letters — the kernel keeps a zombie until someone reaps it</text>
+<text x="20" y="390" font-size="11" fill="#555555" text-anchor="start">observed: pmon stopped mid-wait (STAT TN) left its exited child as ZN ‘[sleep] &lt;defunct&gt;’ for a 4 s window; SIGCONT reaped it</text>
+</svg>
