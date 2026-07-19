@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 440" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="36" width="840" height="152" rx="12" fill="#f7faff" stroke="#ddd"/>
+<text x="32" y="56" font-size="12" font-weight="700" fill="#1d1d1d">user space — one thread; nothing blocks except epoll_wait(2)</text>
+<rect x="20" y="228" width="840" height="168" rx="12" fill="#f5f5f5" stroke="#ddd"/>
+<text x="32" y="248" font-size="12" font-weight="700" fill="#1d1d1d">kernel</text>
+<rect x="40" y="76" width="180" height="64" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="130.0" y="98.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">1 · arm timerfd</text>
+<text x="130.0" y="115.5" font-size="11.5" fill="#555555" text-anchor="middle">one-shot: min(deadline,</text>
+<text x="130.0" y="130.5" font-size="11.5" fill="#555555" text-anchor="middle">earliest debounce due)</text>
+<rect x="260" y="76" width="170" height="64" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="345.0" y="98.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">2 · epoll_wait</text>
+<text x="345.0" y="115.5" font-size="11.5" fill="#555555" text-anchor="middle">timeout −1:</text>
+<text x="345.0" y="130.5" font-size="11.5" fill="#555555" text-anchor="middle">sleep until readiness</text>
+<rect x="470" y="76" width="170" height="64" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="555.0" y="98.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">3 · dispatch</text>
+<text x="555.0" y="115.5" font-size="11.5" fill="#555555" text-anchor="middle">switch on the</text>
+<text x="555.0" y="130.5" font-size="11.5" fill="#555555" text-anchor="middle">data.u32 token</text>
+<rect x="680" y="76" width="160" height="64" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="760.0" y="98.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">4 · drain + act</text>
+<text x="760.0" y="115.5" font-size="11.5" fill="#555555" text-anchor="middle">read until EAGAIN,</text>
+<text x="760.0" y="130.5" font-size="11.5" fill="#555555" text-anchor="middle">coalesce, flush due</text>
+<rect x="300" y="240" width="280" height="52" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="440.0" y="264.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">eventpoll — interest list</text>
+<text x="440.0" y="281.0" font-size="11.5" fill="#dddddd" text-anchor="middle">tfd 3·4·5, level-triggered EPOLLIN</text>
+<rect x="60" y="322" width="200" height="60" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="160.0" y="342.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">inotify fd — token 0</text>
+<text x="160.0" y="359.5" font-size="11.5" fill="#555555" text-anchor="middle">wd 1 on DIR, mask 0x3c6</text>
+<text x="160.0" y="374.5" font-size="11.5" fill="#555555" text-anchor="middle">per-watch event queue</text>
+<rect x="340" y="322" width="200" height="60" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="440.0" y="342.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">timerfd — token 1</text>
+<text x="440.0" y="359.5" font-size="11.5" fill="#555555" text-anchor="middle">CLOCK_MONOTONIC,</text>
+<text x="440.0" y="374.5" font-size="11.5" fill="#555555" text-anchor="middle">one-shot expirations</text>
+<rect x="620" y="322" width="200" height="60" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="720.0" y="342.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">signalfd — token 2</text>
+<text x="720.0" y="359.5" font-size="11.5" fill="#555555" text-anchor="middle">blocked SIGINT/SIGTERM</text>
+<text x="720.0" y="374.5" font-size="11.5" fill="#555555" text-anchor="middle">as readable data</text>
+<path d="M220,108 L260,108" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M430,108 L470,108" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="456.0" y="100.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">wakeup</text>
+<text x="456.0" y="100.0" font-size="11" fill="#555" text-anchor="middle">wakeup</text>
+<path d="M640,108 L680,108" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M760,140 L760,170" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M760,170 L130,170" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="451.0" y="164.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">loop: re-arm, wait again</text>
+<text x="451.0" y="164.0" font-size="11" fill="#555" text-anchor="middle">loop: re-arm, wait again</text>
+<path d="M130,170 L130,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M190,140 L360,322" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="215.0" y="255.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">timerfd_settime</text>
+<text x="215.0" y="255.0" font-size="11" fill="#555" text-anchor="middle">timerfd_settime</text>
+<path d="M160,322 L360,292" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="230.0" y="313.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">file events</text>
+<text x="230.0" y="313.0" font-size="11" fill="#555" text-anchor="middle">file events</text>
+<path d="M440,322 L440,292" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="484.0" y="315.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">expiration</text>
+<text x="484.0" y="315.0" font-size="11" fill="#555" text-anchor="middle">expiration</text>
+<path d="M720,322 L520,292" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="644.0" y="311.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">signal</text>
+<text x="644.0" y="311.0" font-size="11" fill="#555" text-anchor="middle">signal</text>
+<path d="M440,240 L345,140" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="484.5" y="198.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">ready: {EPOLLIN, token}</text>
+<text x="484.5" y="198.0" font-size="11" fill="#b8650a" text-anchor="middle">ready: {EPOLLIN, token}</text>
+<text x="440" y="26" font-size="11" fill="#1d1d1d" text-anchor="middle" font-weight="700">fwatch watch — one epoll loop, three event sources</text>
+<text x="440" y="424" font-size="12" fill="#666666" text-anchor="middle">Go inverts this picture: the runtime netpoller owns the loop (epoll_pwait) and surfaces each source as a channel</text>
+</svg>

@@ -17,3 +17,31 @@ examples:
     langs: [cpp, go, rust]
     mode: local
     timeout: 180
+  - id: 04-syscalls-and-the-abi
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 180
+  - id: 05-errors-three-ways
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 180
+  - id: 06-concurrency-three-ways
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 240
+  - id: 07-fds-raii-and-the-vfs
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 180
+  - id: 08-page-cache-and-durability
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 300
+  - id: 09-event-loops-epoll-inotify
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 240
+  - id: 10-io-uring
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 300

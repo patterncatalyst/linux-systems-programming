@@ -25,6 +25,10 @@ every later example reuses.
    alt="Three toolchain stacks — GCC/CMake/gdb for C++, go1.26.5/go build/dlv for Go, rustc/cargo/clippy for Rust — each converging through its own demo.sh onto one shared demo.sh runner contract."
    caption="Figure 1.1 — three toolchains, one demo.sh contract shared by every example in the book" %}
 
+> **Tools used** — `gcc`, `cmake`, `ninja`, `go`, `cargo`, `rustup`, `strace`
+> (all host — the toolchains are this chapter's subject). Everything here is
+> checked by `scripts/check-host.sh`.
+
 ## One host, three toolchains
 
 The book targets **Fedora 44** deliberately. Systems programming is the one
@@ -104,11 +108,16 @@ The hard requirements, and the reason each is hard:
   script checks the device node itself.
 - **`git` and `gh`** — the repo workflow.
 
-The soft rows: **Conan 2.x** (only some C++ demos pull dependencies through
-it), **ruby + bundler** (local Jekyll preview of this site only), and the Go
-lint/debug trio **golangci-lint, staticcheck, dlv** (CI runs them; locally
-they are nice-to-have). Membership in the `libvirt` group is also warn-only —
-everything works with `sudo`, it is just tedious without the group.
+Hard rows also cover the debug and observation tooling the cross-checks lean
+on from here forward: **gdb, valgrind, perf, strace, ltrace**, and the
+**sanitizer runtimes** (`libasan`/`libtsan` — without them the `asan` and
+`tsan` presets compile but cannot link). The soft rows: **Conan 2.x** (only
+some C++ demos pull dependencies through it) and the Go lint/debug trio
+**golangci-lint, staticcheck, dlv** (CI runs them; locally they are
+nice-to-have). Membership in the `libvirt` group is also warn-only —
+everything works with `sudo`, it is just tedious without the group. There is
+no Ruby row: the site builds and deploys in CI, so nothing local depends on
+Jekyll.
 
 ## The demo contract
 

@@ -1,0 +1,12 @@
+[package]
+name = "sysprobe"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+rustix = { version = "1", features = ["fs", "rand", "thread"] }

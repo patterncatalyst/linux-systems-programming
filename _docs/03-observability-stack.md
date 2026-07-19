@@ -25,6 +25,10 @@ Chapter 38 onward depends on what you stand up now.
    alt="Telemetry pipeline: a host demo and a VM demo send OTLP HTTP to port 4318 on the lsp-lgtm container, where the OpenTelemetry Collector fans out to Loki for logs, Tempo for traces, and Mimir for metrics; Grafana on port 3000 queries all three and serves the developer's browser. The VM demo reaches the host at the libvirt gateway address 192.168.124.1."
    caption="Figure 3.1 — one container, whole pipeline: OTLP in on :4318, Grafana out on :3000" %}
 
+> **Tools used** — `podman`, `systemctl`, `curl`, `openssl`, `python3` (host);
+> `ip` (systems-target VM). Everything here is checked by
+> `scripts/check-host.sh`, ships with Fedora, or is preinstalled in the lab VMs.
+
 ## What LGTM is, and why one container
 
 LGTM is Grafana Labs' acronym for its open-source backend quartet: **L**oki
