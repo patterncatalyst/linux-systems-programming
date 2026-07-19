@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 600" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="20" width="460" height="250" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">C++ / Rust — unshare(2) then clone3/fork(flags=0)</text>
+<rect x="500" y="20" width="460" height="250" rx="12" fill="#fdeaea" stroke="#ddd"/>
+<text x="512" y="40" font-size="12" font-weight="700" fill="#1d1d1d">Go, first attempt — unshare(2) then re-exec via os/exec</text>
+<rect x="20" y="290" width="940" height="250" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="32" y="310" font-size="12" font-weight="700" fill="#1d1d1d">Go, shipped fix — Cloneflags on the re-exec&#x27;s SysProcAttr</text>
+<rect x="40" y="60" width="420" height="45" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="250.0" y="80.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">unshare(NEWNS|NEWUTS|NEWNET|NEWPID)</text>
+<text x="250.0" y="97.5" font-size="11.5" fill="#555555" text-anchor="middle">takes effect on the caller now</text>
+<rect x="40" y="120" width="420" height="45" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="250.0" y="140.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">clone3(flags=0, stack=0)</text>
+<text x="250.0" y="157.5" font-size="11.5" fill="#555555" text-anchor="middle">= fork(2): child becomes PID 1</text>
+<rect x="40" y="180" width="420" height="55" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="250.0" y="205.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">child: print pid/hostname, execvp(CMD)</text>
+<text x="250.0" y="222.5" font-size="11.5" fill="#555555" text-anchor="middle">PASS — real run, this session</text>
+<rect x="520" y="60" width="420" height="45" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="730.0" y="80.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">runtime.LockOSThread(); unshare(...)</text>
+<text x="730.0" y="97.5" font-size="11.5" fill="#555555" text-anchor="middle">pins goroutine, then unshares</text>
+<rect x="520" y="120" width="420" height="45" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="730.0" y="140.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">os/exec.Start() re-execs self</text>
+<text x="730.0" y="157.5" font-size="11.5" fill="#555555" text-anchor="middle">internal vfork/pidfd probe fork first</text>
+<rect x="520" y="180" width="420" height="55" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="730.0" y="205.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">clone() = -1 ENOMEM</text>
+<text x="730.0" y="222.5" font-size="11.5" fill="#dddddd" text-anchor="middle">&quot;fork/exec: cannot allocate memory&quot; — real, this session</text>
+<rect x="40" y="335" width="420" height="45" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="250.0" y="355.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">setup_cgroup(): write own pid first</text>
+<text x="250.0" y="372.5" font-size="11.5" fill="#555555" text-anchor="middle">(unchanged — inherited across fork)</text>
+<rect x="500" y="335" width="440" height="45" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="720.0" y="355.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">exec.Command(self, hostname, &quot;--&quot;, CMD)</text>
+<text x="720.0" y="372.5" font-size="11.5" fill="#555555" text-anchor="middle">SysProcAttr.Cloneflags = NEWNS|NEWUTS|NEWNET|NEWPID</text>
+<rect x="40" y="395" width="900" height="55" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="490.0" y="420.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">ONE clone(2) creates the child already inside all four namespaces — no prior unshare(), no LockOSThread needed</text>
+<text x="490.0" y="437.5" font-size="11.5" fill="#555555" text-anchor="middle">child re-execs itself as __ns_init__: mounts / MS_PRIVATE, sethostname, prints proof lines, execs CMD as PID 1</text>
+<rect x="40" y="465" width="900" height="45" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="490.0" y="493.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">PASS 13/13 — cpp, go, rust — systems-target, this session</text>
+<path d="M250,105 L250,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M250,165 L250,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M730,105 L730,120" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M730,165 L730,180" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M250,380 L500,358" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="381.0" y="363.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">cgroup membership inherited either way</text>
+<text x="381.0" y="363.0" font-size="11" fill="#555" text-anchor="middle">cgroup membership inherited either way</text>
+<path d="M490,380 L490,395" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M490,450 L490,465" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="30" y="555" font-size="12" fill="#555555" text-anchor="start">The ENOMEM is a real, kernel-documented restriction (golang/go#19716): unshare(CLONE_NEWPID) lets the caller create exactly ONE child in the fresh</text>
+<text x="30" y="572" font-size="12" fill="#555555" text-anchor="start">namespace before further forks there return ENOMEM, and os/exec&#x27;s own vfork/pidfd fast path performs an internal probe fork that silently spends it.</text>
+</svg>
