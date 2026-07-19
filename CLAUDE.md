@@ -51,7 +51,15 @@ Ruby), examples in `examples/NN-slug/{cpp,go,rust}/`, chapters in
   (`status--verified` / `status--unverified`) state the behavioral evidence.
   Every number quoted as "from a run" must come from a real run.
 - **Banned words**: never use "honest", "honestly", "to be honest" — write
-  "real", "practical", "accurate" instead.
+  "real", "practical", "accurate" instead. Same rule for "lie"/"lies"/"lying"
+  **when the subject is the work, the method, or the reader** ("benchmarking
+  without lies", "the lie this chapter corrects") — it implies the rest of the
+  book is dishonest and calls the reader a liar. Keep "lie" when the subject is
+  a machine reporting a wrong value ("the mtime can lie",
+  "`hardware_concurrency()` lies about its container") — accurate idiom, no
+  accusation. Name a deliberately-bad variant after its defect (`--naive`,
+  `--unwarmed`), never `--lie`: flag names propagate into all three languages,
+  `verify.lua`, the recorded chapter output, and the example slug.
 
 ## Examples
 
