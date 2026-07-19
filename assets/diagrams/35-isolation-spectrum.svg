@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 430" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="20" width="940" height="340" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">Shared host kernel  &lt;-----------------------------------------&gt;  separate guest kernel</text>
+<rect x="45" y="70" width="200" height="130" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="145.0" y="118.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">bare process</text>
+<text x="145.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">no isolation boundary</text>
+<text x="145.0" y="150.0" font-size="11.5" fill="#555555" text-anchor="middle">syscall = host syscall</text>
+<text x="145.0" y="165.0" font-size="11.5" fill="#555555" text-anchor="middle">overheadbench host numbers</text>
+<rect x="285" y="70" width="210" height="130" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="390.0" y="118.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">podman container</text>
+<text x="390.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">namespaces + cgroup v2 + seccomp</text>
+<text x="390.0" y="150.0" font-size="11.5" fill="#555555" text-anchor="middle">one host kernel, one syscall table</text>
+<text x="390.0" y="165.0" font-size="11.5" fill="#555555" text-anchor="middle">syscall/mem ~= host; io ~= host on a bind mount</text>
+<rect x="535" y="70" width="210" height="130" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="640.0" y="118.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">microVM (Firecracker,</text>
+<text x="640.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">cloud-hypervisor / rust-vmm)</text>
+<text x="640.0" y="150.0" font-size="11.5" fill="#555555" text-anchor="middle">own guest kernel, minimal virtio devices</text>
+<text x="640.0" y="165.0" font-size="11.5" fill="#555555" text-anchor="middle">~125ms boot, &lt;5 MiB overhead (Firecracker)</text>
+<rect x="785" y="70" width="175" height="130" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="872.5" y="118.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">full KVM/QEMU VM</text>
+<text x="872.5" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">own guest kernel, full device model</text>
+<text x="872.5" y="150.0" font-size="11.5" fill="#555555" text-anchor="middle">systems-target in this lab</text>
+<text x="872.5" y="165.0" font-size="11.5" fill="#555555" text-anchor="middle">syscall ~= host; io ~3x slower (virtio-blk)</text>
+<rect x="45" y="230" width="200" height="100" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="145.0" y="278.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">escape = root on host</text>
+<text x="145.0" y="295.0" font-size="11.5" fill="#555555" text-anchor="middle">kernel 0-days apply directly</text>
+<rect x="285" y="230" width="210" height="100" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="390.0" y="278.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">escape = kernel bug in</text>
+<text x="390.0" y="295.0" font-size="11.5" fill="#555555" text-anchor="middle">namespace/cgroup code</text>
+<rect x="535" y="230" width="210" height="100" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="640.0" y="278.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">escape = bug in the ~5 devices</text>
+<text x="640.0" y="295.0" font-size="11.5" fill="#555555" text-anchor="middle">the VMM exposes, or KVM itself</text>
+<rect x="785" y="230" width="175" height="100" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="872.5" y="278.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">escape = bug in the full</text>
+<text x="872.5" y="295.0" font-size="11.5" fill="#555555" text-anchor="middle">emulated device model or KVM</text>
+<path d="M245,135 L285,135" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="271.0" y="129.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">less trust needed</text>
+<text x="271.0" y="129.0" font-size="11" fill="#555" text-anchor="middle">less trust needed</text>
+<path d="M495,135 L535,135" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="521.0" y="129.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">own kernel</text>
+<text x="521.0" y="129.0" font-size="11" fill="#555" text-anchor="middle">own kernel</text>
+<path d="M745,135 L785,135" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="771.0" y="129.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">full device model</text>
+<text x="771.0" y="129.0" font-size="11" fill="#555" text-anchor="middle">full device model</text>
+<text x="500" y="400" font-size="11" fill="#1d1d1d" text-anchor="middle">rust-vmm crates (kvm-ioctls, virtio-queue, vm-memory) underpin both Firecracker v1.16.1 and Cloud Hypervisor v53.0</text>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="30" width="380" height="240" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">builder stage (discarded)</text>
+<rect x="460" y="30" width="400" height="240" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="472" y="50" font-size="12" font-weight="700" fill="#1d1d1d">runtime stage (shipped image)</text>
+<rect x="44" y="70" width="340" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="214.0" y="98.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">registry.access.redhat.com/ubi10/ubi:10.2</text>
+<text x="214.0" y="115.0" font-size="11.5" fill="#555555" text-anchor="middle">220 MB measured</text>
+<rect x="44" y="150" width="340" height="90" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="214.0" y="178.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">dnf install gcc-c++/golang/rustup</text>
+<text x="214.0" y="195.0" font-size="11.5" fill="#555555" text-anchor="middle">compile app statically</text>
+<text x="214.0" y="210.0" font-size="11.5" fill="#555555" text-anchor="middle">cpp: -static-libstdc++ -static-libgcc</text>
+<text x="214.0" y="225.0" font-size="11.5" fill="#555555" text-anchor="middle">go: CGO_ENABLED=0   rust: rustup 1.97.1</text>
+<rect x="484" y="70" width="352" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="660.0" y="98.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">registry.access.redhat.com/ubi10-micro:10.2</text>
+<text x="660.0" y="115.0" font-size="11.5" fill="#555555" text-anchor="middle">24.3 MB measured</text>
+<rect x="484" y="150" width="352" height="40" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="660.0" y="175.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">COPY --from=builder app /usr/local/bin/app</text>
+<rect x="484" y="210" width="352" height="40" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="660.0" y="235.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">ENTRYPOINT [&quot;/usr/local/bin/app&quot;]   CMD [&quot;serve&quot;]</text>
+<path d="M384,195 L484,195" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="440.0" y="189.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">COPY --from=builder</text>
+<text x="440.0" y="189.0" font-size="11" fill="#b8650a" text-anchor="middle">COPY --from=builder</text>
+<text x="44" y="300" font-size="15" fill="#1d1d1d" text-anchor="start">Final images measured on this host: cpp 27.2 MB, go 27.2 MB, rust 24.9 MB</text>
+<text x="44" y="325" font-size="14" fill="#555555" text-anchor="start">-- barely above the bare ubi10-micro base (24.3 MB); the 220 MB builder never ships</text>
+<text x="44" y="355" font-size="13" fill="#555555" text-anchor="start">Static linking (cpp -static-libstdc++, go CGO_ENABLED=0) is what makes &#x27;copy one binary&#x27; sufficient --</text>
+<text x="44" y="375" font-size="13" fill="#555555" text-anchor="start">a dynamically-linked binary would need its .so&#x27;s copied into the runtime stage too.</text>
+</svg>

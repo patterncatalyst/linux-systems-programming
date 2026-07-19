@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 420" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="30" width="880" height="130" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">host (rootless user rsedor, uid 1000)</text>
+<rect x="20" y="190" width="880" height="200" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="32" y="210" font-size="12" font-weight="700" fill="#1d1d1d">podman&#x27;s user namespace (uid 0 in container == uid 1000 on host)</text>
+<rect x="44" y="66" width="260" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="174.0" y="99.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">podman exec demo34go</text>
+<text x="174.0" y="116.0" font-size="11.5" fill="#555555" text-anchor="middle">cat /proc/1/status</text>
+<rect x="340" y="66" width="260" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="470.0" y="99.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">podman unshare nsenter</text>
+<text x="470.0" y="116.0" font-size="11.5" fill="#555555" text-anchor="middle">--target &lt;hostpid&gt; --pid --mount</text>
+<rect x="636" y="66" width="240" height="70" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="756.0" y="99.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">plain nsenter (no unshare)</text>
+<text x="756.0" y="116.0" font-size="11.5" fill="#555555" text-anchor="middle">EPERM: reassociate failed</text>
+<rect x="44" y="230" width="300" height="50" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="194.0" y="253.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">container PID 1 == host pid 2998602</text>
+<text x="194.0" y="270.0" font-size="11.5" fill="#555555" text-anchor="middle">(podman inspect .State.Pid)</text>
+<rect x="380" y="230" width="500" height="50" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="630.0" y="260.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">Name: app   State: S (sleeping)   readlink /proc/1/exe -&gt; /usr/local/bin/app</text>
+<rect x="44" y="300" width="400" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="244.0" y="328.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">subuid rsedor:524288:65536</text>
+<text x="244.0" y="345.0" font-size="11.5" fill="#555555" text-anchor="middle">uid_map: 0-&gt;1000 (1), 1-&gt;524288 (65536)</text>
+<rect x="480" y="300" width="400" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="680.0" y="328.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">zombie scan (podman exec):</text>
+<text x="680.0" y="345.0" font-size="11.5" fill="#555555" text-anchor="middle">/proc/[0-9]*/stat state==Z, count=0</text>
+<path d="M174,136 L174,230" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="180.0" y="177.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">enters via container runtime</text>
+<text x="180.0" y="177.0" font-size="11" fill="#b8650a" text-anchor="middle">enters via container runtime</text>
+<path d="M470,136 L470,230" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="476.0" y="177.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">podman unshare joins userns first</text>
+<text x="476.0" y="177.0" font-size="11" fill="#b8650a" text-anchor="middle">podman unshare joins userns first</text>
+<path d="M636,101 L600,101" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M244,280 L380,255" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M630,280 L630,300" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="44" y="400" font-size="13" fill="#555555" text-anchor="start">Both paths independently confirm the same PID 1 identity -- podman exec from inside the container runtime, nsenter from the bare host.</text>
+</svg>

@@ -1,0 +1,24 @@
+# Multi-stage build for overheadbench (chapter 35). Build stage compiles a
+# fully static binary against UBI 10's go-toolset (go1.26.5 — the same
+# toolchain pin the host uses); the runtime stage is ubi10/ubi-micro, which
+# carries no shell and no package manager, so the final image is just the
+# static binary plus the handful of files ubi-micro itself ships.
+FROM registry.access.redhat.com/ubi10/go-toolset:latest AS build
+# Stay in the s2i image's own /opt/app-root/src: it is already writable by
+# the image's arbitrary non-root uid (1001, gid 0); a fresh WORKDIR would be
+# created root-owned and rootless podman's build user could not write to it.
+COPY go.mod go.sum ./
+RUN go mod download
+COPY main.go ./
+# CGO_ENABLED=0: unix.Getpid() is a raw syscall, no libc needed, so a fully
+# static binary can run unmodified on ubi-micro's minimal userspace.
+RUN CGO_ENABLED=0 go build -o overheadbench .
+
+FROM registry.access.redhat.com/ubi10/ubi-micro:latest
+COPY --from=build /opt/app-root/src/overheadbench /usr/local/bin/overheadbench
+# Rootless podman default: container runs as the invoking user's mapped uid,
+# not root, and writes its scratch io-bench files into WORKDIR (set at run
+# time via -w so the io bench lands on the mounted volume, not container
+# storage).
+ENTRYPOINT ["/usr/local/bin/overheadbench"]
+CMD ["--bench", "all"]

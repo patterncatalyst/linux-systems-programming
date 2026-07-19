@@ -1,0 +1,19 @@
+# app (Go 1.26) — multi-stage: UBI10 builder -> UBI10-micro runtime.
+#
+#   podman build -t lsp34-go -f Containerfile .
+#   podman run --rm --cpus=2 --memory=128m lsp34-go serve
+#
+# CGO_ENABLED=0 gives a fully static binary, so the runtime stage needs
+# nothing at all beyond the binary itself.
+
+FROM registry.access.redhat.com/ubi10/ubi:10.2 AS builder
+RUN dnf -y install golang && dnf clean all
+WORKDIR /src
+COPY go.mod ./
+COPY main.go ./
+RUN CGO_ENABLED=0 go build -o /out/app .
+
+FROM registry.access.redhat.com/ubi10-micro:10.2 AS runtime
+COPY --from=builder /out/app /usr/local/bin/app
+ENTRYPOINT ["/usr/local/bin/app"]
+CMD ["serve"]
