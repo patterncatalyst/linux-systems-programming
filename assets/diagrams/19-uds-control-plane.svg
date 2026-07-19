@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="40" width="380" height="300" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">pmon supervise  (pid 2622904)</text>
+<rect x="560" y="40" width="380" height="300" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="572" y="60" font-size="12" font-weight="700" fill="#1d1d1d">pmon pmctl  (pid 2624432)</text>
+<rect x="20" y="355" width="920" height="95" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="375" font-size="12" font-weight="700" fill="#1d1d1d">kernel</text>
+<rect x="40" y="75" width="160" height="56" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="120.0" y="93.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">listener fd 4</text>
+<text x="120.0" y="110.5" font-size="11.5" fill="#555555" text-anchor="middle">bind /tmp/…/ctl.sock</text>
+<text x="120.0" y="125.5" font-size="11.5" fill="#555555" text-anchor="middle">SOCK_STREAM|CLOEXEC</text>
+<rect x="40" y="150" width="160" height="56" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="120.0" y="168.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">accepted fd 5</text>
+<text x="120.0" y="185.5" font-size="11.5" fill="#555555" text-anchor="middle">SO_PEERCRED first:</text>
+<text x="120.0" y="200.5" font-size="11.5" fill="#555555" text-anchor="middle">uid=1000 pid=2624432</text>
+<rect x="40" y="225" width="160" height="52" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="120.0" y="241.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">log fd 3</text>
+<text x="120.0" y="258.5" font-size="11.5" fill="#555555" text-anchor="middle">pmon.log</text>
+<text x="120.0" y="273.5" font-size="11.5" fill="#555555" text-anchor="middle">O_RDWR|O_APPEND</text>
+<rect x="225" y="150" width="155" height="56" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="302.5" y="168.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">command loop</text>
+<text x="302.5" y="185.5" font-size="11.5" fill="#555555" text-anchor="middle">status / logfd / stop</text>
+<text x="302.5" y="200.5" font-size="11.5" fill="#555555" text-anchor="middle">one line in, one out</text>
+<rect x="225" y="225" width="155" height="52" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="302.5" y="241.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">child sleep 300</text>
+<text x="302.5" y="258.5" font-size="11.5" fill="#555555" text-anchor="middle">pid 2622905</text>
+<text x="302.5" y="273.5" font-size="11.5" fill="#555555" text-anchor="middle">own process group</text>
+<rect x="580" y="75" width="160" height="56" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="660.0" y="93.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">client fd 3</text>
+<text x="660.0" y="110.5" font-size="11.5" fill="#555555" text-anchor="middle">connect ctl.sock</text>
+<text x="660.0" y="125.5" font-size="11.5" fill="#555555" text-anchor="middle">writes &quot;status\n&quot;</text>
+<rect x="765" y="75" width="155" height="56" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="842.5" y="93.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">reply</text>
+<text x="842.5" y="110.5" font-size="11.5" fill="#555555" text-anchor="middle">child=2622905</text>
+<text x="842.5" y="125.5" font-size="11.5" fill="#555555" text-anchor="middle">uptime=20s restarts=0</text>
+<rect x="120" y="380" width="300" height="48" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="270.0" y="402.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">socket inode 16411996</text>
+<text x="270.0" y="419.0" font-size="11.5" fill="#555555" text-anchor="middle">supervisor end — ss -xp: app,pid=2622904,fd=5</text>
+<rect x="540" y="380" width="300" height="48" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="690.0" y="402.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">socket inode 16422777</text>
+<text x="690.0" y="419.0" font-size="11.5" fill="#555555" text-anchor="middle">client end — ss -xp: app,pid=2624432,fd=3</text>
+<path d="M120,131 L120,150" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="126.0" y="134.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">accept4</text>
+<text x="126.0" y="134.5" font-size="11" fill="#555" text-anchor="middle">accept4</text>
+<path d="M200,178 L225,178" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M302,206 L302,225" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="368.0" y="209.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">SIGTERM on stop</text>
+<text x="368.0" y="209.5" font-size="11" fill="#555" text-anchor="middle">SIGTERM on stop</text>
+<path d="M225,253 L200,253" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="218.5" y="245.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">stdout+stderr</text>
+<text x="218.5" y="245.0" font-size="11" fill="#555" text-anchor="middle">stdout+stderr</text>
+<path d="M660,131 L660,380" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="696.0" y="249.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">connect(2)</text>
+<text x="696.0" y="249.5" font-size="11" fill="#b8650a" text-anchor="middle">connect(2)</text>
+<path d="M160,206 L230,380" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M420,404 L540,404" fill="none" stroke="#b8650a" stroke-width="2" marker-start="url(#am)" marker-end="url(#am)"/>
+<text x="486.0" y="398.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">one stream, two ends</text>
+<text x="486.0" y="398.0" font-size="11" fill="#b8650a" text-anchor="middle">one stream, two ends</text>
+<path d="M740,103 L765,103" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="40" y="30" font-size="12" fill="#1d1d1d" text-anchor="start" font-weight="700">pmon v5 control plane — every number from the chapter&#x27;s live run</text>
+<text x="415" y="335" font-size="11" fill="#b8650a" text-anchor="start">SO_PEERCRED: the kernel, not the client, names uid/pid</text>
+</svg>

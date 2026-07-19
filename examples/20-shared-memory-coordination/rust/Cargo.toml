@@ -1,0 +1,13 @@
+[package]
+name = "shmkv"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+libc = "0.2"
+rustix = { version = "1", features = ["fs", "mm"] }

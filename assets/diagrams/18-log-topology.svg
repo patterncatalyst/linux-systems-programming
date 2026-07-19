@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="40" width="920" height="185" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">pmon supervise (pid 2633754) — capture</text>
+<rect x="20" y="250" width="920" height="150" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="32" y="270" font-size="12" font-weight="700" fill="#1d1d1d">pmon tail (pid 2634759) — relay</text>
+<rect x="20" y="425" width="920" height="150" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="445" font-size="12" font-weight="700" fill="#1d1d1d">kernel FIFO + reader</text>
+<rect x="40" y="90" width="175" height="105" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="127.5" y="125.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">sh (child 2633756)</text>
+<text x="127.5" y="142.5" font-size="11.5" fill="#555555" text-anchor="middle">fd 1 → pipe:[16462630]</text>
+<text x="127.5" y="157.5" font-size="11.5" fill="#555555" text-anchor="middle">fd 2 → pipe:[16462631]</text>
+<text x="127.5" y="172.5" font-size="11.5" fill="#555555" text-anchor="middle">mask reset at spawn</text>
+<rect x="255" y="75" width="165" height="55" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="337.5" y="100.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">stdout pipe</text>
+<text x="337.5" y="117.5" font-size="11.5" fill="#555555" text-anchor="middle">inode 16462630</text>
+<rect x="255" y="145" width="165" height="55" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="337.5" y="170.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">stderr pipe</text>
+<text x="337.5" y="187.5" font-size="11.5" fill="#555555" text-anchor="middle">inode 16462631</text>
+<rect x="465" y="85" width="215" height="110" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="572.5" y="123.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">one poll(2) loop</text>
+<text x="572.5" y="140.0" font-size="11.5" fill="#555555" text-anchor="middle">signalfd 4 · pidfd 6</text>
+<text x="572.5" y="155.0" font-size="11.5" fill="#555555" text-anchor="middle">pipe read ends 5 and 7</text>
+<text x="572.5" y="170.0" font-size="11.5" fill="#555555" text-anchor="middle">LineRelay tags each line</text>
+<rect x="725" y="95" width="190" height="90" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="820.0" y="130.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">live.log — fd 3</text>
+<text x="820.0" y="147.5" font-size="11.5" fill="#555555" text-anchor="middle">O_WRONLY|O_APPEND</text>
+<text x="820.0" y="162.5" font-size="11.5" fill="#555555" text-anchor="middle">&quot;[out] …&quot; / &quot;[err] …&quot;</text>
+<rect x="40" y="295" width="200" height="85" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="140.0" y="320.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">live.log — fd 3</text>
+<text x="140.0" y="337.5" font-size="11.5" fill="#555555" text-anchor="middle">O_RDONLY, fdinfo pos 10</text>
+<text x="140.0" y="352.5" font-size="11.5" fill="#555555" text-anchor="middle">offset advances only</text>
+<text x="140.0" y="367.5" font-size="11.5" fill="#555555" text-anchor="middle">for delivered bytes</text>
+<rect x="465" y="295" width="215" height="85" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="572.5" y="320.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">FIFO writer — fd 4</text>
+<text x="572.5" y="337.5" font-size="11.5" fill="#555555" text-anchor="middle">fdinfo flags 02100001</text>
+<text x="572.5" y="352.5" font-size="11.5" fill="#555555" text-anchor="middle">O_NONBLOCK cleared</text>
+<text x="572.5" y="367.5" font-size="11.5" fill="#555555" text-anchor="middle">after ENXIO wait loop</text>
+<rect x="465" y="470" width="215" height="65" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="572.5" y="500.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">live.fifo</text>
+<text x="572.5" y="517.5" font-size="11.5" fill="#555555" text-anchor="middle">S_IFIFO, mode 0644</text>
+<rect x="735" y="465" width="180" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="825.0" y="495.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">cat — fd 3</text>
+<text x="825.0" y="512.5" font-size="11.5" fill="#555555" text-anchor="middle">detach → EPIPE upstream</text>
+<text x="825.0" y="527.5" font-size="11.5" fill="#555555" text-anchor="middle">next reader loses nothing</text>
+<path d="M215,115 L253,103" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="240.0" y="101.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">write(2)</text>
+<text x="240.0" y="101.0" font-size="11" fill="#555" text-anchor="middle">write(2)</text>
+<path d="M215,165 L253,172" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="240.0" y="184.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">write(2)</text>
+<text x="240.0" y="184.5" font-size="11" fill="#555" text-anchor="middle">write(2)</text>
+<path d="M420,103 L463,115" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="447.5" y="101.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">POLLIN</text>
+<text x="447.5" y="101.0" font-size="11" fill="#555" text-anchor="middle">POLLIN</text>
+<path d="M420,172 L463,160" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="447.5" y="182.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">POLLIN</text>
+<text x="447.5" y="182.0" font-size="11" fill="#555" text-anchor="middle">POLLIN</text>
+<path d="M680,140 L723,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="707.5" y="134.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">append</text>
+<text x="707.5" y="134.0" font-size="11" fill="#555" text-anchor="middle">append</text>
+<path d="M820,185 L140,293" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="600.0" y="231.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">tail follows the same file, from offset 0</text>
+<text x="600.0" y="231.0" font-size="11" fill="#555" text-anchor="middle">tail follows the same file, from offset 0</text>
+<path d="M240,337 L463,337" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="357.5" y="327.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">splice(3, NULL, 4, NULL, 65536, 0) = 22</text>
+<text x="357.5" y="327.0" font-size="11" fill="#b8650a" text-anchor="middle">splice(3, NULL, 4, NULL, 65536, 0) = 22</text>
+<path d="M572,380 L572,468" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="662.0" y="418.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">pages move, no user copy</text>
+<text x="662.0" y="418.0" font-size="11" fill="#b8650a" text-anchor="middle">pages move, no user copy</text>
+<path d="M680,502 L733,502" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="712.5" y="494.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">read(2)</text>
+<text x="712.5" y="494.0" font-size="11" fill="#555" text-anchor="middle">read(2)</text>
+<text x="40" y="415" font-size="11" fill="#b8650a" text-anchor="start">reader killed → splice = -1 EPIPE → &quot;pmon: tail reader detached&quot; — the relay survives and re-splices undelivered bytes to the next reader</text>
+<text x="20" y="30" font-size="12" fill="#1d1d1d" text-anchor="start" font-weight="700">pmon v4&#x27;s log pipeline — every pid, fd number, pipe inode, flag value, and splice return in this figure comes from the chapter&#x27;s live runs</text>
+</svg>

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 520" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="20" width="280" height="470" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">watcher process (shmkv watch)</text>
+<rect x="320" y="20" width="280" height="470" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="332" y="40" font-size="12" font-weight="700" fill="#1d1d1d">kernel</text>
+<rect x="620" y="20" width="300" height="470" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="632" y="40" font-size="12" font-weight="700" fill="#1d1d1d">writer process (shmkv serve)</text>
+<rect x="40" y="55" width="240" height="58" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="160.0" y="82.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">seqlock read: nothing new</text>
+<text x="160.0" y="99.0" font-size="11.5" fill="#555555" text-anchor="middle">counter still 3; futex word w = 3</text>
+<rect x="40" y="133" width="240" height="58" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="160.0" y="160.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">futex(FUTEX_WAIT, w=3, 2s)</text>
+<text x="160.0" y="177.0" font-size="11.5" fill="#555555" text-anchor="middle">shared futex - no PRIVATE flag</text>
+<rect x="340" y="133" width="240" height="72" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="460.0" y="159.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">re-check word == 3 ?</text>
+<text x="460.0" y="176.5" font-size="11.5" fill="#555555" text-anchor="middle">yes: sleep on wait queue</text>
+<text x="460.0" y="191.5" font-size="11.5" fill="#555555" text-anchor="middle">keyed by (inode, offset 12)</text>
+<rect x="640" y="55" width="260" height="88" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="770.0" y="89.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">seqlock write (publish k4)</text>
+<text x="770.0" y="106.5" font-size="11.5" fill="#555555" text-anchor="middle">seq 6 -&gt; 7 (odd), mutate slot+counter,</text>
+<text x="770.0" y="121.5" font-size="11.5" fill="#555555" text-anchor="middle">seq 7 -&gt; 8 (even)</text>
+<rect x="640" y="168" width="260" height="58" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="770.0" y="195.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">store futex word = 4</text>
+<text x="770.0" y="212.0" font-size="11.5" fill="#555555" text-anchor="middle">release ordering</text>
+<rect x="640" y="251" width="260" height="58" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="770.0" y="278.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">futex(FUTEX_WAKE, INT_MAX)</text>
+<text x="770.0" y="295.0" font-size="11.5" fill="#555555" text-anchor="middle">strace showed: returns 1</text>
+<rect x="340" y="251" width="240" height="58" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="460.0" y="278.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">wake every task queued</text>
+<text x="460.0" y="295.0" font-size="11.5" fill="#555555" text-anchor="middle">on this (inode, offset)</text>
+<rect x="40" y="340" width="240" height="72" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="160.0" y="366.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">FUTEX_WAIT returns 0</text>
+<text x="160.0" y="383.5" font-size="11.5" fill="#555555" text-anchor="middle">seqlock read: counter = 4</text>
+<text x="160.0" y="398.5" font-size="11.5" fill="#555555" text-anchor="middle">back-fill ids from 8-slot ring</text>
+<rect x="40" y="432" width="540" height="46" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="310.0" y="453.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">lost-wakeup guard: if the word moved before sleeping,</text>
+<text x="310.0" y="470.0" font-size="11.5" fill="#555555" text-anchor="middle">FUTEX_WAIT returns EAGAIN and the watcher re-reads instead</text>
+<path d="M160,113 L160,133" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M280,162 L340,168" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="316.0" y="157.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">syscall</text>
+<text x="316.0" y="157.0" font-size="11" fill="#555" text-anchor="middle">syscall</text>
+<path d="M770,143 L770,168" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M770,226 L770,251" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M640,280 L580,280" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="616.0" y="272.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">syscall</text>
+<text x="616.0" y="272.0" font-size="11" fill="#555" text-anchor="middle">syscall</text>
+<path d="M400,309 L220,340" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="316.0" y="316.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">runnable again</text>
+<text x="316.0" y="316.5" font-size="11" fill="#b8650a" text-anchor="middle">runnable again</text>
+<path d="M460,205 L460,251" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="40" y="508" font-size="11.5" fill="#1d1d1d" text-anchor="start" font-weight="700">The kernel provides exactly one primitive: sleep until this 32-bit word changes, wake sleepers on it. Everything else is userspace protocol.</text>
+</svg>
