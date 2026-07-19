@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="30" width="860" height="220" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">benchlab (real): --op X --iters N --warmup W</text>
+<rect x="20" y="280" width="860" height="120" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="300" font-size="12" font-weight="700" fill="#1d1d1d">benchlab --lie: the anti-pattern</text>
+<rect x="45" y="70" width="130" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="110.0" y="90.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">warmup loop</text>
+<text x="110.0" y="107.5" font-size="11.5" fill="#555555" text-anchor="middle">W untimed calls</text>
+<text x="110.0" y="122.5" font-size="11.5" fill="#555555" text-anchor="middle">run_once(op)</text>
+<rect x="205" y="70" width="150" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="280.0" y="90.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">timed loop</text>
+<text x="280.0" y="107.5" font-size="11.5" fill="#555555" text-anchor="middle">N iterations</text>
+<text x="280.0" y="122.5" font-size="11.5" fill="#555555" text-anchor="middle">monotonic clock each</text>
+<rect x="385" y="70" width="120" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="445.0" y="90.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">raw[] samples</text>
+<text x="445.0" y="107.5" font-size="11.5" fill="#555555" text-anchor="middle">ns per iter</text>
+<text x="445.0" y="122.5" font-size="11.5" fill="#555555" text-anchor="middle">checksum +=</text>
+<rect x="535" y="40" width="150" height="55" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="610.0" y="58.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">sort + percentile</text>
+<text x="610.0" y="75.0" font-size="11.5" fill="#555555" text-anchor="middle">min / median /</text>
+<text x="610.0" y="90.0" font-size="11.5" fill="#555555" text-anchor="middle">p99 / max</text>
+<rect x="535" y="115" width="150" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="610.0" y="135.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">co_correct()</text>
+<text x="610.0" y="152.5" font-size="11.5" fill="#555555" text-anchor="middle">backfill above</text>
+<text x="610.0" y="167.5" font-size="11.5" fill="#555555" text-anchor="middle">expected_interval</text>
+<rect x="715" y="40" width="140" height="55" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="785.0" y="65.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">printed table</text>
+<text x="785.0" y="82.5" font-size="11.5" fill="#dddddd" text-anchor="middle">min/median/p99/max</text>
+<rect x="715" y="115" width="140" height="60" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="785.0" y="143.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">co_p99_ns</text>
+<text x="785.0" y="160.0" font-size="11.5" fill="#dddddd" text-anchor="middle">co_n, checksum</text>
+<rect x="45" y="310" width="160" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="125.0" y="338.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">one call</text>
+<text x="125.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">no warmup</text>
+<rect x="245" y="310" width="170" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="330.0" y="338.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">wall-clock delta</text>
+<text x="330.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">t1 - t0, single sample</text>
+<rect x="455" y="310" width="220" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="565.0" y="330.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">elapsed_ns printed</text>
+<text x="565.0" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">no percentiles —</text>
+<text x="565.0" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">nothing to compute one from</text>
+<path d="M175,100 L205,100" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="196.0" y="94.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">steady state</text>
+<text x="196.0" y="94.0" font-size="11" fill="#555" text-anchor="middle">steady state</text>
+<path d="M355,100 L385,100" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M505,90 L535,68" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M505,110 L535,145" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M685,68 L715,68" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M685,145 L715,145" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M205,340 L245,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M415,340 L455,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="450" y="250" font-size="11" fill="#1d1d1d" text-anchor="middle">same codec, same fixed workload — the harness, not the code under test, is what changes the story</text>
+</svg>
