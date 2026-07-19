@@ -1,0 +1,11 @@
+[package]
+name = "chatterd-timers"
+version = "0.3.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+nix = { version = "0.31", features = ["time", "poll", "signal"] }

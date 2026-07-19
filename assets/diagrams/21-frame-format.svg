@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 350" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="30" y="118" width="44" height="46" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="52.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">0f</text>
+<rect x="76" y="118" width="44" height="46" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="98.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">00</text>
+<rect x="122" y="118" width="44" height="46" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="144.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">00</text>
+<rect x="168" y="118" width="44" height="46" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="190.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">00</text>
+<rect x="214" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="236.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">61</text>
+<rect x="260" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="282.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">6c</text>
+<rect x="306" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="328.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">69</text>
+<rect x="352" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="374.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">63</text>
+<rect x="398" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="420.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">65</text>
+<rect x="444" y="118" width="44" height="46" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="466.0" y="146.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">00</text>
+<rect x="490" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="512.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">68</text>
+<rect x="536" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="558.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">65</text>
+<rect x="582" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="604.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">6c</text>
+<rect x="628" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="650.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">6c</text>
+<rect x="674" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="696.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">6f</text>
+<rect x="720" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="742.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">20</text>
+<rect x="766" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="788.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">62</text>
+<rect x="812" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="834.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">6f</text>
+<rect x="858" y="118" width="44" height="46" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="880.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">62</text>
+<text x="460" y="40" font-size="13" fill="#1d1d1d" text-anchor="middle" font-weight="700">One length-prefixed frame:  alice sending &quot;hello bob&quot;  (19 bytes on the wire)</text>
+<text x="121.0" y="100" font-size="11" fill="#b8650a" text-anchor="middle" font-weight="700">u32 length (LE) = 15</text>
+<text x="328.0" y="100" font-size="11" fill="#555555" text-anchor="middle">name = alice</text>
+<text x="466.0" y="100" font-size="11" fill="#555555" text-anchor="middle">NUL</text>
+<text x="696.0" y="100" font-size="11" fill="#555555" text-anchor="middle">text = hello bob</text>
+<text x="460" y="205" font-size="12" fill="#1d1d1d" text-anchor="middle">0f 00 00 00  =  0x0000000f  =  15  =  len(&quot;alice&quot;) + 1 (NUL) + len(&quot;hello bob&quot;)</text>
+<text x="30" y="250" font-size="12" fill="#1d1d1d" text-anchor="start" font-weight="700">Two frame kinds, told apart only by whether text is empty:</text>
+<text x="40" y="274" font-size="11" fill="#555555" text-anchor="start">JOIN   name  NUL              (empty text)  -- client sends exactly one at connect</text>
+<text x="40" y="294" font-size="11" fill="#555555" text-anchor="start">CHAT   name  NUL  text                       -- one per non-empty stdin line</text>
+<text x="30" y="328" font-size="11" fill="#999999" text-anchor="start">len == 0 and len &gt; 1048576 (1 MiB) are rejected; the 4 header bytes are never counted.</text>
+</svg>

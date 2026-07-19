@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="30" y="55" width="840" height="150" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="42" y="75" font-size="12" font-weight="700" fill="#1d1d1d">UDP multicast discovery — connectionless, one datagram, boundary preserved</text>
+<rect x="30" y="250" width="840" height="150" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="42" y="270" font-size="12" font-weight="700" fill="#1d1d1d">TCP bridge — connection-oriented, reliable, the canonical chatterd chat frame (JOIN/DELIVER)</text>
+<rect x="55" y="95" width="190" height="92" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="150.0" y="131.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">announce loop</text>
+<text x="150.0" y="148.5" font-size="11.5" fill="#555555" text-anchor="middle">sendto → group</text>
+<text x="150.0" y="163.5" font-size="11.5" fill="#555555" text-anchor="middle">&quot;CHATTERD1 target 9241 …&quot;</text>
+<rect x="290" y="95" width="190" height="92" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="385.0" y="131.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">receive loop</text>
+<text x="385.0" y="148.5" font-size="11.5" fill="#555555" text-anchor="middle">recv() one datagram</text>
+<text x="385.0" y="163.5" font-size="11.5" fill="#555555" text-anchor="middle">split 4 fields · check magic</text>
+<rect x="525" y="95" width="200" height="92" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="625.0" y="131.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">parse + dedup</text>
+<text x="625.0" y="148.5" font-size="11.5" fill="#555555" text-anchor="middle">name == self? skip</text>
+<text x="625.0" y="163.5" font-size="11.5" fill="#555555" text-anchor="middle">seen.first(name)? → dial</text>
+<rect x="290" y="288" width="190" height="92" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="385.0" y="324.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">connect()</text>
+<text x="385.0" y="341.5" font-size="11.5" fill="#555555" text-anchor="middle">dial host-ip : tcp-port</text>
+<text x="385.0" y="356.5" font-size="11.5" fill="#555555" text-anchor="middle">retry ≤ 40 × 50 ms</text>
+<rect x="525" y="288" width="190" height="92" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="620.0" y="324.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">send_frame / read_frame</text>
+<text x="620.0" y="341.5" font-size="11.5" fill="#555555" text-anchor="middle">6B hdr + BE len, payload</text>
+<text x="620.0" y="356.5" font-size="11.5" fill="#555555" text-anchor="middle">one frame each way</text>
+<rect x="760" y="288" width="110" height="92" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="815.0" y="324.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">stdout</text>
+<text x="815.0" y="341.5" font-size="11.5" fill="#dddddd" text-anchor="middle">discovered peer</text>
+<text x="815.0" y="356.5" font-size="11.5" fill="#dddddd" text-anchor="middle">peer … says:</text>
+<path d="M245,141 L290,141" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="273.5" y="133.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">multicast</text>
+<text x="273.5" y="133.0" font-size="11" fill="#b8650a" text-anchor="middle">multicast</text>
+<path d="M480,141 L525,141" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M625,187 L420,288" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="552.5" y="237.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">new peer → bridge to TCP</text>
+<text x="552.5" y="237.5" font-size="11" fill="#b8650a" text-anchor="middle">new peer → bridge to TCP</text>
+<path d="M480,334 L525,334" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M715,334 L760,334" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="55" y="224" font-size="11" fill="#555555" text-anchor="start">loss / reorder tolerated: a dropped beacon just means &quot;discovered one round later&quot;</text>
+</svg>
