@@ -213,6 +213,28 @@ for tool in git gh; do
     fi
 done
 
+# ── Debug + observation tooling (Parts 1-2 cross-checks, Part 8 debugging) ─
+for pair in "gdb:sudo dnf install -y gdb" \
+            "valgrind:sudo dnf install -y valgrind" \
+            "perf:sudo dnf install -y perf" \
+            "strace:sudo dnf install -y strace" \
+            "ltrace:sudo dnf install -y ltrace"; do
+    tool="${pair%%:*}"; hint="${pair#*:}"
+    if command -v "$tool" >/dev/null 2>&1; then
+        record ok "$tool" "$("$tool" --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)"
+    else
+        record fail "$tool" "not installed" "$hint"
+    fi
+done
+
+# Sanitizer runtimes — the asan/tsan CMake presets cannot link without them.
+if ls /usr/lib64/libasan.so.* >/dev/null 2>&1 && ls /usr/lib64/libtsan.so.* >/dev/null 2>&1; then
+    record ok "sanitizer runtimes" "libasan + libtsan present"
+else
+    record fail "sanitizer runtimes" "libasan/libtsan missing" \
+        "sudo dnf install -y libasan libubsan libtsan liblsan"
+fi
+
 # ── Soft requirements (warn only) ────────────────────────────────────────
 # Conan 2.x — only some C++ demos use it.
 if command -v conan >/dev/null 2>&1; then
@@ -225,14 +247,6 @@ if command -v conan >/dev/null 2>&1; then
     fi
 else
     record warn "conan 2.x" "not installed" "pip install --user 'conan>=2.0,<3.0'"
-fi
-
-# ruby + bundler — only for previewing the Jekyll site locally.
-if command -v ruby >/dev/null 2>&1 && command -v bundler >/dev/null 2>&1; then
-    record ok "ruby + bundler" "$(ruby --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
-else
-    record warn "ruby + bundler" "not installed" \
-        "sudo dnf install -y ruby rubygem-bundler   (local Jekyll preview only)"
 fi
 
 # Go linters / debugger — used by CI; nice to have locally.

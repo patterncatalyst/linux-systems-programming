@@ -24,6 +24,10 @@ destroys the guests by name.
    alt="Lab topology: a host band with libvirtd/KVM, the ~/.cache/systems-lab image cache holding the pristine Fedora Cloud Base image plus one qcow2 overlay per guest, and the scripts/lab directory; below it, the libvirt NAT network 192.168.124.0/24 containing systems-target (4 GB, .7) and systems-peer (2 GB, .95), both on kernel 6.19.10. An amber deploy arrow runs from the scripts to systems-target; a dashed line links the two guests for later two-host chapters; a note marks the lab-ready snapshot taken on both."
    caption="Figure 2.1 — the systems-* lab: cached base image + per-VM overlays on the host, two guests on libvirt NAT, one amber deploy path" %}
 
+> **Tools used** — `virt-install`, `qemu-img`, `cloud-localds`, `virsh`, `ssh`
+> (host). Everything here is checked by `scripts/check-host.sh`; the guest
+> toolset itself is installed by cloud-init.
+
 ## Why a disposable lab
 
 Three kinds of chapters force the issue. **Privileged demos** — capabilities,
