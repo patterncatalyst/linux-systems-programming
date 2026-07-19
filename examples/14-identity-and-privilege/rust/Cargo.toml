@@ -1,0 +1,11 @@
+[package]
+name = "pmon"
+version = "3.0.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+libc = "0.2.186"

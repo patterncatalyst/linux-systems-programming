@@ -1,0 +1,13 @@
+[package]
+name = "allocbench"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.104"
+bumpalo = { version = "3.20.3", features = ["collections"] }
+libc = "0.2"

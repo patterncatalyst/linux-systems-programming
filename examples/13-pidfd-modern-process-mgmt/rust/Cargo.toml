@@ -1,0 +1,13 @@
+[package]
+name = "pmon"
+version = "0.2.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+nix = { version = "0.30", features = ["signal", "process"] }
+rustix = { version = "1", features = ["event", "process"] }

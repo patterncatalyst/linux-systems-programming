@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 480" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="55" width="900" height="130" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="75" font-size="12" font-weight="700" fill="#1d1d1d">store.kv — 1034 bytes = 10-byte header + 4 x 256-byte slots</text>
+<rect x="190" y="235" width="560" height="120" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="202" y="255" font-size="12" font-weight="700" fill="#1d1d1d">one slot, 256 bytes</text>
+<rect x="40" y="90" width="150" height="75" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="115.0" y="125.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">magic &quot;SHKV1\0&quot;</text>
+<text x="115.0" y="142.5" font-size="11.5" fill="#dddddd" text-anchor="middle">6 B: 53 48 4b 56 31 00</text>
+<rect x="200" y="90" width="150" height="75" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="275.0" y="125.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">slot_count</text>
+<text x="275.0" y="142.5" font-size="11.5" fill="#555555" text-anchor="middle">u32 LE: 04 00 00 00</text>
+<rect x="360" y="90" width="130" height="75" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="425.0" y="125.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">slot 0</text>
+<text x="425.0" y="142.5" font-size="11.5" fill="#555555" text-anchor="middle">256 B</text>
+<rect x="500" y="90" width="130" height="75" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="565.0" y="125.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">slot 1</text>
+<text x="565.0" y="142.5" font-size="11.5" fill="#555555" text-anchor="middle">256 B</text>
+<rect x="640" y="90" width="130" height="75" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="705.0" y="125.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">slot 2</text>
+<text x="705.0" y="142.5" font-size="11.5" fill="#555555" text-anchor="middle">256 B</text>
+<rect x="780" y="90" width="120" height="75" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="840.0" y="125.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">slot 3</text>
+<text x="840.0" y="142.5" font-size="11.5" fill="#555555" text-anchor="middle">256 B, empty</text>
+<rect x="215" y="270" width="230" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="330.0" y="295.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">key  [0..64)</text>
+<text x="330.0" y="312.5" font-size="11.5" fill="#555555" text-anchor="middle">NUL-padded, max 63 B</text>
+<text x="330.0" y="327.5" font-size="11.5" fill="#555555" text-anchor="middle">key[0] == 0 means empty</text>
+<rect x="465" y="270" width="260" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="595.0" y="303.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">value  [64..256)</text>
+<text x="595.0" y="320.0" font-size="11.5" fill="#555555" text-anchor="middle">NUL-padded, max 191 B</text>
+<rect x="40" y="400" width="250" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="165.0" y="425.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">C++ writes it</text>
+<text x="165.0" y="442.5" font-size="11.5" fill="#555555" text-anchor="middle">memcpy into the mapping</text>
+<rect x="345" y="400" width="250" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="470.0" y="425.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Go reads it</text>
+<text x="470.0" y="442.5" font-size="11.5" fill="#555555" text-anchor="middle">[]byte over the same pages</text>
+<rect x="650" y="400" width="250" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="775.0" y="425.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Rust reads it</text>
+<text x="775.0" y="442.5" font-size="11.5" fill="#555555" text-anchor="middle">&amp;map[off..off+256]</text>
+<path d="M525,165 L470,235" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="527.5" y="194.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">zoom</text>
+<text x="527.5" y="194.0" font-size="11" fill="#555" text-anchor="middle">zoom</text>
+<path d="M165,400 L300,358" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M470,400 L470,358" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M775,400 L650,358" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="40" y="45" font-size="11" fill="#555555" text-anchor="start" font-weight="700">Every field is bytes with a stated width and order (u32 little-endian) — no language repr, padding, or endianness can leak in</text>
+<text x="40" y="385" font-size="11" fill="#b8650a" text-anchor="start">cmp(1) proves it: a store built by the Rust binary and one built by the C++ binary are byte-identical</text>
+</svg>

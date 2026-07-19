@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 380" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="30" y="150" width="180" height="64" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="120.0" y="180.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">buf[i] = 1</text>
+<text x="120.0" y="197.0" font-size="11.5" fill="#555555" text-anchor="middle">first touch of a page</text>
+<rect x="262" y="150" width="180" height="64" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="352.0" y="180.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">MMU: no PTE</text>
+<text x="352.0" y="197.0" font-size="11.5" fill="#555555" text-anchor="middle">CPU traps into the kernel</text>
+<rect x="494" y="150" width="170" height="64" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="579.0" y="180.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">page-fault handler</text>
+<text x="579.0" y="197.0" font-size="11.5" fill="#555555" text-anchor="middle">look up the VMA</text>
+<rect x="716" y="24" width="226" height="54" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="829.0" y="49.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">no VMA / bad perms</text>
+<text x="829.0" y="66.0" font-size="11.5" fill="#dddddd" text-anchor="middle">SIGSEGV</text>
+<rect x="716" y="114" width="226" height="54" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="829.0" y="139.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">anonymous, first write</text>
+<text x="829.0" y="156.0" font-size="11.5" fill="#555555" text-anchor="middle">new zero-filled frame — minor</text>
+<rect x="716" y="204" width="226" height="54" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="829.0" y="229.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">file page in page cache</text>
+<text x="829.0" y="246.0" font-size="11.5" fill="#555555" text-anchor="middle">map it + fault-around — minor</text>
+<rect x="716" y="294" width="226" height="54" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="829.0" y="319.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">file page not cached</text>
+<text x="829.0" y="336.0" font-size="11.5" fill="#555555" text-anchor="middle">read from disk, sleep — major</text>
+<path d="M210,182 L262,182" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M442,182 L494,182" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="468.0" y="178.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">trap</text>
+<text x="468.0" y="178.0" font-size="11" fill="#555" text-anchor="middle">trap</text>
+<path d="M664,166 L716,51" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M664,176 L716,141" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M664,190 L716,231" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M664,200 L716,321" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="30" y="296" font-size="12" fill="#1d1d1d" text-anchor="start" font-weight="700">measured this chapter (getrusage deltas):</text>
+<text x="30" y="318" font-size="11" fill="#1d1d1d" text-anchor="start">heap 64 MiB written: minor=16385  major=0 — one fault per touched page</text>
+<text x="30" y="336" font-size="11" fill="#1d1d1d" text-anchor="start">fault-walk 16 MiB read: minor=32 per 512-page step — fault-around maps 16 pages/fault</text>
+<text x="30" y="354" font-size="11" fill="#1d1d1d" text-anchor="start">major=0 everywhere: the walk file was written moments earlier, so it is in the page cache</text>
+</svg>
