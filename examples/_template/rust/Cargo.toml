@@ -1,0 +1,11 @@
+[package]
+name = "template-hello"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+rustix = { version = "1", features = ["system"] }
