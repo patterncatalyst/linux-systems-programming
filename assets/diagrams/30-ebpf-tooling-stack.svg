@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 580" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="20" width="1160" height="90" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">kernel probe primitives</text>
+<rect x="20" y="130" width="1160" height="170" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="32" y="150" font-size="12" font-weight="700" fill="#1d1d1d">eBPF-based tooling (this chapter, live on systems-target)</text>
+<rect x="20" y="320" width="1160" height="90" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="340" font-size="12" font-weight="700" fill="#1d1d1d">sibling technology (Ch. 45 covers deeper)</text>
+<rect x="20" y="430" width="1160" height="110" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="450" font-size="12" font-weight="700" fill="#1d1d1d">target binaries under observation</text>
+<rect x="50" y="55" width="210" height="44" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="155.0" y="75.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">kprobe / kretprobe</text>
+<text x="155.0" y="92.0" font-size="11.5" fill="#555555" text-anchor="middle">kernel functions</text>
+<rect x="280" y="55" width="210" height="44" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="385.0" y="75.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">uprobe / uretprobe</text>
+<text x="385.0" y="92.0" font-size="11.5" fill="#555555" text-anchor="middle">userspace functions</text>
+<rect x="510" y="55" width="210" height="44" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="615.0" y="75.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">tracepoint</text>
+<text x="615.0" y="92.0" font-size="11.5" fill="#555555" text-anchor="middle">stable kernel ABI</text>
+<rect x="740" y="55" width="210" height="44" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="845.0" y="75.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">perf_event</text>
+<text x="845.0" y="92.0" font-size="11.5" fill="#555555" text-anchor="middle">timer / PMU sampling</text>
+<rect x="970" y="55" width="180" height="44" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="1060.0" y="75.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">BTF / CO-RE</text>
+<text x="1060.0" y="92.0" font-size="11.5" fill="#555555" text-anchor="middle">struct layout w/o headers</text>
+<rect x="50" y="160" width="330" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="215.0" y="180.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">bcc-tools</text>
+<text x="215.0" y="197.5" font-size="11.5" fill="#555555" text-anchor="middle">execsnoop/opensnoop/biolatency/</text>
+<text x="215.0" y="212.5" font-size="11.5" fill="#555555" text-anchor="middle">offcputime/funccount/profile</text>
+<rect x="400" y="160" width="300" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="550.0" y="180.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">bpftrace</text>
+<text x="550.0" y="197.5" font-size="11.5" fill="#555555" text-anchor="middle">one-liners + scripts,</text>
+<text x="550.0" y="212.5" font-size="11.5" fill="#555555" text-anchor="middle">probe:target /filter/ { action }</text>
+<rect x="720" y="160" width="220" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="830.0" y="180.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">bpftool</text>
+<text x="830.0" y="197.5" font-size="11.5" fill="#555555" text-anchor="middle">prog show / map show,</text>
+<text x="830.0" y="212.5" font-size="11.5" fill="#555555" text-anchor="middle">inspect what&#x27;s loaded</text>
+<rect x="960" y="160" width="190" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="1055.0" y="180.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">c++filt</text>
+<text x="1055.0" y="197.5" font-size="11.5" fill="#555555" text-anchor="middle">demangle the exact</text>
+<text x="1055.0" y="212.5" font-size="11.5" fill="#555555" text-anchor="middle">symbol you attach to</text>
+<rect x="50" y="240" width="1090" height="40" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="595.0" y="265.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">libbpf loads a small verified BPF program per probe; the kernel runs it in-kernel on each hit and maps the result back to userspace</text>
+<rect x="50" y="355" width="300" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="200.0" y="373.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">SystemTap (stap)</text>
+<text x="200.0" y="390.0" font-size="11.5" fill="#555555" text-anchor="middle">kernel-module backend:</text>
+<text x="200.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">needs matching kernel-devel</text>
+<rect x="380" y="355" width="300" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="530.0" y="373.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">stap --runtime=dyninst</text>
+<text x="530.0" y="390.0" font-size="11.5" fill="#555555" text-anchor="middle">userspace binary patching,</text>
+<text x="530.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">no kernel module</text>
+<rect x="60" y="465" width="340" height="55" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="230.0" y="483.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">C++23: busy_hash</text>
+<text x="230.0" y="500.0" font-size="11.5" fill="#555555" text-anchor="middle">extern &quot;C&quot;, SysV ABI</text>
+<text x="230.0" y="515.0" font-size="11.5" fill="#555555" text-anchor="middle">arg0 == RDI (correct)</text>
+<rect x="430" y="465" width="340" height="55" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="600.0" y="483.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Rust: cmd_work</text>
+<text x="600.0" y="500.0" font-size="11.5" fill="#555555" text-anchor="middle">_RNvCs...cmd_work (v0 mangling)</text>
+<text x="600.0" y="515.0" font-size="11.5" fill="#555555" text-anchor="middle">SysV ABI, arg0 == RDI (correct)</text>
+<rect x="800" y="465" width="340" height="55" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="970.0" y="483.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">Go: main.cmdWork</text>
+<text x="970.0" y="500.0" font-size="11.5" fill="#dddddd" text-anchor="middle">ABIInternal registers</text>
+<text x="970.0" y="515.0" font-size="11.5" fill="#dddddd" text-anchor="middle">arg0/RDI == 1 (wrong); RAX == 9 (right)</text>
+<path d="M155,99 L155,160" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M385,99 L500,160" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M615,99 L550,160" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M845,99 L830,160" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M1060,99 L1055,160" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M200,280 L200,355" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M230,465 L590,220" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M600,465 L550,220" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M970,465 L550,220" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<text x="766.0" y="336.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">arg0 mismatch</text>
+<text x="766.0" y="336.5" font-size="11" fill="#b8650a" text-anchor="middle">arg0 mismatch</text>
+<text x="50" y="555" font-size="11.5" fill="#1d1d1d" text-anchor="start">Every amber box above ran live against systems-target this session; stap&#x27;s kernel-module path failed on a real kernel-devel/running-kernel mismatch, dyninst attached without erroring.</text>
+</svg>

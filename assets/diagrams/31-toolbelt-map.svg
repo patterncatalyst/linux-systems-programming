@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 700" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="30" width="360" height="640" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">C++</text>
+<rect x="410" y="30" width="360" height="640" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="422" y="50" font-size="12" font-weight="700" fill="#1d1d1d">Go</text>
+<rect x="800" y="30" width="360" height="640" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="812" y="50" font-size="12" font-weight="700" fill="#1d1d1d">Rust</text>
+<rect x="415" y="40" width="350" height="50" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="590.0" y="63.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">shared target: app &lt;hot|alloc&gt;</text>
+<text x="590.0" y="80.0" font-size="11.5" fill="#dddddd" text-anchor="middle">byte-identical result across all three</text>
+<rect x="40" y="130" width="320" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="200.0" y="158.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">perf record --call-graph fp</text>
+<text x="200.0" y="175.0" font-size="11.5" fill="#555555" text-anchor="middle">external sampler, any ELF — spin_hot 99.9%</text>
+<rect x="40" y="210" width="320" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="200.0" y="233.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">perf report --stdio / perf stat</text>
+<text x="200.0" y="250.0" font-size="11.5" fill="#555555" text-anchor="middle">cycles, instructions, flamegraph source</text>
+<rect x="40" y="280" width="320" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="200.0" y="303.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">clang-tidy</text>
+<text x="200.0" y="320.0" font-size="11.5" fill="#555555" text-anchor="middle">bugprone-/modernize-/performance- checks</text>
+<rect x="40" y="340" width="320" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="200.0" y="363.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">GCC -fanalyzer</text>
+<text x="200.0" y="380.0" font-size="11.5" fill="#555555" text-anchor="middle">interprocedural static analysis, own preset</text>
+<rect x="40" y="400" width="320" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="200.0" y="423.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">gdb (Chapter 28)</text>
+<text x="200.0" y="440.0" font-size="11.5" fill="#555555" text-anchor="middle">the same binary, post-mortem</text>
+<rect x="430" y="130" width="320" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="590.0" y="158.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">runtime/pprof (in-process)</text>
+<text x="590.0" y="175.0" font-size="11.5" fill="#555555" text-anchor="middle">--cpuprofile -&gt; go tool pprof --top: main.hotSpin</text>
+<rect x="430" y="210" width="320" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="590.0" y="233.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">--memprofile, --alloc_space</text>
+<text x="590.0" y="250.0" font-size="11.5" fill="#555555" text-anchor="middle">main.allocChurn, since-start allocation view</text>
+<rect x="430" y="280" width="320" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="590.0" y="303.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">runtime/trace + go tool trace</text>
+<text x="590.0" y="320.0" font-size="11.5" fill="#555555" text-anchor="middle">per-goroutine execution timeline</text>
+<rect x="430" y="340" width="320" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="590.0" y="363.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">delve (dlv)</text>
+<text x="590.0" y="380.0" font-size="11.5" fill="#555555" text-anchor="middle">scripted breakpoint on main.hotSpin</text>
+<rect x="430" y="400" width="320" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="590.0" y="423.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">go vet</text>
+<text x="590.0" y="440.0" font-size="11.5" fill="#555555" text-anchor="middle">static correctness checks</text>
+<rect x="820" y="130" width="320" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="980.0" y="158.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">perf record --call-graph fp</text>
+<text x="980.0" y="175.0" font-size="11.5" fill="#555555" text-anchor="middle">external sampler again — spin_hot inlined, ~100%</text>
+<rect x="820" y="210" width="320" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="980.0" y="233.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">cargo flamegraph</text>
+<text x="980.0" y="250.0" font-size="11.5" fill="#555555" text-anchor="middle">inferno collapse+render, real SVG with spin_hot</text>
+<rect x="820" y="280" width="320" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="980.0" y="303.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">cargo clippy / cargo fmt --check</text>
+<text x="980.0" y="320.0" font-size="11.5" fill="#555555" text-anchor="middle">lints + style, clean on this source</text>
+<rect x="820" y="340" width="320" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="980.0" y="363.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">tokio-console (forward ref, Ch. 27)</text>
+<text x="980.0" y="380.0" font-size="11.5" fill="#555555" text-anchor="middle">not applicable: no async runtime here</text>
+<rect x="820" y="400" width="320" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="980.0" y="423.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">gdb / rust-gdb (Chapter 28)</text>
+<text x="980.0" y="440.0" font-size="11.5" fill="#555555" text-anchor="middle">the same binary, post-mortem</text>
+<path d="M200,90 L200,128" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M590,90 L590,128" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M980,90 L980,128" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="590" y="22" font-size="15" fill="#b8650a" text-anchor="middle" font-weight="700">Figure 31.2 — one target, three native toolbelts</text>
+<text x="40" y="470" font-size="12" fill="#1d1d1d" text-anchor="start">Amber boxes are the CPU-profiling step this chapter cross-checks against each other: perf report / go tool pprof / perf report (or cargo flamegraph), all naming the same function.</text>
+<text x="40" y="500" font-size="12" fill="#555555" text-anchor="start">Dashed boxes are noted but out of scope here: gdb belongs to Chapter 28, tokio-console to the async runtimes of Chapter 27 (this program has no async runtime to show).</text>
+</svg>

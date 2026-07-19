@@ -1,0 +1,16 @@
+[package]
+name = "gdb-and-remote-debugging"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+
+# Keep debug info in the release binary: gdb needs line/function info even
+# though this is an optimized build, same as the CMake "release" preset
+# (RelWithDebInfo) and `go build`'s always-on DWARF.
+[profile.release]
+debug = true
