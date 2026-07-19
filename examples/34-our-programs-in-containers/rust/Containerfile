@@ -1,0 +1,26 @@
+# app (Rust edition 2024) — multi-stage: UBI10 builder -> UBI10-micro runtime.
+#
+#   podman build -t lsp34-rust -f Containerfile .
+#   podman run --rm --cpus=2 --memory=128m lsp34-rust serve
+#
+# UBI10's dnf rust package (1.92.0) predates this book's pinned 1.97.1, so
+# the builder installs the exact toolchain via rustup instead, matching
+# rust-toolchain.toml. The resulting binary only needs libc + libgcc_s, both
+# already present in ubi10-micro.
+
+FROM registry.access.redhat.com/ubi10/ubi:10.2 AS builder
+RUN dnf -y install gcc-c++ curl && dnf clean all
+COPY rust-toolchain.toml /tmp/rust-toolchain.toml
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup.sh \
+ && sh /tmp/rustup.sh -y --profile minimal \
+      --default-toolchain "$(sed -n 's/^channel *= *"\(.*\)"/\1/p' /tmp/rust-toolchain.toml)"
+ENV PATH="/root/.cargo/bin:${PATH}"
+WORKDIR /src
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+RUN cargo build --release --locked
+
+FROM registry.access.redhat.com/ubi10-micro:10.2 AS runtime
+COPY --from=builder /src/target/release/app /usr/local/bin/app
+ENTRYPOINT ["/usr/local/bin/app"]
+CMD ["serve"]

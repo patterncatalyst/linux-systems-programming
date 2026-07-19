@@ -230,6 +230,20 @@ def lgtm_up() -> bool:
     return _lgtm_up
 
 
+_podman_up: bool | None = None
+
+
+def podman_up() -> bool:
+    global _podman_up
+    if _podman_up is None:
+        try:
+            r = subprocess.run(["podman", "info"], capture_output=True, timeout=15)
+            _podman_up = r.returncode == 0
+        except (FileNotFoundError, subprocess.SubprocessError, OSError):
+            _podman_up = False
+    return _podman_up
+
+
 def revert_target() -> bool:
     p = subprocess.run(
         [str(REPO_ROOT / "scripts" / "lab" / "revert-vm.sh"), TARGET_VM, "lab-ready"],
@@ -390,6 +404,12 @@ def main(argv: list[str]) -> int:
             for l in langs:
                 results[(ex["id"], l)].mark("SKIP", "lgtm down")
             print(f"  {ex['id']}: SKIP (lgtm down)")
+            continue
+
+        if "podman" in ex["requires"] and not podman_up():
+            for l in langs:
+                results[(ex["id"], l)].mark("SKIP", "podman unavailable")
+            print(f"  {ex['id']}: SKIP (podman unavailable)")
             continue
 
         if ex["mode"] in ("vm", "vm-peer"):

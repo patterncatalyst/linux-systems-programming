@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 480" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="30" width="900" height="230" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">building the ruleset (unprivileged — no root, no VM needed)</text>
+<rect x="20" y="280" width="900" height="170" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="300" font-size="12" font-weight="700" fill="#1d1d1d">after landlock_restrict_self() — enforced against this process + every descendant</text>
+<rect x="50" y="65" width="400" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="250.0" y="90.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">landlock_create_ruleset(NULL, 0, VERSION)</text>
+<text x="250.0" y="107.5" font-size="11.5" fill="#555555" text-anchor="middle">probes the ABI — never hardcoded</text>
+<rect x="500" y="65" width="400" height="55" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="700.0" y="90.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">host: ABI=9  ·  systems-target guest: ABI=7</text>
+<text x="700.0" y="107.5" font-size="11.5" fill="#555555" text-anchor="middle">same kernel line, different Landlock ABI</text>
+<rect x="50" y="140" width="400" height="55" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="250.0" y="165.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">landlock_create_ruleset(attr)</text>
+<text x="250.0" y="182.5" font-size="11.5" fill="#555555" text-anchor="middle">handled_access_fs = READ_FILE|READ_DIR</text>
+<rect x="500" y="140" width="400" height="55" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="700.0" y="165.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">landlock_add_rule(PATH_BENEATH, parent_fd=open(DIR,O_PATH))</text>
+<text x="700.0" y="182.5" font-size="11.5" fill="#555555" text-anchor="middle">binds those rights to DIR only</text>
+<rect x="50" y="210" width="400" height="40" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="250.0" y="228.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">prctl(PR_SET_NO_NEW_PRIVS, 1)</text>
+<text x="250.0" y="245.0" font-size="11.5" fill="#555555" text-anchor="middle">required before restrict_self</text>
+<rect x="500" y="210" width="400" height="40" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="700.0" y="228.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">landlock_restrict_self(ruleset_fd[, TSYNC])</text>
+<text x="700.0" y="245.0" font-size="11.5" fill="#555555" text-anchor="middle">irrevocable; TSYNC covers every Go OS thread</text>
+<rect x="60" y="310" width="380" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="250.0" y="338.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">/tmp/lsp33-watch-sandbox (= DIR)</text>
+<text x="250.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">READ_FILE|READ_DIR allowed — watch loop works normally</text>
+<rect x="500" y="310" width="380" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="690.0" y="338.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">/tmp/lsp33-outside-target/secret.txt</text>
+<text x="690.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">open(O_RDONLY) → -1 EACCES</text>
+<rect x="60" y="390" width="820" height="45" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="470.0" y="410.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">handled_access_net left at 0 in this ruleset — no network mediation requested</text>
+<text x="470.0" y="427.5" font-size="11.5" fill="#555555" text-anchor="middle">TCP bind/connect rights exist since ABI v4; UDP not until ABI v10</text>
+<path d="M450,92 L500,92" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M250,120 L250,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M700,120 L700,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M250,195 L250,210" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M700,195 L700,210" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M450,230 L500,230" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M250,250 L250,310" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="256.0" y="274.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">grant</text>
+<text x="256.0" y="274.0" font-size="11" fill="#555" text-anchor="middle">grant</text>
+<path d="M700,250 L700,310" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="706.0" y="274.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">deny</text>
+<text x="706.0" y="274.0" font-size="11" fill="#555" text-anchor="middle">deny</text>
+<text x="470" y="20" font-size="11" fill="#1d1d1d" text-anchor="middle" font-weight="700">Figure 33.2 — the Landlock ruleset/rule model, ABI-probed not assumed</text>
+</svg>

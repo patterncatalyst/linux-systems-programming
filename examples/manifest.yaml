@@ -129,3 +129,20 @@ examples:
     langs: [cpp, go, rust]
     mode: local
     timeout: 360
+  - id: 32-namespaces-and-cgroups
+    langs: [cpp, go, rust]
+    mode: vm
+    timeout: 360
+  - id: 33-seccomp-and-landlock
+    langs: [cpp, go, rust]
+    mode: vm
+    timeout: 360
+  - id: 34-our-programs-in-containers
+    langs: [cpp, go, rust]
+    mode: local
+    requires: [podman]
+    timeout: 420
+  - id: 35-virtualization-and-kvm
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 360

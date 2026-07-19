@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="20" width="920" height="130" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">Host, VMX root mode (ring 0 host kernel)</text>
+<rect x="20" y="170" width="920" height="150" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="190" font-size="12" font-weight="700" fill="#1d1d1d">Guest, VMX non-root mode (ring 0 guest kernel, ring 3 guest process)</text>
+<rect x="20" y="340" width="920" height="130" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="32" y="360" font-size="12" font-weight="700" fill="#1d1d1d">Trapped path: virtio-blk write + fsync (a real vmexit)</text>
+<rect x="20" y="490" width="920" height="110" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="510" font-size="12" font-weight="700" fill="#1d1d1d">overheadbench measured deltas (this host, this guest)</text>
+<rect x="40" y="55" width="200" height="70" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="140.0" y="88.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">kvm.ko + kvm_intel.ko</text>
+<text x="140.0" y="105.0" font-size="11.5" fill="#555555" text-anchor="middle">/dev/kvm, EPT tables</text>
+<rect x="270" y="55" width="200" height="70" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="370.0" y="88.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">QEMU/VMM userspace</text>
+<text x="370.0" y="105.0" font-size="11.5" fill="#555555" text-anchor="middle">vCPU thread, virtio-blk backend</text>
+<rect x="730" y="55" width="190" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="825.0" y="88.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Host NVMe/btrfs</text>
+<text x="825.0" y="105.0" font-size="11.5" fill="#555555" text-anchor="middle">real fsync(2) lands here</text>
+<rect x="40" y="200" width="220" height="90" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="150.0" y="235.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">guest kernel (ring 0)</text>
+<text x="150.0" y="252.5" font-size="11.5" fill="#555555" text-anchor="middle">getpid(2) served in-guest</text>
+<text x="150.0" y="267.5" font-size="11.5" fill="#555555" text-anchor="middle">no host trap needed</text>
+<rect x="290" y="200" width="220" height="90" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="400.0" y="243.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">overheadbench (ring 3)</text>
+<text x="400.0" y="260.0" font-size="11.5" fill="#555555" text-anchor="middle">syscall bench: raw getpid loop</text>
+<rect x="550" y="200" width="200" height="90" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="650.0" y="243.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">virtio-blk front-end driver</text>
+<text x="650.0" y="260.0" font-size="11.5" fill="#555555" text-anchor="middle">io bench: open/write/fsync</text>
+<rect x="790" y="200" width="130" height="90" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="855.0" y="243.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">virtqueue</text>
+<text x="855.0" y="260.0" font-size="11.5" fill="#555555" text-anchor="middle">descriptor ring</text>
+<rect x="40" y="370" width="210" height="90" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="145.0" y="413.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">fsync(2) in guest</text>
+<text x="145.0" y="430.0" font-size="11.5" fill="#555555" text-anchor="middle">-&gt; VM exit (EPT/IO trap)</text>
+<rect x="300" y="370" width="210" height="90" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="405.0" y="413.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">KVM exit handler</text>
+<text x="405.0" y="430.0" font-size="11.5" fill="#555555" text-anchor="middle">hands off to QEMU vCPU thread</text>
+<rect x="560" y="370" width="200" height="90" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="660.0" y="413.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">virtio-blk backend issues</text>
+<text x="660.0" y="430.0" font-size="11.5" fill="#555555" text-anchor="middle">real host fsync, then VM enter</text>
+<rect x="800" y="370" width="120" height="90" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="860.0" y="413.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">round trip</text>
+<text x="860.0" y="430.0" font-size="11.5" fill="#555555" text-anchor="middle">cost lands here</text>
+<rect x="40" y="520" width="280" height="65" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="180.0" y="550.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">syscall (getpid): host ~88ns/call</text>
+<text x="180.0" y="567.5" font-size="11.5" fill="#555555" text-anchor="middle">guest ~88ns/call — no vmexit on this path</text>
+<rect x="340" y="520" width="280" height="65" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="480.0" y="550.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">mem (128MiB scan): host ~14GB/s</text>
+<text x="480.0" y="567.5" font-size="11.5" fill="#555555" text-anchor="middle">guest ~15GB/s — EPT cost amortized</text>
+<rect x="640" y="520" width="280" height="65" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="780.0" y="550.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">io (create+write+fsync): host ~1.3k ops/s</text>
+<text x="780.0" y="567.5" font-size="11.5" fill="#555555" text-anchor="middle">guest ~0.5k ops/s — the real vmexit tax</text>
+<path d="M240,90 L270,90" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="261.0" y="84.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">ioctl(KVM_RUN)</text>
+<text x="261.0" y="84.0" font-size="11" fill="#555" text-anchor="middle">ioctl(KVM_RUN)</text>
+<path d="M470,90 L730,90" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="606.0" y="84.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">host write path</text>
+<text x="606.0" y="84.0" font-size="11" fill="#555" text-anchor="middle">host write path</text>
+<path d="M260,245 L290,245" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="281.0" y="239.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">raw syscall</text>
+<text x="281.0" y="239.0" font-size="11" fill="#555" text-anchor="middle">raw syscall</text>
+<path d="M510,245 L550,245" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="536.0" y="239.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">block req</text>
+<text x="536.0" y="239.0" font-size="11" fill="#555" text-anchor="middle">block req</text>
+<path d="M750,245 L790,245" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="776.0" y="239.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">enqueue</text>
+<text x="776.0" y="239.0" font-size="11" fill="#555" text-anchor="middle">enqueue</text>
+<path d="M250,415 L300,415" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="281.0" y="409.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">vmexit</text>
+<text x="281.0" y="409.0" font-size="11" fill="#b8650a" text-anchor="middle">vmexit</text>
+<path d="M510,415 L560,415" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="541.0" y="409.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">kick</text>
+<text x="541.0" y="409.0" font-size="11" fill="#b8650a" text-anchor="middle">kick</text>
+<path d="M760,415 L800,415" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="786.0" y="409.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">vmenter</text>
+<text x="786.0" y="409.0" font-size="11" fill="#b8650a" text-anchor="middle">vmenter</text>
+<text x="480" y="165" font-size="11" fill="#b8650a" text-anchor="middle" font-weight="700">VMX root &lt;-&gt; non-root boundary</text>
+</svg>
