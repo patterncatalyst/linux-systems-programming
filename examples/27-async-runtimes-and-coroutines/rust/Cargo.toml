@@ -1,0 +1,21 @@
+[package]
+name = "chatterd"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+# This is the async chapter, so tokio is warranted for the async engine.
+tokio = { version = "1.53", features = [
+    "rt-multi-thread",
+    "net",
+    "io-util",
+    "sync",
+    "signal",
+    "macros",
+] }
+# std-only signal flag for the thread engine (no tokio runtime involved there).
+signal-hook = "0.4.4"

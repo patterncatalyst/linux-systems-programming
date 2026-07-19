@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 420" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="55" width="900" height="150" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="75" font-size="12" font-weight="700" fill="#1d1d1d">serve — one listener thread</text>
+<rect x="20" y="250" width="900" height="150" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="270" font-size="12" font-weight="700" fill="#1d1d1d">one std::jthread / goroutine / std::thread per accepted connection</text>
+<rect x="35" y="95" width="158" height="66" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="114.0" y="118.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">socket()</text>
+<text x="114.0" y="135.5" font-size="11.5" fill="#555555" text-anchor="middle">AF_INET</text>
+<text x="114.0" y="150.5" font-size="11.5" fill="#555555" text-anchor="middle">SOCK_STREAM|CLOEXEC</text>
+<rect x="210" y="95" width="158" height="66" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="289.0" y="118.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">setsockopt</text>
+<text x="289.0" y="135.5" font-size="11.5" fill="#555555" text-anchor="middle">SO_REUSEADDR = 1</text>
+<text x="289.0" y="150.5" font-size="11.5" fill="#555555" text-anchor="middle">rebind past TIME_WAIT</text>
+<rect x="385" y="95" width="158" height="66" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="464.0" y="118.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">bind()</text>
+<text x="464.0" y="135.5" font-size="11.5" fill="#555555" text-anchor="middle">sockaddr_in</text>
+<text x="464.0" y="150.5" font-size="11.5" fill="#555555" text-anchor="middle">127.0.0.1:9000</text>
+<rect x="560" y="95" width="158" height="66" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="639.0" y="118.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">listen(128)</text>
+<text x="639.0" y="135.5" font-size="11.5" fill="#555555" text-anchor="middle">passive socket</text>
+<text x="639.0" y="150.5" font-size="11.5" fill="#555555" text-anchor="middle">fd 3</text>
+<rect x="735" y="95" width="165" height="66" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="817.5" y="118.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">accept4() loop</text>
+<text x="817.5" y="135.5" font-size="11.5" fill="#555555" text-anchor="middle">SOCK_CLOEXEC</text>
+<text x="817.5" y="150.5" font-size="11.5" fill="#555555" text-anchor="middle">-&gt; new fd 4, 5, ...</text>
+<rect x="300" y="288" width="190" height="74" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="395.0" y="315.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">serve_client  fd 4</text>
+<text x="395.0" y="332.5" font-size="11.5" fill="#555555" text-anchor="middle">read_frame -&gt; broadcast</text>
+<text x="395.0" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">bob</text>
+<rect x="540" y="288" width="190" height="74" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="635.0" y="315.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">serve_client  fd 5</text>
+<text x="635.0" y="332.5" font-size="11.5" fill="#555555" text-anchor="middle">read_frame -&gt; broadcast</text>
+<text x="635.0" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">alice</text>
+<path d="M193,128 L210,128" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M368,128 L385,128" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M543,128 L560,128" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M718,128 L735,128" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M790,161 L430,288" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="580.0" y="218.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">spawn thread</text>
+<text x="580.0" y="218.5" font-size="11" fill="#b8650a" text-anchor="middle">spawn thread</text>
+<path d="M830,161 L640,288" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="775.0" y="218.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">spawn thread</text>
+<text x="775.0" y="218.5" font-size="11" fill="#b8650a" text-anchor="middle">spawn thread</text>
+<text x="470" y="232" font-size="11" fill="#b8650a" text-anchor="middle" font-weight="700">SIGINT -&gt; g_stop = 1; poll(2) wakes -&gt; stop accepting; listener fd closes; threads join; exit 0</text>
+</svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="30" y="60" width="840" height="310" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="42" y="80" font-size="12" font-weight="700" fill="#1d1d1d">libvirt default network — virbr0 bridge · 192.168.124.0/24 · one L2 segment (NAT only toward the host)</text>
+<rect x="350" y="92" width="200" height="62" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="450.0" y="121.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">multicast group</text>
+<text x="450.0" y="138.0" font-size="11.5" fill="#555555" text-anchor="middle">239.23.7.1 : 51824  ·  TTL 1</text>
+<rect x="60" y="245" width="250" height="108" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="185.0" y="282.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">systems-target</text>
+<text x="185.0" y="299.0" font-size="11.5" fill="#555555" text-anchor="middle">192.168.124.7</text>
+<text x="185.0" y="314.0" font-size="11.5" fill="#555555" text-anchor="middle">joined 239.23.7.1 on enp1s0</text>
+<text x="185.0" y="329.0" font-size="11.5" fill="#555555" text-anchor="middle">udp :51824 fd=4  ·  tcp :9241</text>
+<rect x="590" y="245" width="250" height="108" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="715.0" y="282.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">systems-peer</text>
+<text x="715.0" y="299.0" font-size="11.5" fill="#555555" text-anchor="middle">192.168.124.95</text>
+<text x="715.0" y="314.0" font-size="11.5" fill="#555555" text-anchor="middle">joined 239.23.7.1 on enp1s0</text>
+<text x="715.0" y="329.0" font-size="11.5" fill="#555555" text-anchor="middle">udp :51824 fd=4  ·  tcp :9241</text>
+<path d="M185,245 L380,154" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-start="url(#am)" marker-end="url(#am)"/>
+<text x="272.5" y="195.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">beacon 35 B</text>
+<text x="272.5" y="195.5" font-size="11" fill="#b8650a" text-anchor="middle">beacon 35 B</text>
+<path d="M715,245 L520,154" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-start="url(#am)" marker-end="url(#am)"/>
+<text x="627.5" y="195.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">beacon 34 B</text>
+<text x="627.5" y="195.5" font-size="11" fill="#b8650a" text-anchor="middle">beacon 34 B</text>
+<path d="M310,320 L590,320" fill="none" stroke="#555" stroke-width="2" marker-start="url(#a)" marker-end="url(#a)"/>
+<text x="456.0" y="312.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">TCP :9241 — one ch21 chat frame each way</text>
+<text x="456.0" y="312.0" font-size="11" fill="#555" text-anchor="middle">TCP :9241 — one ch21 chat frame each way</text>
+<text x="450" y="388" font-size="11" fill="#555555" text-anchor="middle">each guest sends one beacon to the group and hears the other&#x27;s — dedup by name, then dial TCP</text>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 470" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="20" width="440" height="430" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">C++ / Rust — you write the epoll loop</text>
+<rect x="480" y="20" width="440" height="430" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="492" y="40" font-size="12" font-weight="700" fill="#1d1d1d">Go — you write goroutines; the runtime hides the epoll</text>
+<rect x="60" y="70" width="360" height="64" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="240.0" y="100.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">1 OS thread  (Threads: 1)</text>
+<text x="240.0" y="117.0" font-size="11.5" fill="#555555" text-anchor="middle">epoll_wait — 4 calls for a 50-conn flood</text>
+<rect x="60" y="250" width="360" height="118" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="240.0" y="299.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">kernel eventpoll interest list</text>
+<text x="240.0" y="316.5" font-size="11.5" fill="#555555" text-anchor="middle">tok 0 listener   tok 1 signalfd</text>
+<text x="240.0" y="331.5" font-size="11.5" fill="#555555" text-anchor="middle">tok 2..N  every client socket, one process</text>
+<rect x="520" y="70" width="360" height="70" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="700.0" y="103.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">goroutine per conn (read + write) + hub</text>
+<text x="700.0" y="120.0" font-size="11.5" fill="#555555" text-anchor="middle">channels fan out  —  ~7 OS threads total</text>
+<rect x="520" y="185" width="360" height="64" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="700.0" y="215.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">runtime netpoller  (hidden)</text>
+<text x="700.0" y="232.0" font-size="11.5" fill="#dddddd" text-anchor="middle">epoll_pwait — 165 calls, edge-triggered EPOLLET</text>
+<rect x="520" y="300" width="360" height="64" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="700.0" y="330.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">same kernel sockets</text>
+<text x="700.0" y="347.0" font-size="11.5" fill="#555555" text-anchor="middle">one process, N conns  (ss -tp)</text>
+<path d="M240,250 L240,136" fill="none" stroke="#b8650a" stroke-width="2" marker-start="url(#am)" marker-end="url(#am)"/>
+<text x="246.0" y="187.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">EPOLLIN/EPOLLOUT + token</text>
+<text x="246.0" y="187.0" font-size="11" fill="#b8650a" text-anchor="middle">EPOLLIN/EPOLLOUT + token</text>
+<path d="M700,185 L700,142" fill="none" stroke="#b8650a" stroke-width="2" marker-start="url(#am)" marker-end="url(#am)"/>
+<text x="706.0" y="163.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">park / resume goroutine</text>
+<text x="706.0" y="163.5" font-size="11" fill="#b8650a" text-anchor="middle">park / resume goroutine</text>
+<path d="M700,300 L700,251" fill="none" stroke="#555" stroke-width="2" marker-start="url(#a)" marker-end="url(#a)"/>
+<text x="60" y="158" font-size="10" fill="#555555" text-anchor="start">one thread multiplexes N sockets; state machine is yours to write</text>
+<text x="60" y="200" font-size="10" fill="#b8650a" text-anchor="start">backpressure = outbuf + EPOLLOUT (explicit)</text>
+<text x="520" y="405" font-size="10" fill="#b8650a" text-anchor="start">backpressure = blocking channel send (implicit); threaded engine = same code, 51 threads</text>
+</svg>

@@ -85,3 +85,31 @@ examples:
     langs: [cpp, go, rust]
     mode: local
     timeout: 300
+  - id: 21-tcp-sockets
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 240
+  - id: 22-scaling-the-server
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 300
+  - id: 23-udp-and-peer-discovery
+    langs: [cpp, go, rust]
+    mode: vm-peer
+    timeout: 360
+  - id: 24-time-timers-deadlines
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 240
+  - id: 25-shared-state-and-the-futex
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 300
+  - id: 26-atomics-and-lock-free
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 300
+  - id: 27-async-runtimes-and-coroutines
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 360

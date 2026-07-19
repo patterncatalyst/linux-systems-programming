@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="44" width="420" height="300" rx="12" fill="#fbeeee" stroke="#ddd"/>
+<text x="32" y="64" font-size="12" font-weight="700" fill="#1d1d1d">pad=off — head &amp; tail share one 64 B line</text>
+<rect x="460" y="44" width="420" height="300" rx="12" fill="#eef7ef" stroke="#ddd"/>
+<text x="472" y="64" font-size="12" font-weight="700" fill="#1d1d1d">pad=on — head &amp; tail on separate lines</text>
+<rect x="60" y="84" width="150" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="135.0" y="112.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">core 0</text>
+<text x="135.0" y="129.0" font-size="11.5" fill="#555555" text-anchor="middle">producer: writes tail</text>
+<rect x="250" y="84" width="150" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="325.0" y="112.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">core 2</text>
+<text x="325.0" y="129.0" font-size="11.5" fill="#555555" text-anchor="middle">consumer: writes head</text>
+<rect x="120" y="200" width="220" height="64" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="230.0" y="230.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">cache line #1</text>
+<text x="230.0" y="247.0" font-size="11.5" fill="#dddddd" text-anchor="middle">head | tail (adjacent)</text>
+<rect x="500" y="84" width="150" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="575.0" y="112.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">core 0</text>
+<text x="575.0" y="129.0" font-size="11.5" fill="#555555" text-anchor="middle">producer: writes tail</text>
+<rect x="690" y="84" width="150" height="60" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="765.0" y="112.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">core 2</text>
+<text x="765.0" y="129.0" font-size="11.5" fill="#555555" text-anchor="middle">consumer: writes head</text>
+<rect x="500" y="200" width="150" height="64" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="575.0" y="230.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">line #1</text>
+<text x="575.0" y="247.0" font-size="11.5" fill="#555555" text-anchor="middle">head + 56 B pad</text>
+<rect x="690" y="200" width="150" height="64" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="765.0" y="230.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">line #2</text>
+<text x="765.0" y="247.0" font-size="11.5" fill="#555555" text-anchor="middle">tail + 56 B pad</text>
+<path d="M135,144 L200,200" fill="none" stroke="#b8650a" stroke-width="2" marker-start="url(#am)" marker-end="url(#am)"/>
+<text x="173.5" y="166.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">invalidate</text>
+<text x="173.5" y="166.0" font-size="11" fill="#b8650a" text-anchor="middle">invalidate</text>
+<path d="M325,144 L260,200" fill="none" stroke="#b8650a" stroke-width="2" marker-start="url(#am)" marker-end="url(#am)"/>
+<text x="298.5" y="166.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">invalidate</text>
+<text x="298.5" y="166.0" font-size="11" fill="#b8650a" text-anchor="middle">invalidate</text>
+<path d="M575,144 L575,200" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="581.0" y="166.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">local</text>
+<text x="581.0" y="166.0" font-size="11" fill="#555" text-anchor="middle">local</text>
+<path d="M765,144 L765,200" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="771.0" y="166.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">local</text>
+<text x="771.0" y="166.0" font-size="11" fill="#555" text-anchor="middle">local</text>
+<text x="130" y="300" font-size="12" fill="#a12a2a" text-anchor="start" font-weight="700">L1 load-misses ~128 M</text>
+<text x="130" y="322" font-size="11" fill="#555555" text-anchor="start">median 4.64 Mops (capacity 1, 10 M items)</text>
+<text x="560" y="300" font-size="12" fill="#2a7d3a" text-anchor="start" font-weight="700">L1 load-misses ~108 M</text>
+<text x="560" y="322" font-size="11" fill="#555555" text-anchor="start">median 6.20 Mops — ~34% faster</text>
+</svg>

@@ -1,0 +1,13 @@
+[package]
+name = "chatterd"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "app"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+mio = { version = "1", features = ["os-poll", "os-ext", "net"] }
+nix = { version = "0.30", features = ["signal", "poll"] }
