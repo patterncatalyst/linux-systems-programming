@@ -85,18 +85,23 @@ done
 ]] .. demo .. [[ watch @WD@/kv.shm --events ]] .. updates .. [[ \
     > @WD@/watch.out 2>&1 &
 wpid=$!
-sleep 0.25
-# Bracket trick so this shell's own command line never matches the pattern.
-sprocs=$(pgrep -c -f "/ap[p] serve" || true)
-wprocs=$(pgrep -c -f "/ap[p] watch" || true)
+# Confirm both processes we spawned are simultaneously alive mid-run. Test the
+# exact PIDs with kill -0 rather than pgrep -f on a command-line pattern: -f
+# matches substrings of every process's argv, so a parent/wrapper shell whose
+# script text contains "app serve" would inflate the count. kill -0 is exact.
+both_alive=0
+for i in $(seq 1 60); do
+  if kill -0 "$spid" 2>/dev/null && kill -0 "$wpid" 2>/dev/null; then both_alive=1; break; fi
+  sleep 0.02
+done
 s_rc=0; wait $spid || s_rc=$?
 w_rc=0; wait $wpid || w_rc=$?
-echo "sprocs=$sprocs wprocs=$wprocs s_rc=$s_rc w_rc=$w_rc"
+echo "both_alive=$both_alive s_rc=$s_rc w_rc=$w_rc"
 echo "--- serve ---"; cat @WD@/serve.out
 echo "--- watch ---"; cat @WD@/watch.out
 ]])
 checks.expect_exit(sw, 0, lang .. ": serve+watch harness exits 0")
-checks.expect_match(sw.out, "sprocs=1 wprocs=1", lang .. ": one serve and one watch process alive mid-run")
+checks.expect_match(sw.out, "both_alive=1", lang .. ": serve and watch processes both alive mid-run")
 checks.expect_match(sw.out, "s_rc=0 w_rc=0", lang .. ": both processes exit 0")
 checks.expect_match(sw.out, "serve: file=" .. wd .. "/kv%.shm updates=6 interval_ms=80",
   lang .. ": serve announces its parameters")
