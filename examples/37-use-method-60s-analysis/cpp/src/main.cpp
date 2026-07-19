@@ -12,7 +12,7 @@
 // and for each of the four resources reports which USE signals — Utilization
 // and Saturation — fired against a fixed threshold. Errors is reported too,
 // fixed false: this chapter induces load, not kernel-logged faults, so an
-// honest checklist run finds none.
+// real checklist run finds none.
 //
 // C++23 idioms used throughout: std::jthread (RAII-joined worker pools),
 // std::atomic counters shared across them, std::expected for the one truly
@@ -314,6 +314,12 @@ std::pair<uint64_t, uint64_t> sat_cpu(int seconds, unsigned workers) {
                 checksum.fetch_add(x, std::memory_order_relaxed); // keeps x provably live (no DCE)
             });
         }
+        // Hold the scope open for the full duration. ~jthread runs
+        // request_stop() *before* join(), so without this wait the workers are
+        // told to stop the instant the spawn loop ends and the deadline check
+        // below never fires. The sleep makes that stop request the intended
+        // post-deadline signal rather than an immediate kill.
+        std::this_thread::sleep_until(deadline);
     } // jthreads join here (RAII)
     return {total_iters.load(), checksum.load()};
 }
@@ -353,6 +359,7 @@ std::pair<uint64_t, uint64_t> sat_mem(int seconds, unsigned workers) {
                 total_touches.fetch_add(touches, std::memory_order_relaxed);
             });
         }
+        std::this_thread::sleep_until(deadline); // see sat_cpu: ~jthread stops before it joins
     }
     return {total_touches.load(), target_bytes};
 }
@@ -398,6 +405,7 @@ std::pair<uint64_t, uint64_t> sat_io(int seconds, unsigned workers) {
                 total_bytes.fetch_add(bytes, std::memory_order_relaxed);
             });
         }
+        std::this_thread::sleep_until(deadline); // see sat_cpu: ~jthread stops before it joins
     }
     ::rmdir(dir.c_str());
     return {total_writes.load(), total_bytes.load()};
@@ -449,6 +457,7 @@ std::pair<uint64_t, uint64_t> sat_net(int seconds, unsigned workers) {
                     total_bytes.fetch_add(bytes, std::memory_order_relaxed);
                 });
             }
+            std::this_thread::sleep_until(deadline); // see sat_cpu: ~jthread stops before it joins
         } // sender pool joins here
         stop.store(true, std::memory_order_relaxed);
     } // receiver joins here (notices `stop` within ~200ms)
