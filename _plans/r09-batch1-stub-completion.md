@@ -593,7 +593,7 @@ hello-syscall text.
 |---|---|
 | S1 golden capture 37 | pending |
 | S2 golden capture 40 | pending |
-| S3 verify.lua 37 | pending |
+| S3 verify.lua 37 | done — 50 assertions, clean pass with `LSP_LANG=cpp` (`PASS 50 / FAIL 0`); `/bin/true` negative control confirmed FAIL (`PASS 9 / FAIL 41`) |
 | S4 verify.lua 40 | pending |
 | S5 Go port 37 | pending |
 | S6 Rust port 37 | pending |
