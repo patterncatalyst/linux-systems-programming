@@ -2,6 +2,7 @@
 title: "r09 batch 1 — stub completion for examples 37 and 40"
 layout: plan
 render_with_liquid: false
+published: false
 ---
 
 # r09 batch 1 — stub completion for examples 37 and 40

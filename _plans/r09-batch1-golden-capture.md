@@ -2,6 +2,7 @@
 title: "r09 batch 1 — golden capture from the C++ reference"
 layout: plan
 render_with_liquid: false
+published: false
 ---
 
 # r09 batch 1 — golden capture from the C++ reference

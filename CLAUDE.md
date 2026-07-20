@@ -81,3 +81,9 @@ Ruby), examples in `examples/NN-slug/{cpp,go,rust}/`, chapters in
 - CI (`validate.yml`) checks site integrity + build smoke only; the
   authoritative gate is a host run of the runner with the lab up, recorded in
   `_plans/`.
+- `_plans` is a **published** collection (`output: true`), and
+  `_plans/iteration-plan.md` is reader-facing — it is linked as "Roadmap" from
+  `_includes/footer.html` and `_layouts/part_index.html`, so never unpublish or
+  rename it without fixing both links. **Internal working plans and capture
+  dumps must set `published: false` in their front matter** so they stay in git
+  for resumability without shipping to the site.
