@@ -8,6 +8,4 @@ name = "app"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "1"
-core_affinity = "0.8"
-nix = { version = "0.31", features = ["signal"] }
+nix = { version = "0.31", features = ["socket", "net", "poll", "sched", "signal", "fs"] }
