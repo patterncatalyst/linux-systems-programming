@@ -587,16 +587,96 @@ hello-syscall text.
   half-way cases. Verify must match `%d+%.%d%d` shapes and numeric ranges, never
   exact decimal strings compared across languages.
 
+## Port findings — example 40 (S7/S8)
+
+Recorded from the Go and Rust ports of `chatterd-fastpath`. Two of the three
+were pre-empted by the Risks section above; the third was not, and is the one
+worth carrying into chapter 40's prose.
+
+### 1. Go shutdown — the `SA_RESTART`/netpoller divergence (predicted, Risk 3)
+
+Confirmed exactly as Risk 3 warned. The C++ reference unblocks an in-flight
+`read(2)`/`poll(2)` by installing a **non-`SA_RESTART`** handler so the syscall
+returns `EINTR` and the loop notices the stop flag. That mechanism is
+unavailable to Go: the Go runtime installs its own `SA_RESTART` handlers, and a
+"blocking" read on a `net.Conn` never sits in a syscall to begin with — the
+netpoller parks the goroutine on an epoll registration. No signal makes that
+read return `EINTR`.
+
+The Go port therefore reaches identical observable behavior by a different
+mechanism: a `signal.Notify` goroutine sets the stop flag and then **closes the
+listener and the live connection**. Closing is what wakes a parked netpoller
+read — the `shutdown(2)`-driven wakeup the C++ header itself cites from ch21.
+The accept loop additionally carries a 200ms deadline mirroring the C++ `poll`
+timeout, so shutdown stays bounded even if a close races an in-flight accept.
+The busy-poll path takes a dup'd fd out of the netpoller (`TCPConn.File()` +
+`O_NONBLOCK`) and is woken by `shutdown(SHUT_RDWR)` on that raw fd. Verified: the
+SIGINT assertion (the one Risk 3 flagged Go was most likely to fail) passes,
+`PASS 28 / FAIL 0`.
+
+### 2. Go pinning proof — the `/proc` thread-group leader (predicted, Risk 2)
+
+As Risk 2 warned, `sched_setaffinity` on a goroutine is meaningless (goroutines
+migrate between Ms). The port pins with `runtime.LockOSThread` + `GOMAXPROCS(1)`
+to nail the hot loop to one M, then calls `SchedSetaffinity` **twice** — once
+with pid 0 (the calling thread, which is what actually restricts the loop) and
+once with the process pid (the thread-group leader, which is what
+`/proc/<pid>/status` reports and phase A reads). This is a lighter touch than
+the plan's "every tid in `/proc/self/task`" note and was sufficient: phase A
+prints `fastpath-cpus-allowed 1` (single CPU) and `naive-cpus-allowed 0-1` (full
+set), the kernel-level proof, on every run.
+
+### 3. Go range check — `runtime.NumCPU()` masked by `taskset` (NOT predicted)
+
+**This is the novel finding — nothing in the Risks section anticipated it.** The
+bench driver's phase B launches the server under `taskset -c 1`. The C++ range
+check uses `sysconf(_SC_NPROCESSORS_ONLN)`, which reports CPUs online
+**system-wide** (2 on the guest) and is blind to the affinity mask, so a pin to
+CPU 1 is in range. Go's `runtime.NumCPU()` returns the size of the process's
+**affinity mask** — under `taskset -c 1` that is 1 — so the port's own range
+check rejected the pin to CPU 1 with `app: error: cpu 1 out of range (0..0)`,
+and the whole phase-B timing comparison failed to start.
+
+This is the same class of bug as `hardware_concurrency()` lying about its
+container (the running theme of this part), but reached through an unexpected
+door: a `taskset` affinity mask rather than a cgroup quota. The count that
+matters for a *range check on absolute CPU indices* is the system-wide online
+count, not the caller's affinity-masked view. The fix is `onlineCPUs()`, which
+parses `/sys/devices/system/cpu/online` to match the C++ `sysconf` semantics.
+C++ and Rust never hit this because both use `sysconf(_SC_NPROCESSORS_ONLN)`
+directly.
+
+### 4. Rust — the port that follows C++ verbatim
+
+Unlike Go, Rust makes real blocking syscalls (no M:N runtime parking work off
+the syscall), so the C++ non-`SA_RESTART` → `EINTR` → notice-the-stop-flag
+technique works **verbatim**. The catch is that std's higher-level wrappers hide
+`EINTR` — `TcpListener::accept` retries it internally (`cvt_r`) and
+`Read::read_exact` treats `ErrorKind::Interrupted` as "try again" — so the
+servers are built on raw fds via `nix` (`OwnedFd` as the RAII `Socket`), where
+every `EINTR` is handled explicitly. Pinning is a single `sched_setaffinity(0,
+…)`: the process is single-threaded (tid == pid), so one call both pins the hot
+loop and shows up in `/proc/<pid>/status` — no `LockOSThread`/`GOMAXPROCS` dance.
+`Cargo.toml` dropped `core_affinity`/`anyhow`/`rustix`; `nix` now carries
+`socket`/`net`/`poll`/`sched`/`signal`/`fs`. Verified `PASS`, median(naive
+p50)=12063 ns vs median(fastpath p50)=7747 ns.
+
+### Whole-example gate
+
+`test-all-examples.py --only 40-low-latency-fastpath --mode vm` — all three
+languages PASS in one runner pass; per-run margins cpp 1.47x, go 1.62x, rust
+1.51x, all clearing the `verify.lua` 0.90-factor gate.
+
 ## Progress
 
 | Step | Status |
 |---|---|
-| S1 golden capture 37 | pending |
-| S2 golden capture 40 | pending |
+| S1 golden capture 37 | done — see `r09-batch1-golden-capture.md` |
+| S2 golden capture 40 | done — see `r09-batch1-golden-capture.md` |
 | S3 verify.lua 37 | done — 50 assertions, clean pass with `LSP_LANG=cpp` (`PASS 50 / FAIL 0`); `/bin/true` negative control confirmed FAIL (`PASS 9 / FAIL 41`) |
-| S4 verify.lua 40 | pending |
+| S4 verify.lua 40 | done — clean pass with `LSP_LANG=cpp` (`PASS 46 / FAIL 0`), commit `4ccb916` |
 | S5 Go port 37 | pending |
 | S6 Rust port 37 | pending |
-| S7 Go port 40 | pending |
-| S8 Rust port 40 | pending |
-| S9 runner gate | pending |
+| S7 Go port 40 | done — `PASS 28 / FAIL 0`, commit `ba1387a` (see Port findings 1–3) |
+| S8 Rust port 40 | done — `PASS`, commit `127c049` (see Port finding 4) |
+| S9 runner gate | 40 done (all three languages PASS in one `--mode vm` pass); 37 pending |
