@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 470" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="20" width="1180" height="190" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">kernel-maintained files (procfs / sysfs, no root)</text>
+<rect x="20" y="230" width="1180" height="260" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="250" font-size="12" font-weight="700" fill="#1d1d1d">sysagent take_snapshot(interval_ms)</text>
+<rect x="50" y="60" width="190" height="70" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="145.0" y="85.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">/proc/stat</text>
+<text x="145.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">cpu jiffies</text>
+<text x="145.0" y="117.5" font-size="11.5" fill="#555555" text-anchor="middle">counter, since boot</text>
+<rect x="260" y="60" width="190" height="70" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="355.0" y="85.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">/proc/loadavg</text>
+<text x="355.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">load1/5/15, runnable/total</text>
+<text x="355.0" y="117.5" font-size="11.5" fill="#555555" text-anchor="middle">gauge</text>
+<rect x="470" y="60" width="190" height="70" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="565.0" y="85.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">/proc/meminfo</text>
+<text x="565.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">MemTotal, MemAvailable</text>
+<text x="565.0" y="117.5" font-size="11.5" fill="#555555" text-anchor="middle">gauge</text>
+<rect x="680" y="60" width="190" height="70" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="775.0" y="85.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">/proc/diskstats</text>
+<text x="775.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">reads/writes/sectors</text>
+<text x="775.0" y="117.5" font-size="11.5" fill="#555555" text-anchor="middle">counter</text>
+<rect x="890" y="60" width="150" height="70" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="965.0" y="85.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">/proc/net/dev</text>
+<text x="965.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">rx/tx bytes</text>
+<text x="965.0" y="117.5" font-size="11.5" fill="#555555" text-anchor="middle">counter</text>
+<rect x="1060" y="60" width="130" height="70" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="1125.0" y="85.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">cgroup PSI</text>
+<text x="1125.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">cpu/mem/io.pressure</text>
+<text x="1125.0" y="117.5" font-size="11.5" fill="#555555" text-anchor="middle">gauge (avg10)</text>
+<rect x="50" y="155" width="190" height="45" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="145.0" y="175.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">t0 read, t1 read</text>
+<text x="145.0" y="192.5" font-size="11.5" fill="#555555" text-anchor="middle">interval_ms apart</text>
+<rect x="1060" y="155" width="130" height="45" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="1125.0" y="175.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">/proc/self/cgroup</text>
+<text x="1125.0" y="192.5" font-size="11.5" fill="#555555" text-anchor="middle">0::&lt;path&gt; lookup</text>
+<rect x="60" y="260" width="230" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="175.0" y="288.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">t0 = read_cpu_ticks()</text>
+<text x="175.0" y="305.0" font-size="11.5" fill="#555555" text-anchor="middle">one read, no sleep yet</text>
+<rect x="60" y="340" width="230" height="100" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="175.0" y="373.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">5 concurrent readers</text>
+<text x="175.0" y="390.0" font-size="11.5" fill="#555555" text-anchor="middle">loadavg · meminfo</text>
+<text x="175.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">diskstats · netdev · psi</text>
+<text x="175.0" y="420.0" font-size="11.5" fill="#555555" text-anchor="middle">jthread / goroutine / scoped thread</text>
+<rect x="340" y="340" width="200" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="440.0" y="368.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">sleep(interval_ms)</text>
+<text x="440.0" y="385.0" font-size="11.5" fill="#555555" text-anchor="middle">default 200ms</text>
+<rect x="340" y="260" width="200" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="440.0" y="288.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">t1 = read_cpu_ticks()</text>
+<text x="440.0" y="305.0" font-size="11.5" fill="#555555" text-anchor="middle">second read, after sleep</text>
+<rect x="600" y="300" width="260" height="100" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="730.0" y="340.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">delta = t1 - t0</text>
+<text x="730.0" y="357.5" font-size="11.5" fill="#dddddd" text-anchor="middle">busy = user+nice+sys+irq+softirq+steal</text>
+<text x="730.0" y="372.5" font-size="11.5" fill="#dddddd" text-anchor="middle">cpu_util_pct = 100 * d_busy / d_total</text>
+<rect x="920" y="300" width="240" height="100" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="1040.0" y="340.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Snapshot{}</text>
+<text x="1040.0" y="357.5" font-size="11.5" fill="#555555" text-anchor="middle">one struct, byte-identical</text>
+<text x="1040.0" y="372.5" font-size="11.5" fill="#555555" text-anchor="middle">field names, all 3 languages</text>
+<path d="M145,130 L145,155" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M1125,130 L1125,155" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M175,320 L175,340" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="181.0" y="324.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">t0 read</text>
+<text x="181.0" y="324.0" font-size="11" fill="#b8650a" text-anchor="middle">t0 read</text>
+<path d="M290,370 L340,370" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="321.0" y="364.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">in parallel with</text>
+<text x="321.0" y="364.0" font-size="11" fill="#555" text-anchor="middle">in parallel with</text>
+<path d="M440,340 L440,320" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="446.0" y="324.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">sleep ends → t1 read</text>
+<text x="446.0" y="324.0" font-size="11" fill="#b8650a" text-anchor="middle">sleep ends → t1 read</text>
+<path d="M290,260 L340,290" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="321.0" y="269.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">joins before delta</text>
+<text x="321.0" y="269.0" font-size="11" fill="#555" text-anchor="middle">joins before delta</text>
+<path d="M540,290 L540,290" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M860,350 L920,350" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="896.0" y="344.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">fills</text>
+<text x="896.0" y="344.0" font-size="11" fill="#555" text-anchor="middle">fills</text>
+<path d="M540,400 L600,380" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="576.0" y="384.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">join()</text>
+<text x="576.0" y="384.0" font-size="11" fill="#555" text-anchor="middle">join()</text>
+<text x="40" y="205" font-size="12" fill="#b8650a" text-anchor="start" font-weight="700">Counters (stat, diskstats, net/dev) need TWO samples — a single read is cumulative since boot, not a rate.</text>
+<text x="40" y="500" font-size="12" fill="#555555" text-anchor="start">Gauges (loadavg, meminfo, PSI avg10) are valid from one read — only the CPU line needs the delta.</text>
+</svg>

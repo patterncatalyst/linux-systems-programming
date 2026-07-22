@@ -146,3 +146,29 @@ examples:
     langs: [cpp, go, rust]
     mode: local
     timeout: 360
+  - id: 36-proc-sys-and-the-agent
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 300
+  - id: 37-use-method-60s-analysis
+    langs: [cpp, go, rust]
+    mode: vm
+    timeout: 360
+  - id: 38-opentelemetry-to-lgtm
+    langs: [cpp, go, rust]
+    mode: local
+    requires: [lgtm]
+    timeout: 420
+  - id: 39-benchmarking-without-lies
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 360
+  - id: 40-low-latency-fastpath
+    langs: [cpp, go, rust]
+    mode: vm
+    timeout: 420
+  - id: 41-capstone-fleet
+    langs: [cpp, go, rust]
+    mode: vm-peer
+    requires: [lgtm]
+    timeout: 600

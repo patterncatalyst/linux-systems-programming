@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 500" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="20" width="1180" height="160" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">sysagent (one binary, cpp | go | rust)</text>
+<rect x="20" y="200" width="1180" height="150" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="220" font-size="12" font-weight="700" fill="#1d1d1d">cross-check tools (same host, same moment)</text>
+<rect x="20" y="370" width="1180" height="110" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="390" font-size="12" font-weight="700" fill="#1d1d1d">forward references</text>
+<rect x="60" y="60" width="260" height="90" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="190.0" y="95.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">sample [--json]</text>
+<text x="190.0" y="112.5" font-size="11.5" fill="#555555" text-anchor="middle">one snapshot to stdout</text>
+<text x="190.0" y="127.5" font-size="11.5" fill="#555555" text-anchor="middle">text or JSON</text>
+<rect x="380" y="60" width="260" height="90" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="510.0" y="95.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">serve --port P</text>
+<text x="510.0" y="112.5" font-size="11.5" fill="#555555" text-anchor="middle">GET /metrics per request</text>
+<text x="510.0" y="127.5" font-size="11.5" fill="#555555" text-anchor="middle">hand-rolled HTTP/1.1</text>
+<rect x="700" y="60" width="460" height="90" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="930.0" y="95.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">take_snapshot() / procfs readers</text>
+<text x="930.0" y="112.5" font-size="11.5" fill="#555555" text-anchor="middle">shared by both subcommands</text>
+<text x="930.0" y="127.5" font-size="11.5" fill="#555555" text-anchor="middle">identical field schema, all 3 languages</text>
+<rect x="50" y="240" width="170" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="135.0" y="273.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">vmstat 1 2</text>
+<text x="135.0" y="290.0" font-size="11.5" fill="#555555" text-anchor="middle">us+sy vs cpu_util_pct</text>
+<rect x="240" y="240" width="170" height="70" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="325.0" y="265.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">mpstat -P ALL 1</text>
+<text x="325.0" y="282.5" font-size="11.5" fill="#555555" text-anchor="middle">not installed here</text>
+<text x="325.0" y="297.5" font-size="11.5" fill="#555555" text-anchor="middle">ch37 lab VM</text>
+<rect x="430" y="240" width="170" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="515.0" y="273.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">free -m</text>
+<text x="515.0" y="290.0" font-size="11.5" fill="#555555" text-anchor="middle">MemAvailable vs available</text>
+<rect x="620" y="240" width="170" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="705.0" y="273.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">ss -s</text>
+<text x="705.0" y="290.0" font-size="11.5" fill="#555555" text-anchor="middle">socket census</text>
+<rect x="810" y="240" width="170" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="895.0" y="273.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">awk /proc/meminfo</text>
+<text x="895.0" y="290.0" font-size="11.5" fill="#555555" text-anchor="middle">exact MemTotal match</text>
+<rect x="1000" y="240" width="170" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="1085.0" y="273.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">kill -INT</text>
+<text x="1085.0" y="290.0" font-size="11.5" fill="#555555" text-anchor="middle">clean serve shutdown</text>
+<rect x="60" y="405" width="340" height="55" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="230.0" y="430.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Chapter 37: USE method + 60-second checklist</text>
+<text x="230.0" y="447.5" font-size="11.5" fill="#555555" text-anchor="middle">sysagent&#x27;s fields, read systematically</text>
+<rect x="430" y="405" width="340" height="55" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="600.0" y="430.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Chapter 38: OTLP export</text>
+<text x="600.0" y="447.5" font-size="11.5" fill="#555555" text-anchor="middle">sysagent&#x27;s numbers into the LGTM stack</text>
+<rect x="800" y="405" width="360" height="55" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="980.0" y="430.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Chapter 45: PCP pmrep</text>
+<text x="980.0" y="447.5" font-size="11.5" fill="#555555" text-anchor="middle">an alternate collector over the same /proc</text>
+<path d="M320,105 L380,105" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="356.0" y="99.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">shares</text>
+<text x="356.0" y="99.0" font-size="11" fill="#555" text-anchor="middle">shares</text>
+<path d="M640,105 L700,105" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="676.0" y="99.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">calls</text>
+<text x="676.0" y="99.0" font-size="11" fill="#555" text-anchor="middle">calls</text>
+<path d="M190,150 L135,240" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="168.5" y="189.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">compared</text>
+<text x="168.5" y="189.0" font-size="11" fill="#b8650a" text-anchor="middle">compared</text>
+<path d="M210,150 L325,240" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<path d="M470,150 L515,240" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="498.5" y="189.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">compared</text>
+<text x="498.5" y="189.0" font-size="11" fill="#b8650a" text-anchor="middle">compared</text>
+<path d="M490,150 L895,240" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="698.5" y="189.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">same host</text>
+<text x="698.5" y="189.0" font-size="11" fill="#555" text-anchor="middle">same host</text>
+<path d="M610,150 L1085,240" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="853.5" y="189.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">SIGINT</text>
+<text x="853.5" y="189.0" font-size="11" fill="#555" text-anchor="middle">SIGINT</text>
+<text x="40" y="195" font-size="12" fill="#555555" text-anchor="start">Every arrow below is a number quoted from both sides, not just a tool invocation.</text>
+</svg>
