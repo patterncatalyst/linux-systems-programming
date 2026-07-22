@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 372" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="18" y="44" width="270" height="306" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="30" y="64" font-size="12" font-weight="700" fill="#1d1d1d">serve — one traced request per input line</text>
+<rect x="34" y="70" width="238" height="46" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="153.0" y="91.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">span: request</text>
+<text x="153.0" y="108.0" font-size="11.5" fill="#555555" text-anchor="middle">(attr request.seq)</text>
+<rect x="34" y="136" width="114" height="44" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="91.0" y="156.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">span: work</text>
+<text x="91.0" y="173.0" font-size="11.5" fill="#555555" text-anchor="middle">sleep 1+seq%4 ms</text>
+<rect x="158" y="136" width="114" height="44" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="215.0" y="156.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">span: respond</text>
+<text x="215.0" y="173.0" font-size="11.5" fill="#555555" text-anchor="middle">write ok &lt;seq&gt;</text>
+<rect x="34" y="212" width="238" height="40" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="153.0" y="237.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">metric requests_total  (+1 / request)</text>
+<rect x="34" y="262" width="238" height="40" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="153.0" y="287.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">metric request_duration  (ms)</text>
+<rect x="330" y="150" width="150" height="74" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="405.0" y="185.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">OTLP / HTTP exporter</text>
+<text x="405.0" y="202.0" font-size="11.5" fill="#555555" text-anchor="middle">batch ~2s · flush on SIGINT</text>
+<rect x="522" y="150" width="132" height="74" rx="9" fill="#f4f4f4" stroke="#888888" stroke-width="1.5"/>
+<text x="588.0" y="185.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">OTel collector</text>
+<text x="588.0" y="202.0" font-size="11.5" fill="#555555" text-anchor="middle">:4318</text>
+<rect x="690" y="80" width="150" height="54" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="765.0" y="105.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Tempo</text>
+<text x="765.0" y="122.0" font-size="11.5" fill="#555555" text-anchor="middle">traces</text>
+<rect x="690" y="166" width="150" height="54" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="765.0" y="191.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Prometheus</text>
+<text x="765.0" y="208.0" font-size="11.5" fill="#555555" text-anchor="middle">metrics</text>
+<rect x="876" y="120" width="110" height="74" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="931.0" y="155.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">Grafana</text>
+<text x="931.0" y="172.0" font-size="11.5" fill="#dddddd" text-anchor="middle">query :3000</text>
+<path d="M91,116 L91,136" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M215,116 L215,136" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M288,187 L330,187" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="315.0" y="181.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">OTLP</text>
+<text x="315.0" y="181.0" font-size="11" fill="#555" text-anchor="middle">OTLP</text>
+<path d="M480,187 L522,187" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="507.0" y="181.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">POST /v1/{traces,metrics}</text>
+<text x="507.0" y="181.0" font-size="11" fill="#b8650a" text-anchor="middle">POST /v1/{traces,metrics}</text>
+<path d="M654,175 L690,107" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="678.0" y="135.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">spans</text>
+<text x="678.0" y="135.0" font-size="11" fill="#555" text-anchor="middle">spans</text>
+<path d="M654,193 L690,193" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="678.0" y="187.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">metrics</text>
+<text x="678.0" y="187.0" font-size="11" fill="#555" text-anchor="middle">metrics</text>
+<path d="M840,107 L876,140" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M840,193 L876,168" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="500" y="338" font-size="12" fill="#666" text-anchor="middle">cpp · go · rust — each tags service.name = lsp-otel-&lt;lang&gt;, so the three never collide in the shared stack</text>
+</svg>
