@@ -8,10 +8,8 @@ opentelemetry-cpp/*:with_otlp_grpc=False
 opentelemetry-cpp/*:with_zipkin=False
 opentelemetry-cpp/*:with_prometheus=False
 opentelemetry-cpp/*:with_elasticsearch=False
+libcurl/*:with_ssl=False
 
 [generators]
 CMakeDeps
 CMakeToolchain
-
-[layout]
-cmake_layout

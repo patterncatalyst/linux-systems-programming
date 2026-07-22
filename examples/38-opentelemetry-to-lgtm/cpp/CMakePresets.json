@@ -15,7 +15,8 @@
       "name": "release",
       "inherits": "_base",
       "displayName": "Release (-O2 with debug info)",
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+      "toolchainFile": "${sourceDir}/build/release/conan_toolchain.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
     },
     {
       "name": "debug",

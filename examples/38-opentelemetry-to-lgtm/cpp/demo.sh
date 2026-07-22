@@ -6,6 +6,7 @@ REPO_ROOT="$(cd ../../.. && pwd)"
 BIN=build/release/app
 
 build() {
+    conan install . --output-folder=build/release -s build_type=Release --build=missing
     cmake --preset release
     cmake --build --preset release
 }
