@@ -164,7 +164,7 @@ the dispatcher, rather than one 1300-line drop.
 |---|---|
 | S1 contract extraction | done — captured empirically from the Go reference (usage, sysagent/fwatch/chatterd/pmon output shapes, the `from=NICK@node` bridge tag, `landlock ABI=N enforced`, `bounding_set_dropped=N no_new_privs=1`, `sysagent_cpu_pct` gauge) |
 | S2 verify.lua (go gate) | done — `PASS 31 / FAIL 0` for `LSP_LANG=go` through the runner. Following ex23's convention the verify runs entirely on LOCAL loopback (fleet, cross-node bridge on two 127.0.0.1 ports, telemetry to the local LGTM) rather than orchestrating two guests over ssh — far more tractable, and the bridge logic is identical on loopback; the real two-host run is the chapter's demo |
-| S3 C++ port | pending |
-| S4 Rust port | pending |
+| S3 C++ port | done — `PASS 31 / FAIL 0` for `LSP_LANG=cpp` through the runner, first gate. Multi-file (pmon/chatterd/sysagent/fwatch/proto/caps/telemetry/util), reusing ex33/34/36/38/40; fixed a real telemetry-scaffold bug (`shared_ptr` vs `nostd::shared_ptr`) and the OTLP CMake linkage. Builds offline |
+| S4 Rust port | pending (deps de-risked — all cached) |
 | S5 whole-fleet gate | pending |
 | S6 chapter 41 | pending |
