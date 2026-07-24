@@ -1,5 +1,5 @@
 [package]
-name = "template-hello"
+name = "capstone-fleet"
 version = "0.1.0"
 edition = "2024"
 
@@ -8,4 +8,15 @@ name = "app"
 path = "src/main.rs"
 
 [dependencies]
-rustix = { version = "1", features = ["system"] }
+anyhow = "1"
+libc = "0.2"
+nix = { version = "0.31", features = ["fs", "inotify", "net", "poll", "process", "signal"] }
+landlock = "0.4"
+opentelemetry = "0.32"
+opentelemetry_sdk = "0.32"
+opentelemetry-otlp = { version = "0.32", default-features = false, features = [
+  "http-proto",
+  "reqwest-blocking-client",
+  "trace",
+  "metrics",
+] }
