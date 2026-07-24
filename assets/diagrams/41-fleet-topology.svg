@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 452" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="24" y="48" width="452" height="300" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="36" y="68" font-size="12" font-weight="700" fill="#1d1d1d">systems-target · node=target</text>
+<rect x="524" y="48" width="452" height="300" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="536" y="68" font-size="12" font-weight="700" fill="#1d1d1d">systems-peer · node=peer</text>
+<rect x="44" y="78" width="412" height="52" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="250.0" y="102.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pmon — supervisor</text>
+<text x="250.0" y="119.0" font-size="11.5" fill="#555555" text-anchor="middle">drops caps · no_new_privs · restarts · health</text>
+<rect x="44" y="162" width="126" height="66" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="107.0" y="193.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">fwatch</text>
+<text x="107.0" y="210.0" font-size="11.5" fill="#555555" text-anchor="middle">inotify + Landlock</text>
+<rect x="180" y="162" width="126" height="66" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="243.0" y="193.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">sysagent</text>
+<text x="243.0" y="210.0" font-size="11.5" fill="#555555" text-anchor="middle">/proc → OTLP</text>
+<rect x="316" y="162" width="140" height="66" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="386.0" y="193.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">chatterd</text>
+<text x="386.0" y="210.0" font-size="11.5" fill="#555555" text-anchor="middle">chat + bridge</text>
+<rect x="544" y="78" width="412" height="52" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="750.0" y="102.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pmon — supervisor</text>
+<text x="750.0" y="119.0" font-size="11.5" fill="#555555" text-anchor="middle">drops caps · no_new_privs · restarts · health</text>
+<rect x="544" y="162" width="140" height="66" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="614.0" y="193.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">chatterd</text>
+<text x="614.0" y="210.0" font-size="11.5" fill="#555555" text-anchor="middle">chat + bridge</text>
+<rect x="694" y="162" width="126" height="66" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="757.0" y="193.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">sysagent</text>
+<text x="757.0" y="210.0" font-size="11.5" fill="#555555" text-anchor="middle">/proc → OTLP</text>
+<rect x="830" y="162" width="126" height="66" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="893.0" y="193.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">fwatch</text>
+<text x="893.0" y="210.0" font-size="11.5" fill="#555555" text-anchor="middle">inotify + Landlock</text>
+<rect x="396" y="378" width="208" height="56" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="500.0" y="404.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">host LGTM stack</text>
+<text x="500.0" y="421.0" font-size="11.5" fill="#dddddd" text-anchor="middle">OTLP :4318 via libvirt gateway</text>
+<path d="M130,130 L107,162" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M240,130 L243,162" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M360,130 L386,162" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M640,130 L614,162" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M760,130 L757,162" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M870,130 L893,162" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M456,195 L544,195" fill="none" stroke="#b8650a" stroke-width="2" marker-start="url(#am)" marker-end="url(#am)"/>
+<text x="506.0" y="189.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">bridge  from=NICK@node</text>
+<text x="506.0" y="189.0" font-size="11" fill="#b8650a" text-anchor="middle">bridge  from=NICK@node</text>
+<path d="M243,228 L440,378" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="347.5" y="297.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">OTLP</text>
+<text x="347.5" y="297.0" font-size="11" fill="#555" text-anchor="middle">OTLP</text>
+<path d="M757,228 L560,378" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<text x="664.5" y="297.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">OTLP</text>
+<text x="664.5" y="297.0" font-size="11" fill="#555" text-anchor="middle">OTLP</text>
+<text x="250" y="250" font-size="11" fill="#666" text-anchor="middle">sandbox: cap-drop + Landlock ABI=7 (guest)</text>
+<text x="750" y="250" font-size="11" fill="#666" text-anchor="middle">sandbox: cap-drop + Landlock ABI=7 (guest)</text>
+</svg>
