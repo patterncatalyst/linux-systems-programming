@@ -91,13 +91,13 @@ each port is more assembly than green-field:
   offline. libcap/prctl and Landlock are kernel headers/syscalls (no package).
   **Ready.**
 - **Rust** — `rust/Cargo.toml` is **still the template stub** (`template-hello`,
-  only `rustix`). The port must choose and add: `opentelemetry`/`-otlp`/`_sdk`
-  (0.32, cached from ex 38), a Landlock path (the `landlock` crate — **offline
-  availability UNVERIFIED**), inotify (`nix` or the `inotify` crate —
-  **unverified**), `libc`/`nix` for prctl. **First S3/S4 task: `cargo add` the
-  candidates and confirm `cargo fetch --offline` succeeds; if `landlock`/
-  `inotify` crates aren't cached, fall back to raw syscalls via `nix`/`libc`
-  (Landlock via `landlock_*` syscalls directly, as ex 33's Rust may already do).**
+  only `rustix`); the port must set the deps. **All confirmed cached offline
+  (checked S3-prep):** `landlock 0.4` (ex 33 uses it; `landlock-0.4.5.crate`
+  cached), inotify via `nix` with the `inotify` feature (ex 09's approach; `nix
+  0.30/0.31` cached — no separate inotify crate), `opentelemetry-otlp 0.32`
+  (ex 38; cached), plus `libc`/`anyhow`. prctl via `libc`/`nix`. Landlock's ABI
+  probe goes through the raw `syscall(2)` as ex 33's Rust already does. **No
+  offline-availability risk remains for the Rust port.**
 - **Go** — full opentelemetry-go stack + `google/uuid`, already in `go.sum`.
 
 ## Approach
