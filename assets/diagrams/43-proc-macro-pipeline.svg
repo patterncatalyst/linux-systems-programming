@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 460" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="30" width="960" height="190" rx="12" fill="#eef4fb" stroke="#ddd"/>
+<text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">app crate -- main.rs (built around the sysmacros expansion)</text>
+<rect x="20" y="250" width="960" height="190" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="32" y="270" font-size="12" font-weight="700" fill="#1d1d1d">sysmacros -- a separate proc-macro crate, compiled FIRST</text>
+<rect x="50" y="80" width="210" height="110" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="155.0" y="110.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">main.rs (annotated source)</text>
+<text x="155.0" y="127.5" font-size="11.5" fill="#555555" text-anchor="middle">#[derive(SysError)]</text>
+<text x="155.0" y="142.5" font-size="11.5" fill="#555555" text-anchor="middle">enum PmonError { .. }</text>
+<text x="155.0" y="157.5" font-size="11.5" fill="#555555" text-anchor="middle">#[instrument]</text>
+<text x="155.0" y="172.5" font-size="11.5" fill="#555555" text-anchor="middle">fn hash_chunk(len) -&gt; u64</text>
+<rect x="310" y="95" width="190" height="80" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="405.0" y="125.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">rustc: macro invocation</text>
+<text x="405.0" y="142.5" font-size="11.5" fill="#555555" text-anchor="middle">sees the attribute/derive</text>
+<text x="405.0" y="157.5" font-size="11.5" fill="#555555" text-anchor="middle">packages a TokenStream</text>
+<rect x="560" y="95" width="190" height="80" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="655.0" y="125.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">rustc: expand &amp; typecheck</text>
+<text x="655.0" y="142.5" font-size="11.5" fill="#555555" text-anchor="middle">splices tokens into the AST</text>
+<text x="655.0" y="157.5" font-size="11.5" fill="#555555" text-anchor="middle">typechecks the result</text>
+<rect x="800" y="80" width="170" height="110" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="885.0" y="118.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">app binary</text>
+<text x="885.0" y="135.0" font-size="11.5" fill="#dddddd" text-anchor="middle">generated Display + Error</text>
+<text x="885.0" y="150.0" font-size="11.5" fill="#dddddd" text-anchor="middle">instrumented hash_chunk</text>
+<text x="885.0" y="165.0" font-size="11.5" fill="#dddddd" text-anchor="middle">(tokens, now real code)</text>
+<rect x="310" y="290" width="190" height="90" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="405.0" y="325.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">syn::parse_macro_input!</text>
+<text x="405.0" y="342.5" font-size="11.5" fill="#555555" text-anchor="middle">TokenStream -&gt; DeriveInput</text>
+<text x="405.0" y="357.5" font-size="11.5" fill="#555555" text-anchor="middle">/ ItemFn -- a real, typed AST</text>
+<rect x="560" y="290" width="190" height="90" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="655.0" y="325.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">quote! { .. }</text>
+<text x="655.0" y="342.5" font-size="11.5" fill="#555555" text-anchor="middle">AST -&gt; new TokenStream2</text>
+<text x="655.0" y="357.5" font-size="11.5" fill="#555555" text-anchor="middle">Display impl / wrapped fn</text>
+<path d="M260,130 L308,130" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M405,176 L405,288" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="405.0" y="226.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">TokenStream (macro input)</text>
+<text x="405.0" y="226.0" font-size="11" fill="#555" text-anchor="middle">TokenStream (macro input)</text>
+<path d="M502,335 L558,335" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="536.0" y="329.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">AST</text>
+<text x="536.0" y="329.0" font-size="11" fill="#555" text-anchor="middle">AST</text>
+<path d="M655,288 L655,176" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="655.0" y="238.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">TokenStream (macro output)</text>
+<text x="655.0" y="238.0" font-size="11" fill="#b8650a" text-anchor="middle">TokenStream (macro output)</text>
+<path d="M752,130 L798,130" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="40" y="400" font-size="12" fill="#b8650a" text-anchor="start">sysmacros never runs at app runtime: it is pure tokens-in / tokens-out, executed only while rustc is compiling app.</text>
+<text x="40" y="420" font-size="12" fill="#555555" text-anchor="start">Two crates, one build: cargo compiles sysmacros to a host-side compiler plugin before it ever compiles main.rs.</text>
+</svg>
