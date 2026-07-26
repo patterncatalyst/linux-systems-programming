@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="20" width="900" height="400" rx="12" fill="#fafafa" stroke="#ddd"/>
+<rect x="140" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="165.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">0</text>
+<rect x="190" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="215.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">1</text>
+<rect x="240" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="265.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">2</text>
+<rect x="290" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="315.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">3</text>
+<rect x="340" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="365.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">4</text>
+<rect x="390" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="415.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">5</text>
+<rect x="440" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="465.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">6</text>
+<rect x="490" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="515.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">7</text>
+<rect x="540" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="565.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">8</text>
+<rect x="590" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="615.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">9</text>
+<rect x="640" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="665.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">10</text>
+<rect x="690" y="130" width="50" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="715.0" y="160.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">11</text>
+<rect x="140" y="80" width="200" height="32" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="240.0" y="101.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">magic: u32 (bytes 0..4)</text>
+<rect x="340" y="80" width="200" height="32" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="440.0" y="101.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">slots: u32 (bytes 4..8)</text>
+<rect x="140" y="220" width="400" height="100" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="340.0" y="253.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">SOUND: read_record(buf, oob=false)</text>
+<text x="340.0" y="270.0" font-size="11.5" fill="#555555" text-anchor="middle">read_unaligned::&lt;Record&gt;(ptr.add(0))</text>
+<text x="340.0" y="285.0" font-size="11.5" fill="#555555" text-anchor="middle">window [0..8) -- fully inside the 8-byte alloc</text>
+<text x="340.0" y="300.0" font-size="11.5" fill="#555555" text-anchor="middle">cargo +nightly miri run: exit 0, no UB</text>
+<rect x="340" y="340" width="400" height="100" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="540.0" y="373.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">--oob-read: read_record(buf, oob=true)</text>
+<text x="540.0" y="390.0" font-size="11.5" fill="#555555" text-anchor="middle">read_unaligned::&lt;Record&gt;(ptr.add(4))</text>
+<text x="540.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">window [4..12) -- 4 bytes past the 8-byte alloc</text>
+<text x="540.0" y="420.0" font-size="11.5" fill="#555555" text-anchor="middle">miri: &quot;...only 4 bytes from the end of the allocation&quot; (main.rs:57)</text>
+<path d="M140,220 L140,180" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M540,220 L540,180" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+<path d="M340,340 L340,180" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<path d="M740,340 L740,180" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<text x="140" y="60" font-size="12" fill="#1d1d1d" text-anchor="start" font-weight="700">BUF: [u8; 8] -- one 8-byte stack allocation (miri: &quot;alloc25&quot;)</text>
+<text x="540" y="145" font-size="10" fill="#b8650a" text-anchor="start">end of the allocation</text>
+<text x="540" y="200" font-size="11" fill="#b8650a" text-anchor="start">past the end (never allocated)</text>
+</svg>
