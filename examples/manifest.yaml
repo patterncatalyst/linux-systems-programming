@@ -176,3 +176,7 @@ examples:
     langs: [cpp, go, rust]
     mode: local
     timeout: 360
+  - id: 43-rust-macros-for-systems
+    langs: [rust]
+    mode: local
+    timeout: 300
