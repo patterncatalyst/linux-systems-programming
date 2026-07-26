@@ -172,3 +172,7 @@ examples:
     mode: vm-peer
     requires: [lgtm]
     timeout: 600
+  - id: 42-embedded-lua-scripting
+    langs: [cpp, go, rust]
+    mode: local
+    timeout: 360
