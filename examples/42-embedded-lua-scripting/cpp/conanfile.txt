@@ -1,0 +1,11 @@
+[requires]
+sol2/3.5.0
+lua/5.4.6
+
+[options]
+lua/*:with_tools=False
+lua/*:with_readline=False
+
+[generators]
+CMakeDeps
+CMakeToolchain

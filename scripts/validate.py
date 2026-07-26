@@ -281,7 +281,15 @@ def check_lua() -> None:
         print("note: lua not on PATH; skipping .lua syntax checks", file=sys.stderr)
         return
     stdin_check = "local f, e = loadfile(arg[1]) if not f then io.stderr:write(tostring(e) .. '\\n') os.exit(1) end"
+    # A .lua file that declares "validate: expect-syntax-error" is an
+    # intentionally-invalid fixture (e.g. chapter 42's policy-broken.lua, which
+    # demonstrates load-time rejection). Skip its syntax check by design.
     for luafile in script_files("*.lua"):
+        try:
+            if "validate: expect-syntax-error" in luafile.read_text(errors="replace"):
+                continue
+        except OSError:
+            pass
         if luac:
             r = subprocess.run([luac, "-p", str(luafile)], capture_output=True, text=True)
         else:
