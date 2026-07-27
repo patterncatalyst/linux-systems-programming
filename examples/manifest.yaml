@@ -180,3 +180,7 @@ examples:
     langs: [rust]
     mode: local
     timeout: 300
+  - id: 44-go-runtime-for-systems
+    langs: [go]
+    mode: local
+    timeout: 300
