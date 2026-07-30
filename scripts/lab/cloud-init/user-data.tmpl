@@ -80,6 +80,10 @@ packages:
 runcmd:
   # Enable the Cockpit socket so the web console is reachable at :9090.
   - [ systemctl, enable, --now, cockpit.socket ]
+  # SystemTap's kernel-module backend (Chapter 45) needs kernel-devel matching
+  # the RUNNING kernel; the cloud base image ships without it, and a plain
+  # `kernel-devel` can drift ahead of the booted kernel. Pin it to `uname -r`.
+  - [ bash, -c, "dnf install -y kernel-devel-$(uname -r) >> /var/log/lab-ready 2>&1 || echo 'kernel-devel: MISSING' >> /var/log/lab-ready" ]
   # Readiness stamp: bpftrace works and which kernel we're on.
   - [ bash, -c, "bpftrace --version > /var/log/lab-ready 2>&1 || echo 'bpftrace: MISSING' > /var/log/lab-ready" ]
   - [ bash, -c, "uname -r >> /var/log/lab-ready" ]
