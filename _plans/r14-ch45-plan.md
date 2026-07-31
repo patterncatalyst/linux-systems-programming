@@ -58,9 +58,18 @@ name mismatch (crit 5-6); invented CSS class (crit 10 two-span mix); "Honest:" l
 edge-into-space / hidden label (band for container boxes, edges terminate on box edge).
 
 ## Status
-- [ ] S1 diagram A
-- [ ] S2 diagram B
-- [ ] S3 prose
-- [ ] S4 catalogue
-- [ ] S5 manifest confirm
-- [ ] Phase 3 validate
+- [x] S1 diagram A — `45-analysis-suite-landscape.{svg,excalidraw}`
+- [x] S2 diagram B — `45-pcp-build-gate.{svg,excalidraw}`
+- [x] S3 prose — `_docs/45-linux-analysis-suites.md` (503 lines)
+- [x] S4 catalogue — README +2 rows
+- [x] S5 manifest confirm — id 45 already correct, no edit
+- [x] Phase 3 validate (Opus) — all 14 criteria MET, verdict **SHIP**, zero MUST-FIX
+
+## Gate (authoritative host run, 2026-07-30)
+- `python3 scripts/validate.py` → `validate: OK`
+- `python3 scripts/test-all-examples.py --only 45-linux-analysis-suites` → `1 passed, 0 failed, 0 skipped` (cpp PASS)
+- Example already CI-verified by build lane: podman image 265 MB, verify.lua PASS 10/0.
+- Verification is MIXED (recorded in footer): podman run + VM SystemTap kernel-module + Cockpit socket VERIFIED; Cockpit web-UI panels DESCRIBED, not browser-automated.
+
+## Merge
+Per user (r14): commit + PR, PAUSE for user merge approval (not autonomous).
