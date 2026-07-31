@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 660" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="40" width="340" height="590" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">Cockpit — web console (VM)</text>
+<rect x="380" y="40" width="340" height="590" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="392" y="60" font-size="12" font-weight="700" fill="#1d1d1d">SystemTap — kernel-module tracing (VM)</text>
+<rect x="740" y="40" width="340" height="590" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="752" y="60" font-size="12" font-weight="700" fill="#1d1d1d">PCP — pmcd + PMDAs (container, ch45)</text>
+<rect x="60" y="90" width="240" height="50" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="180.0" y="113.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">browser</text>
+<text x="180.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">https://&lt;vm&gt;:9090/</text>
+<rect x="60" y="190" width="240" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="180.0" y="218.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">cockpit-ws</text>
+<text x="180.0" y="235.0" font-size="11.5" fill="#555555" text-anchor="middle">one process — WebSocket + D-Bus</text>
+<rect x="60" y="320" width="110" height="55" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="115.0" y="345.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">systemd</text>
+<text x="115.0" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">guest services</text>
+<rect x="190" y="320" width="110" height="55" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="245.0" y="345.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">podman</text>
+<text x="245.0" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">guest containers</text>
+<rect x="410" y="90" width="260" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="540.0" y="113.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">.stp script</text>
+<text x="540.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">probe + printf source</text>
+<rect x="410" y="180" width="260" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="540.0" y="203.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">stap translator</text>
+<text x="540.0" y="220.0" font-size="11.5" fill="#555555" text-anchor="middle">elaborates + type-checks</text>
+<rect x="410" y="270" width="260" height="50" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="540.0" y="293.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">generated C</text>
+<text x="540.0" y="310.0" font-size="11.5" fill="#555555" text-anchor="middle">kernel-module source, emitted</text>
+<rect x="410" y="360" width="260" height="70" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="540.0" y="385.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">kernel module (insmod)</text>
+<text x="540.0" y="402.5" font-size="11.5" fill="#555555" text-anchor="middle">stap-module-ok (verified)</text>
+<text x="540.0" y="417.5" font-size="11.5" fill="#555555" text-anchor="middle">needs matching kernel-devel</text>
+<rect x="780" y="90" width="260" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="910.0" y="118.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pmda-openmetrics</text>
+<text x="910.0" y="135.0" font-size="11.5" fill="#555555" text-anchor="middle">file:///etc/lsp45/lsp45.prom</text>
+<rect x="820" y="280" width="180" height="70" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="910.0" y="313.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">pmcd</text>
+<text x="910.0" y="330.0" font-size="11.5" fill="#dddddd" text-anchor="middle">central metrics daemon</text>
+<rect x="780" y="460" width="260" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="910.0" y="488.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pmda-podman</text>
+<text x="910.0" y="505.0" font-size="11.5" fill="#555555" text-anchor="middle">podman.sock (ch34)</text>
+<rect x="780" y="560" width="260" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="910.0" y="588.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pmda-bcc — NOT shipped</text>
+<text x="910.0" y="605.0" font-size="11.5" fill="#555555" text-anchor="middle">super-privileged; ch30 on the VM</text>
+<path d="M180,140 L180,190" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="186.0" y="159.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">HTTP 200 (verified)</text>
+<text x="186.0" y="159.0" font-size="11" fill="#555" text-anchor="middle">HTTP 200 (verified)</text>
+<path d="M115,250 L115,320" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M245,250 L245,320" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M540,140 L540,180" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M540,230 L540,270" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M540,320 L540,360" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M910,150 L910,280" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M910,460 L910,350" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="60" y="410" font-size="11" fill="#555555" text-anchor="start">Web panels (Overview / Podman / Logs): described only —</text>
+<text x="60" y="426" font-size="11" fill="#555555" text-anchor="start">no browser automation in this session.</text>
+<text x="410" y="460" font-size="11" fill="#555555" text-anchor="start">Contrast: ch30&#x27;s dyninst backend was inconclusive on this host —</text>
+<text x="410" y="476" font-size="11" fill="#555555" text-anchor="start">the kernel-module path needed matching kernel-devel; now verified.</text>
+</svg>

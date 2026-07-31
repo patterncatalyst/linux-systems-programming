@@ -1,0 +1,79 @@
+# PCP (Performance Co-Pilot) container -- Fedora base, multi-stage, rootless
+# podman. No app code: this image ships pmcd + two layered PMDAs.
+#
+#   podman build -t lsp45-pcp -f Containerfile .
+#   podman run -d --name lsp45-pcp-demo --cpus=2 --memory=256m \
+#     -v "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/podman/podman.sock:/run/podman/podman.sock" \
+#     lsp45-pcp
+#
+# Why Fedora, not UBI: verified against a real `dnf install` that `pcp` and
+# its PMDAs are NOT resolvable on UBI 9/10 without a RHEL entitlement (no
+# free/anonymous repo carries them). Fedora's own repos carry pcp 7.1.5 and
+# every PMDA package unauthenticated -- registry.fedoraproject.org/fedora
+# needs no subscription, which is what this book's readers actually have.
+#
+# `pcp-pmda-bcc` is deliberately NOT installed here: activating it needs a
+# working BCC/eBPF stack, which needs a super-privileged container (BPF
+# syscalls, /sys/kernel/debug, a matching kernel-devel) that cannot load
+# rootless. It's covered in the chapter as PCP's privileged sibling PMDA,
+# demonstrated on the systems-target VM instead of shipped in this image.
+FROM registry.fedoraproject.org/fedora:44 AS builder
+RUN dnf -y install pcp pcp-system-tools pcp-pmda-openmetrics pcp-pmda-podman && \
+    dnf clean all
+
+# A tiny, real, self-contained OpenMetrics document -- no network access
+# needed to scrape it. pmdaopenmetrics.python supports a `file://` source
+# scheme (checked directly in its source: `self.url.startswith('file://')`
+# reads the path with a plain `open()`), so pointing config.d at a local
+# file gives a REAL scrape with a REAL, known value, entirely offline.
+COPY config/lsp45.prom /etc/lsp45/lsp45.prom
+RUN rm -f /var/lib/pcp/pmdas/openmetrics/config.d/*.url && \
+    echo "file:///etc/lsp45/lsp45.prom" \
+      > /var/lib/pcp/pmdas/openmetrics/config.d/lsp45.url && \
+    mkdir -p /run/pcp
+
+# Activate both PMDAs against a LIVE pmcd (started here, in this same RUN).
+# This is the one thing that took real iteration to get right: each PMDA's
+# `./Install` script (`pmdaproc.sh`) restarts pmcd via `systemctl restart
+# pmcd.service` when it thinks a restart is needed -- and this build has no
+# systemd, so that call fails and Install's failure path REVERTS its own
+# pmcd.conf edit, silently dropping the PMDA. But `pmdaproc.sh` has a second
+# path: if `pminfo -v pmcd.version` already succeeds against a running pmcd,
+# it just sends pmcd a SIGHUP (`pmsignal -a -s HUP pmcd`) instead of trying
+# to restart it -- no systemd involved. Starting pmcd first, before either
+# Install call, takes that path for both PMDAs and nothing gets reverted.
+RUN /usr/libexec/pcp/bin/pmcd -f >/tmp/pmcd-build.log 2>&1 & \
+    for i in $(seq 1 20); do \
+      pminfo -f pmcd.version >/dev/null 2>&1 && break; sleep 1; \
+    done && \
+    cd /var/lib/pcp/pmdas/openmetrics && yes '' | ./Install && \
+    cd /var/lib/pcp/pmdas/podman      && yes '' | ./Install
+
+# Build-time correctness gate (never shipped): start pmcd fresh from the
+# config Install just wrote, confirm BOTH layered PMDAs actually registered
+# and that a REAL metric value comes back from each -- the scraped
+# openmetrics value AND a core, always-present PCP metric. If either PMDA
+# silently failed to attach, this RUN fails and the `podman build` itself
+# fails -- stronger than a runtime-only check.
+FROM builder AS smoke
+RUN /usr/libexec/pcp/bin/pmcd -f >/tmp/pmcd.log 2>&1 & \
+    for i in $(seq 1 20); do \
+      pminfo -f pmcd.version >/dev/null 2>&1 && break; sleep 1; \
+    done; \
+    pcp | tee /tmp/pcp-summary.txt; \
+    grep -q openmetrics /tmp/pcp-summary.txt && \
+    grep -q podman      /tmp/pcp-summary.txt && \
+    pminfo -f openmetrics.lsp45.lsp45_answer | tee /tmp/om.txt && \
+    grep -q "value 42" /tmp/om.txt && \
+    pminfo -f kernel.all.load | tee /tmp/load.txt && \
+    grep -q "kernel.all.load" /tmp/load.txt
+
+# Shipped runtime. Reuses the smoke stage's already-activated PMNS/pmcd.conf
+# rather than re-running Install a third time -- FROM smoke (not FROM
+# builder) also means podman actually builds the smoke stage by default:
+# with no COPY --from/FROM edge into it, an unreferenced intermediate stage
+# is silently skipped by `podman build`, which would make the "build-time
+# gate" a no-op. Chaining runtime FROM smoke is what makes the gate real.
+FROM smoke AS runtime
+EXPOSE 44321
+ENTRYPOINT ["/usr/libexec/pcp/bin/pmcd", "-f"]

@@ -184,3 +184,8 @@ examples:
     langs: [go]
     mode: local
     timeout: 300
+  - id: 45-linux-analysis-suites
+    langs: [cpp]
+    mode: local
+    requires: [podman]
+    timeout: 600
