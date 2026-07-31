@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1260 600" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="40" width="380" height="380" rx="12" fill="#f4f4f4" stroke="#ddd"/>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">builder — dnf install + PMDA activation</text>
+<rect x="440" y="40" width="380" height="380" rx="12" fill="#fff8ef" stroke="#ddd"/>
+<text x="452" y="60" font-size="12" font-weight="700" fill="#1d1d1d">smoke — build-time correctness gate (FROM builder)</text>
+<rect x="860" y="40" width="380" height="380" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="872" y="60" font-size="12" font-weight="700" fill="#1d1d1d">runtime — shipped image (FROM smoke)</text>
+<rect x="40" y="80" width="340" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="210.0" y="108.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">dnf install</text>
+<text x="210.0" y="125.0" font-size="11.5" fill="#555555" text-anchor="middle">pcp + pcp-pmda-openmetrics + pcp-pmda-podman</text>
+<rect x="40" y="170" width="340" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="210.0" y="193.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">start pmcd -f (background)</text>
+<text x="210.0" y="210.0" font-size="11.5" fill="#555555" text-anchor="middle">wait for pminfo -f pmcd.version</text>
+<rect x="40" y="250" width="340" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="210.0" y="273.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">yes &#x27;&#x27; | ./Install</text>
+<text x="210.0" y="290.0" font-size="11.5" fill="#555555" text-anchor="middle">openmetrics PMDA</text>
+<rect x="40" y="330" width="340" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="210.0" y="353.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">yes &#x27;&#x27; | ./Install</text>
+<text x="210.0" y="370.0" font-size="11.5" fill="#555555" text-anchor="middle">podman PMDA</text>
+<rect x="460" y="80" width="340" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="630.0" y="103.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">start pmcd -f</text>
+<text x="630.0" y="120.0" font-size="11.5" fill="#555555" text-anchor="middle">fresh pmcd.conf from the smoke layer</text>
+<rect x="460" y="160" width="340" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="630.0" y="183.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pcp | tee pcp-summary.txt</text>
+<text x="630.0" y="200.0" font-size="11.5" fill="#555555" text-anchor="middle">grep openmetrics &amp;&amp; grep podman</text>
+<rect x="460" y="240" width="340" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="630.0" y="268.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pminfo -f: openmetrics answer</text>
+<text x="630.0" y="285.0" font-size="11.5" fill="#555555" text-anchor="middle">openmetrics.lsp45.lsp45_answer = 42 (verified)</text>
+<rect x="460" y="330" width="340" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="630.0" y="353.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pminfo -f kernel.all.load</text>
+<text x="630.0" y="370.0" font-size="11.5" fill="#555555" text-anchor="middle">core, always-present metric</text>
+<rect x="880" y="140" width="340" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="1050.0" y="170.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">EXPOSE 44321</text>
+<rect x="880" y="220" width="340" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="1050.0" y="243.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">ENTRYPOINT</text>
+<text x="1050.0" y="260.0" font-size="11.5" fill="#555555" text-anchor="middle">/usr/libexec/pcp/bin/pmcd -f</text>
+<rect x="340" y="500" width="600" height="70" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="640.0" y="533.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Cockpit + SystemTap</text>
+<text x="640.0" y="550.0" font-size="11.5" fill="#555555" text-anchor="middle">not in this image — on systems-target via cloud-init</text>
+<path d="M210,140 L210,170" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M210,220 L210,250" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M210,300 L210,330" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M630,130 L630,160" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M630,210 L630,240" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M630,300 L630,330" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M1050,190 L1050,220" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M380,355 L460,105" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="426.0" y="224.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">FROM builder</text>
+<text x="426.0" y="224.0" font-size="11" fill="#555" text-anchor="middle">FROM builder</text>
+<path d="M800,355 L880,165" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="846.0" y="254.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">FROM smoke</text>
+<text x="846.0" y="254.0" font-size="11" fill="#b8650a" text-anchor="middle">FROM smoke</text>
+<text x="60" y="450" font-size="12" fill="#1d1d1d" text-anchor="start">Chaining runtime onto smoke forces podman to actually build the gate stage —</text>
+<text x="60" y="468" font-size="12" fill="#555555" text-anchor="start">an unreferenced stage (e.g. “FROM builder AS runtime”) is silently skipped by podman build.</text>
+<text x="880" y="305" font-size="11" fill="#555555" text-anchor="start">Reuses smoke&#x27;s already-activated</text>
+<text x="880" y="320" font-size="11" fill="#555555" text-anchor="start">PMNS/pmcd.conf — no third Install run.</text>
+</svg>

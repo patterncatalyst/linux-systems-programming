@@ -1,0 +1,5 @@
+# HELP lsp45_answer A known constant this chapter ships so the openmetrics
+# PMDA has something real to scrape without any network access -- pointed at
+# via a `file://` config.d source, not an HTTP endpoint.
+# TYPE lsp45_answer gauge
+lsp45_answer 42
