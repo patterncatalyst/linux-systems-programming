@@ -1,0 +1,9 @@
+{
+    "version": "0.5",
+    "requires": [
+        "fmt/11.0.2#7b5e2770c1ccb3d4af9b4f6762135645%1778145873.016"
+    ],
+    "build_requires": [],
+    "python_requires": [],
+    "config_requires": []
+}
