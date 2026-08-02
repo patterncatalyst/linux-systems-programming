@@ -83,6 +83,16 @@ CLEAN — cleaner than ch45. Local/no-VM/no-root. Hard core A-C deterministic on
 any conforming host, richer on reference host. Only unverified corners: ccache/mold (absent) + diagnostic-wording
 asides — never gated. Should merge on standard host-gate + CI-green, no mixed caveat.
 
-## Status
-- [ ] S1 scaffold  - [ ] S2 sources  - [ ] S3 verify.lua  - [ ] S4 build+capture
-- [ ] S5 chapter  - [ ] S6 diagrams  - [ ] S7 manifest  - [ ] Phase 3 validate  - [ ] gate/PR
+## Status — DONE
+- [x] S1-S4 example (scaffold→sources→verify.lua→build+capture): PASS 20/0, all tools present+firing
+- [x] S5 chapter `_docs/46-cpp-toolbox.md` (815 lines)
+- [x] S6 diagrams (46-cmake-preset-graph, 46-toolbox-pipeline) + README rows
+- [x] S7 manifest (langs:[cpp], mode:local, timeout 420)
+- [x] Phase 3 validate (Opus): all 12 criteria MET, verdict **SHIP**, zero MUST-FIX (fixed one `cmd`→`cmake` typo)
+
+## Gate (host run, 2026-08-01/02)
+- `verify.lua` PASS 20/0 · `validate.py` → validate: OK · `test-all-examples --only 46-cpp-toolbox` PASS
+- Verification CLEAN (local, no VM). Only ccache/mold shown-not-gated (absent on host); GCC-vs-clang diagnostic asides framed as illustrative live-session, not gated.
+- Reference toolchain: GCC 16.1.1, clang 22.1.8, CMake 4.3.0, gdb 17.2, Conan 2.30.0, kernel 7.1.4-204.fc44.
+
+## Merge: AUTONOMOUS (user authorized for r15).
