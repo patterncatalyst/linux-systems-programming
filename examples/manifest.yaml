@@ -189,3 +189,7 @@ examples:
     mode: local
     requires: [podman]
     timeout: 600
+  - id: 46-cpp-toolbox
+    langs: [cpp]
+    mode: local
+    timeout: 420

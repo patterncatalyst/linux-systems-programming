@@ -1,0 +1,16 @@
+---
+# Pinned check for the ch46 clang-tidy gate: performance-unnecessary-value-param,
+# which src/smell.cpp's decorate_label(std::string label) deliberately trips
+# (the parameter is only read, so passing by value forces an avoidable copy).
+# verify.lua asserts the check-NAME token, not message wording, so this stays
+# stable across clang-tidy versions.
+Checks: >
+  bugprone-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+FormatStyle: file
