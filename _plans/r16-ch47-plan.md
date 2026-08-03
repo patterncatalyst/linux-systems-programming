@@ -109,6 +109,11 @@ Merge safe either way; footer reflects exactly which optional tools Phase 2 inst
 - govulncheck: chapter prose/workflow + clearly-labeled ILLUSTRATIVE advisory output (not "from a run"),
   NOT gated, NO vulnerable dep in repo.
 - verify.lua must PASS on A-E, informational-SKIP F-K, FAIL 0.
-## Status
-- [ ] S1 scaffold - [ ] S2 sources - [ ] S3 verify - [ ] S4 build+install+capture
-- [ ] S5 chapter - [ ] S6 diagrams - [ ] S7 manifest - [ ] Phase3 validate - [ ] gate/PR
+## Status — DONE
+- [x] S1-S4 example (offline): verify PASS 16/0 (A-E hard pass, F-K SKIP)
+- [x] S5 chapter `_docs/47-go-toolbox.md` (983 lines)
+- [x] S6 diagrams (47-go-toolchain-pipeline, 47-go-tool-gates) + README rows
+- [x] S7 manifest (langs:[go], mode:local, timeout 480)
+- [x] Phase 3 validate (Opus): all 12 criteria MET, verdict **SHIP**, zero MUST-FIX
+- Gate: verify PASS 16/0 · validate: OK · runner PASS. Correct delve decimal 5195329438047200767; govulncheck illustrative placeholder only.
+- Verified = go-native A-E; the 6 marquee tools absent on host → status--unverified (offline decision).
