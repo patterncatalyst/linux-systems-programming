@@ -193,3 +193,7 @@ examples:
     langs: [cpp]
     mode: local
     timeout: 420
+  - id: 47-go-toolbox
+    langs: [go]
+    mode: local
+    timeout: 480

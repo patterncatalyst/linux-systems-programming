@@ -100,7 +100,15 @@ host → depth depends on Phase 2 go-installing them (govulncheck needs network)
 firing, only benchstat timings shown). If not → those 6 sections legitimately status--unverified while hard core passes.
 Merge safe either way; footer reflects exactly which optional tools Phase 2 installed.
 
-## Merge: pending user (see gate).
+## DECISION (user, gate): HARD-CORE ONLY (offline) + AUTONOMOUS merge.
+- NO network, NO `go install`, NO committing a vulnerable dep, NO `go-vuln/` sub-module.
+- VERIFIED on this host = go-native hard gates A-E only.
+- F-K (gofumpt/golangci-lint/staticcheck/govulncheck/dlv/benchstat): ship real committed config
+  artifacts (.golangci.yml, .dlvinit) + skip-if-present gates in verify.lua (a reader WITH the tools
+  hits them; on this host they informational-SKIP). Sections written + shown, marked status--unverified.
+- govulncheck: chapter prose/workflow + clearly-labeled ILLUSTRATIVE advisory output (not "from a run"),
+  NOT gated, NO vulnerable dep in repo.
+- verify.lua must PASS on A-E, informational-SKIP F-K, FAIL 0.
 ## Status
 - [ ] S1 scaffold - [ ] S2 sources - [ ] S3 verify - [ ] S4 build+install+capture
 - [ ] S5 chapter - [ ] S6 diagrams - [ ] S7 manifest - [ ] Phase3 validate - [ ] gate/PR
