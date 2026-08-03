@@ -1,0 +1,23 @@
+# Reference golangci-lint config for ch47 (verify.lua gate G, if present).
+# Absent on the reference host -- committed so a reader who installs
+# golangci-lint gets a real, non-default lint pass, not just "add a config
+# file" hand-waving. `unused` and `staticcheck` are on by default; `revive`
+# and `unparam` are added explicitly, and testdata/ is excluded because those
+# fixtures are gofmt/gofumpt targets, not lint targets.
+version: "2"
+
+linters:
+  default: standard
+  enable:
+    - staticcheck
+    - unused
+    - revive
+    - unparam
+
+  exclusions:
+    paths:
+      - testdata
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
