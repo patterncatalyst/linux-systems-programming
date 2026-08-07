@@ -1,0 +1,8 @@
+# ch48's clippy gate: `cargo clippy --all-targets -- -D warnings` must be
+# clean on the default (no-feature) build; `cargo clippy --features
+# lintbait -- -D warnings` must fire on src/lintbait.rs's deliberate
+# `needless_return`. This file pins the lint-relevant thresholds so a
+# future clippy release doesn't silently change what "clean" means.
+msrv = "1.97.1"
+too-many-arguments-threshold = 8
+type-complexity-threshold = 250

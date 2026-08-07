@@ -90,6 +90,41 @@ clippy clean+lint-name, cargo test = 5 real gates, NO network. Install-decision 
   E-H fire (nextest PASS, deny token, llvm-cov filename, RUSTSEC-id). Footer near ch46 fullness; only flamegraph/watch shown-not-gated.
 Merge-safe either way; verify.lua identical; footer states which optional tools ran.
 
-## DECISION: pending user (depth + merge).
+## DECISION (user, gate): OFFLINE HARD-CORE + AUTONOMOUS merge.
+- NO network, NO cargo install, NO audit-vuln/ sub-crate, NO vulnerable dep committed.
+- VERIFIED = A-D hard gates (pin+digest, rustfmt clean/dirty, clippy clean + needless_return, cargo test).
+- E-H (nextest/deny/llvm-cov/audit): ship committed configs (deny.toml/clippy.toml/rustfmt.toml) + skip-if-present
+  gates (absent/db-absent → informational SKIP). Sections shown-as-reference, status--unverified.
+- cargo-audit: present on host but advisory-db absent → SKIP offline; chapter shows ILLUSTRATIVE RUSTSEC- advisory.
+- verify.lua PASS A-D, SKIP E-H, FAIL 0.
 ## Status
-- [ ] S1 - [ ] S2 - [ ] S3 - [ ] S4 - [ ] S5 - [ ] S6 - [ ] S7 - [ ] Phase3 - [ ] gate/PR
+- [x] S1 - [x] S2 - [x] S3 - [x] S4 - [x] S5 - [x] S6 - [x] S7 - [ ] Phase3 - [ ] gate/PR
+
+## Execution deltas from the plan
+- **`rust-toolchain.toml` components trimmed to `["rustfmt", "clippy"]`.** The planned
+  `llvm-tools`/`rust-src` entries made rustup fetch a missing component over the network on the
+  first `cargo` invocation (observed: `info: downloading component llvm-tools`), which breaks the
+  OFFLINE HARD-CORE decision's `cargo build --offline` claim on a fresh host. Both are now
+  documented as an explicit `rustup component add` opt-in in the file's comment and in the chapter's
+  "What is deliberately *not* pinned" subsection. Diagram `48-rust-toolchain-pipeline` (SVG +
+  .excalidraw) relabelled `rustfmt · clippy components` to match.
+- Gate A widened to also assert `rustc --version` == 1.97.1 through the pin (plan had it; recorded
+  here because it is what proves the pin *resolves*, not merely that the file says so).
+- No `defect` subcommand (ch46 UBSan / ch47 divzero analog): "Errors, three ways" is three *static/
+  behavioral* surfaces (rustfmt shape → clippy idiom + `-D warnings` severity promotion → `cargo
+  test` behavior), plus the deliberate no-`Result` design note. A seeded runtime panic would have
+  duplicated ch47 without adding a Rust-specific observation.
+- Concurrency lens = tooling concurrency: cargo build-graph `-j` + release codegen-units, libtest's
+  thread-per-test model (`--test-threads=1`, captured), and nextest's process-per-test isolation.
+
+## Gate matrix (host run, 2026-08-04 → 08-07, Fedora 44, kernel 7.1.5-201.fc44, offline)
+| gate | result |
+| --- | --- |
+| `lua verify.lua` (LSP_LANG=rust) | **PASS 20 / FAIL 0**, 4 informational SKIP (E-H) |
+| `test-all-examples.py --only 48-rust-toolbox` | 1 passed, 0 failed, 0 skipped |
+| `validate.py` | OK |
+| chapter source blocks verbatim | 15/15 (16th is the `[host]$` command list) |
+| banned words (honest/lie) | clean |
+| cross-language digest | cpp/go/rust all `digest=0x481984990deee5ff` (all three binaries re-run) |
+| A pin+digest / B rustfmt / C clippy / D cargo test | all fire real effects, both directions |
+| E nextest / F deny / G llvm-cov / H audit | SKIP (absent / advisory-db absent) — never FAIL |
