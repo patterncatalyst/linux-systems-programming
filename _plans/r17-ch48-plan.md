@@ -98,7 +98,10 @@ Merge-safe either way; verify.lua identical; footer states which optional tools 
 - cargo-audit: present on host but advisory-db absent → SKIP offline; chapter shows ILLUSTRATIVE RUSTSEC- advisory.
 - verify.lua PASS A-D, SKIP E-H, FAIL 0.
 ## Status
-- [x] S1 - [x] S2 - [x] S3 - [x] S4 - [x] S5 - [x] S6 - [x] S7 - [ ] Phase3 - [ ] gate/PR
+- [x] S1 - [x] S2 - [x] S3 - [x] S4 - [x] S5 - [x] S6 - [x] S7 - [x] Phase3 - [ ] gate/PR
+- PR #17 open (`docs/r17-rust-toolbox` → main), CI green (validate + build-and-deploy both success).
+  Merge held for one user look at the `llvm-tools` component deviation below, since that decision
+  post-dates the plan's AUTONOMOUS-merge approval.
 
 ## Execution deltas from the plan
 - **`rust-toolchain.toml` components trimmed to `["rustfmt", "clippy"]`.** The planned
