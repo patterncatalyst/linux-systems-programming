@@ -1,0 +1,8 @@
+# ch48's rustfmt gate: `cargo fmt --check` must be clean on every tracked
+# source under src/, and `rustfmt --edition 2024 --check
+# fixtures/misformatted.rs` must be nonzero on the deliberately misformatted
+# fixture (kept outside the module tree so it never affects `cargo build`).
+edition = "2024"
+max_width = 100
+newline_style = "Unix"
+use_small_heuristics = "Default"
