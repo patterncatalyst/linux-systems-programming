@@ -1,0 +1,53 @@
+# cargo-deny configuration (ch48, shown-as-reference).
+#
+# cargo-deny is NOT installed on the host that verified this example, so
+# verify.lua's gate F degrades to an informational SKIP. The config is
+# committed anyway: it is the artifact a reader copies into their own
+# workspace, and `cargo deny check bans licenses sources` runs against it
+# unchanged the moment `cargo install cargo-deny` has happened.
+#
+# `advisories` is deliberately omitted from the gated subsets -- it needs
+# the RustSec advisory database (a network fetch into ~/.cargo/advisory-db),
+# which this example's offline constraint forbids. `bans`, `licenses`, and
+# `sources` are all answerable from the lockfile alone.
+
+[graph]
+targets = ["x86_64-unknown-linux-gnu"]
+all-features = true
+
+[advisories]
+# Only consulted by `cargo deny check advisories`, which this example never
+# runs offline. Kept here so the file is complete for a reader who fetches
+# the database.
+db-path = "~/.cargo/advisory-db"
+db-urls = ["https://github.com/rustsec/advisory-db"]
+yanked = "deny"
+
+[licenses]
+# toolbox is zero-dependency, so this list constrains exactly one crate:
+# toolbox itself. That is the point -- the policy is in place before the
+# first dependency arrives, not bolted on after.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+]
+confidence-threshold = 0.93
+
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+highlight = "all-duplicates"
+# Crates that must never enter the graph of a systems example: each one
+# would silently pull in a runtime, a C toolchain, or an unvendorable
+# network dependency.
+deny = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

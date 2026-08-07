@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="20" y="20" width="1160" height="150" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">rust-toolchain.toml → rustup → cargo/rustc — version resolution</text>
+<rect x="20" y="190" width="580" height="390" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="32" y="210" font-size="12" font-weight="700" fill="#1d1d1d">cargo run -- report arm — deterministic digest gate (verified, rust-native)</text>
+<rect x="620" y="190" width="560" height="390" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="632" y="210" font-size="12" font-weight="700" fill="#1d1d1d">cargo test arm — digest.rs unit test (verified, rust-native)</text>
+<rect x="60" y="70" width="190" height="70" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="155.0" y="95.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">rust-toolchain.toml</text>
+<text x="155.0" y="112.5" font-size="11.5" fill="#dddddd" text-anchor="middle">channel 1.97.1 · edition 2024</text>
+<text x="155.0" y="127.5" font-size="11.5" fill="#dddddd" text-anchor="middle">rustfmt · clippy components</text>
+<rect x="340" y="70" width="210" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="445.0" y="95.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">rustup</text>
+<text x="445.0" y="112.5" font-size="11.5" fill="#555555" text-anchor="middle">resolves pinned toolchain</text>
+<text x="445.0" y="127.5" font-size="11.5" fill="#555555" text-anchor="middle">installs if missing</text>
+<rect x="630" y="70" width="220" height="70" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
+<text x="740.0" y="95.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">cargo / rustc</text>
+<text x="740.0" y="112.5" font-size="11.5" fill="#555555" text-anchor="middle">1.97.1</text>
+<text x="740.0" y="127.5" font-size="11.5" fill="#555555" text-anchor="middle">drives build/test/fmt/clippy</text>
+<rect x="60" y="235" width="230" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="175.0" y="263.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">cargo run -- report</text>
+<text x="175.0" y="280.0" font-size="11.5" fill="#555555" text-anchor="middle">deterministic build</text>
+<rect x="60" y="330" width="230" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="175.0" y="358.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">toolbox binary</text>
+<text x="175.0" y="375.0" font-size="11.5" fill="#555555" text-anchor="middle">zero-dep, no network</text>
+<rect x="60" y="425" width="230" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="175.0" y="455.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">report output</text>
+<text x="175.0" y="472.5" font-size="11.5" fill="#555555" text-anchor="middle">FNV-1a over fixed payload</text>
+<text x="175.0" y="487.5" font-size="11.5" fill="#555555" text-anchor="middle">prints digest=0x…</text>
+<rect x="340" y="350" width="210" height="100" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="445.0" y="383.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">digest gate</text>
+<text x="445.0" y="400.0" font-size="11.5" fill="#555555" text-anchor="middle">0x481984990deee5ff</text>
+<text x="445.0" y="415.0" font-size="11.5" fill="#555555" text-anchor="middle">same across C++/Go/Rust</text>
+<text x="445.0" y="430.0" font-size="11.5" fill="#555555" text-anchor="middle">verified hard gate</text>
+<rect x="650" y="235" width="230" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="765.0" y="263.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">cargo test</text>
+<text x="765.0" y="280.0" font-size="11.5" fill="#555555" text-anchor="middle">runs #[cfg(test)] suite</text>
+<rect x="650" y="330" width="230" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="765.0" y="358.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">digest.rs</text>
+<text x="765.0" y="375.0" font-size="11.5" fill="#555555" text-anchor="middle">fnv1a() unit test</text>
+<rect x="650" y="425" width="230" height="80" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="765.0" y="455.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">test result: ok</text>
+<text x="765.0" y="472.5" font-size="11.5" fill="#555555" text-anchor="middle">asserts digest literal</text>
+<text x="765.0" y="487.5" font-size="11.5" fill="#555555" text-anchor="middle">drift fails the gate</text>
+<rect x="930" y="350" width="210" height="100" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="1035.0" y="390.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">cargo-test gate</text>
+<text x="1035.0" y="407.5" font-size="11.5" fill="#555555" text-anchor="middle">asserts 0x481984990deee5ff</text>
+<text x="1035.0" y="422.5" font-size="11.5" fill="#555555" text-anchor="middle">verified hard gate</text>
+<path d="M250,105 L340,105" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M550,105 L630,105" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M740,140 L175,235" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M740,140 L765,235" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M175,295 L175,330" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M175,390 L175,425" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M290,465 L340,400" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M765,295 L765,330" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M765,390 L765,425" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M880,465 L930,400" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="20" y="600" font-size="12" fill="#1d1d1d" text-anchor="start">Both gates are rust-native — cargo test and the deterministic report digest run inside the pinned toolchain, verified offline on this host.</text>
+<text x="20" y="618" font-size="12" fill="#555555" text-anchor="start">FNV-1a is language-independent: the same 0x481984990deee5ff digest appears in the ch46 C++ and ch47 Go toolbox reports.</text>
+</svg>

@@ -197,3 +197,7 @@ examples:
     langs: [go]
     mode: local
     timeout: 480
+  - id: 48-rust-toolbox
+    langs: [rust]
+    mode: local
+    timeout: 600

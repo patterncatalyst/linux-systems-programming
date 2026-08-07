@@ -1,0 +1,20 @@
+[package]
+name = "toolbox"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "toolbox"
+path = "src/main.rs"
+
+[features]
+# Feature-gated clippy bait (src/lintbait.rs). Off by default so the
+# default build and `cargo clippy --all-targets -- -D warnings` are clean;
+# `cargo clippy --features lintbait -- -D warnings` compiles it and fires
+# the stable `needless_return` lint on purpose (ch48's clippy gate).
+lintbait = []
+
+# Zero-dependency crate on purpose: this example builds and verifies fully
+# offline. No [dependencies] section, no [dev-dependencies] -- rustc's
+# standard library and the pinned toolchain's own bundled tools (rustfmt,
+# clippy, cargo test) are the whole story.

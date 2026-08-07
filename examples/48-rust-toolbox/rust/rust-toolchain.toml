@@ -1,0 +1,20 @@
+# The pin. rustup reads this file before it runs anything, so `cargo build`,
+# `cargo fmt`, and `cargo clippy` in this directory all resolve to 1.97.1 no
+# matter what `rustup default` says globally -- the pin travels with the
+# repository, not with the developer.
+#
+# `components` lists only what this example's hard gates need: rustfmt and
+# clippy. Both are the *pinned* toolchain's own builds, which is why ch48's
+# format and lint gates can be hard-gated offline while ch47's gofumpt and
+# golangci-lint could not -- those are separate downloads.
+#
+# llvm-tools (needed by cargo-llvm-cov) and rust-src (needed by miri and
+# rust-analyzer) are deliberately NOT pinned here: rustup fetches any missing
+# component over the network on the first cargo invocation in this directory,
+# which would break the offline build on a fresh host. Add them explicitly
+# when you opt into those tools:
+#
+#   rustup component add llvm-tools rust-src
+[toolchain]
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]
