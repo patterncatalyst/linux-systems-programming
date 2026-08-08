@@ -154,14 +154,75 @@ ch46 could show, and the four-model core needs nothing but the stdlib and Linux 
   demo in the framing chapter. Cost: a network fetch, a third-party dep in a framing chapter, and
   duplication of what ch56 is scheduled to do properly.
 
-## DECISIONS NEEDED (user gate)
-- **D1 — scope of the framing demo.** Four models (sequential/concurrent/parallel/both) as above, or
-  trim to three (drop `both` as redundant with `parallel`)?
-- **D2 — P2300 senders.** Scenario 1 (forward-looking prose, defer live demo to ch56) or Scenario 2
-  (pull stdexec via Conan now)?
-- **D3 — `distinct_cpus>1` gate.** Hard-gate it with bounded retry, or gate the deterministic
-  affinity facts (`cpus_allowed=1` vs `16`) and report `distinct_cpus` without gating?
-- **D4 — merge mode.** Autonomous (as r17) or stop at PR for review?
+## DECISIONS (user, gate — 2026-08-07)
+- **D1 = FOUR MODELS.** `sequential` / `concurrent` (pinned) / `parallel` (unpinned) / `both`. The
+  2×2 grid is the chapter's argument; `both` is what real systems are, so no corner is left to prose.
+- **D2 = SCENARIO 1, STDLIB-ONLY.** P2300 is forward-looking prose, clearly labeled with its measured
+  status (`__cpp_lib_senders` undefined, `__cpp_lib_execution = 201902` is C++17 par), cross-referenced
+  to ch56. **No Conan, no stdexec, no network.** ch49 is stdlib + Linux scheduler syscalls only.
+- **D3 = HARD-GATE `distinct_cpus>1` WITH BOUNDED RETRY.** Assert "at least one of K runs observed
+  >1 CPU" — a real effect, not a timing. Affinity facts (`cpus_allowed`) asserted too, as the
+  deterministic companion. Fallback in Risks stands if it proves flaky under load.
+- **D4 = AUTONOMOUS merge.** Build → verify → PR → merge on green CI, pausing only for decisions the
+  plan does not cover.
 
 ## Status
-- [ ] S1 - [ ] S2 - [ ] S3 - [ ] S4 - [ ] S5 - [ ] S6 - [ ] S7 - [ ] S8 - [ ] gate/PR
+- [x] S1 - [x] S2 - [x] S3 - [x] S4 - [x] S5 - [ ] S6 - [x] S7 - [x] S8 - [ ] gate/PR
+
+### RESUME HERE (checkpoint 2026-08-08)
+**Done and green.** `LSP_LANG=cpp lua verify.lua` → **PASS 43 / FAIL 0** (gate G included — clang++
+is present on this host, so the parity gate ran for real rather than skipping).
+`test-all-examples --only 49-concurrency-vs-parallelism` → 1 passed. `validate.py` → OK.
+
+**Remaining work, in order:**
+1. **`examples/49-concurrency-vs-parallelism/README.md` is STILL THE `_template` TEXT** — it was
+   about to be overwritten when the session was checkpointed. Rewrite it (four-model table, the
+   observables, the C++26 support table, run/verify sections). This is the only known-stale file.
+2. **S6 — write `_docs/49-concurrency-vs-parallelism.md`.** Front matter `part:` must be exactly
+   `"Compendium: C++ Concurrency"`. Full spine + the two Figure 49.x includes
+   (`49-concurrency-vs-parallelism` = Fig 49.1, `49-execution-model-lanes` = Fig 49.2).
+3. Re-run validate.py + the runner, verify every chapter code block is a verbatim substring of a
+   source file or a real transcript, banned-words check, then PR and (per D4) merge on green CI.
+
+### Captured transcripts to quote in the chapter (all real runs, this host)
+```
+conc report: model=sequential workers=4  cpus_allowed=16 distinct_cpus=1  max_inflight=1  interleaves=0    consensus=yes digest=0x481984990deee5ff
+conc report: model=concurrent workers=16 cpus_allowed=1  distinct_cpus=1  max_inflight=16 interleaves=19   consensus=yes digest=0x481984990deee5ff
+conc report: model=parallel   workers=16 cpus_allowed=16 distinct_cpus=16 max_inflight=16 interleaves=3816 consensus=yes digest=0x481984990deee5ff
+conc report: model=both       workers=32 cpus_allowed=16 distinct_cpus=16 max_inflight=25 interleaves=7557 consensus=yes digest=0x481984990deee5ff
+```
+Stability over 8 consecutive runs each: `concurrent` interleaves 16–20 (always > 0), `parallel`
+distinct_cpus 14–16 (always > 1), `sequential` interleaves 0 / max_inflight 1 on all 5 runs. The
+bounded retry in gate B never fired.
+
+### Execution deltas from the plan (already applied)
+- **The burn loop was dead code in the first build.** `local` was never consumed, so both compilers
+  deleted the whole nested loop; workers finished in microseconds, never overlapped, and every model
+  reported `max_inflight=1 interleaves=0` — a *sequential* run no matter which model was asked for.
+  Fixed with an atomic `sink` the workers xor into, plus a real serial dependency chain in the loop
+  body. **This is a section of the chapter, not just a bug fix**: the first measurement measured the
+  optimizer, not the scheduler.
+- **`-fcontracts` is needed at LINK time, not just compile time.** Without it on the link line the
+  `observe` and `enforce` targets fail with `undefined reference to
+  handle_contract_violation(std::contracts::contract_violation const&)`. `target_link_options` added.
+- **Gate F redesigned after measurement.** The plan assumed Fedora has `_GLIBCXX_ASSERTIONS` on by
+  default; measured, it is on at `-O0` and **off at `-O2`**, so the CMake `release` preset did *not*
+  trap. Now built twice (`oob_unchecked` / `oob_hardened`). The unchecked side is gated
+  **statically** (`nm` shows no `__glibcxx_assert_fail`) because asserting on what a UB read prints
+  would be unsound. Better story than planned: the safety net is on where you debug, off where you ship.
+- **`parallel` is one thread per CPU, `both` is 2x oversubscribed** — that is what separates the two
+  bottom cells of the grid, since the ticket-gap metric registers interleaving under true
+  parallelism as well. Grid semantics documented in verify.lua's header.
+
+### Toolchain facts measured this session (do not re-derive)
+GCC 16.1.1, clang 22.1.8, CMake 4.3.0, Conan 2.30.0, Boost 1.90 system-installed (`libboost_context/
+fiber/thread` all present → ch52/ch54 need no Conan fetch). 16 logical / 8 physical CPUs, 1 NUMA node.
+`tbb-devel` ABSENT → `std::execution::par` will not link; do not reach for it.
+C++26: `__cpp_contracts = 202502` (works, four semantics), `__cpp_lib_senders` undefined,
+`__cpp_lib_execution = 201902` (C++17 par), `__cpp_impl_reflection` undefined, clang 22 has no
+`-freflection`.
+
+### Unrelated cleanup spotted (not this iteration)
+ch39 is titled "Benchmarking without lies" and ships a `--lie` flag. CLAUDE.md's banned-words rule
+now forbids exactly that ("Name a deliberately-bad variant after its defect (`--naive`,
+`--unwarmed`), never `--lie`"). Pre-existing, shipped before the rule; worth its own small PR.
