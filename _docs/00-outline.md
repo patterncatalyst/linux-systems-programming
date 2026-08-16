@@ -57,7 +57,7 @@ artifacts that grow chapter by chapter:
 | **Performance and Low Latency** | benchmarking without self-deception, pinned-core fast paths, the capstone fleet | 39–41 |
 | **Deep Dives** | embedding Lua, Rust macros for systems code, the Go runtime | 42–44 |
 | **Appendices: Tooling** | Cockpit, SystemTap, and PCP; the C++, Go, and Rust toolboxes | 45–48 |
-| **Compendium: C++ Concurrency** | concurrency vs parallelism, pthreads, std threading, Boost.Thread, C++20 coroutines, Boost.Fiber, and a measured comparison of all five | 49–56 |
+| **Compendium: C++ Concurrency** | concurrency vs parallelism, pthreads, std threading, Boost.Thread, C++20 coroutines, Boost.Fiber, Boost.Asio, and a measured comparison of all six | 49–56 |
 
 ## Where things run
 

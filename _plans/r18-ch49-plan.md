@@ -11,7 +11,7 @@ so this iteration also ships the part index and the outline row — ch48 closed 
 Framing chapter: concurrency is *structure* (a program dealing with many things at once),
 parallelism is *execution* (a machine doing many things at once). The whole compendium's vocabulary
 is set here; ch50–56 (pthreads → std threading → Boost.Thread → C++20 coroutines → Boost.Fiber →
-stack-based threading for I/O → capstone comparison) all lean on it.
+Boost.Asio → capstone comparison) all lean on it. See "ch55 scope" at the end of this file.
 
 ## Host audit (run 2026-08-07, Fedora 44, kernel 7.1.5-201.fc44)
 - GCC **16.1.1**, clang **22.1.8**, CMake **4.3.0**, Ninja 1.13.0, Conan **2.30.0**.
@@ -167,9 +167,26 @@ ch46 could show, and the four-model core needs nothing but the stdlib and Linux 
   plan does not cover.
 
 ## Status
-- [x] S1 - [x] S2 - [x] S3 - [x] S4 - [x] S5 - [ ] S6 - [x] S7 - [x] S8 - [ ] gate/PR
+- [x] S1 - [x] S2 - [x] S3 - [x] S4 - [x] S5 - [x] S6 - [x] S7 - [x] S8 - [ ] PR
 
-### RESUME HERE (checkpoint 2026-08-08)
+### COMPLETE (2026-08-16) — supersedes the checkpoint block below
+README rewritten, `_docs/49-concurrency-vs-parallelism.md` written, gates re-run green:
+`LSP_LANG=cpp lua verify.lua` → **PASS 43 / FAIL 0**, runner → 1 passed, `validate.py` → OK,
+banned-words clean, 15/16 chapter code blocks verified as verbatim substrings of real sources (the
+16th is the deleted pre-fix burn-loop line, quoted deliberately as history).
+
+Two corrections made while writing, both from measurement:
+- **The dead-code claim in `conc.cpp` was overstated and is now a measured 2x2 table.** Rebuilt all
+  four variants (serial-chain vs loop-invariant body) x (sink vs no sink) under g++ 16.1.1 and
+  clang++ 22.1.8 at -O2, three `--model concurrent` runs each. Result: only chain+sink survives
+  **both** compilers. chain+nosink works under GCC but collapses to `max_inflight=1` under clang;
+  loop-invariant collapses under both regardless of the sink. The old comment said "without a sink
+  both compilers delete the whole thing" — not reproducible. Comment and README now carry the table.
+- **`nm` was used as a gate but not gated by `check-host.sh`.** Added a `nm (binutils)` check, since
+  the Tools-used-box rule requires every named tool to appear there. Verified `[ ok ] nm (binutils)
+  GNU nm version 2.46.1-1.fc44`.
+
+### RESUME HERE (checkpoint 2026-08-08, now superseded)
 **Done and green.** `LSP_LANG=cpp lua verify.lua` → **PASS 43 / FAIL 0** (gate G included — clang++
 is present on this host, so the parity gate ran for real rather than skipping).
 `test-all-examples --only 49-concurrency-vs-parallelism` → 1 passed. `validate.py` → OK.
@@ -221,6 +238,30 @@ fiber/thread` all present → ch52/ch54 need no Conan fetch). 16 logical / 8 phy
 C++26: `__cpp_contracts = 202502` (works, four semantics), `__cpp_lib_senders` undefined,
 `__cpp_lib_execution = 201902` (C++17 par), `__cpp_impl_reflection` undefined, clang 22 has no
 `-freflection`.
+
+### ch55 scope, settled 2026-08-16 (forward note, not this iteration)
+The outline row and this plan's ch50–56 list disagreed about ch55: the row named six topics for
+eight chapters, and line 13 called ch55 "stack-based threading for I/O" — which is what ch54
+(Boost.Fiber) already is. **ch55 is now Boost.Asio: concurrency for I/O.** Topics to cover:
+
+- `io_context` threading topologies — one thread; N threads on one context; one context per thread;
+  `thread_pool` as an alternative executor. Each has a different observable CPU/thread footprint,
+  which is the ch49 vocabulary applied to an I/O runtime.
+- **strands** — serialized handler execution without a mutex; implicit vs explicit
+  (`boost/asio/strand.hpp`, `io_context_strand.hpp`).
+- **`executor_work_guard`** — why `io_context::run()` returns early without one.
+- **cancellation signals/slots** (`cancellation_signal.hpp`) — cooperative cancellation, and how it
+  differs from ch51's `std::stop_token`.
+- **scatter-gather buffers** — `const_buffer`/`mutable_buffer` sequences over `readv`/`writev`,
+  which ties straight back to Part 5's I/O chapters.
+
+All present on this host, verified: `boost-devel-1.90.0-7.fc44`, `/usr/include/boost/asio/`
+(`strand.hpp`, `io_context_strand.hpp`, `cancellation_signal.hpp`, `executor_work_guard.hpp`,
+`thread_pool.hpp`, `any_io_executor.hpp`), plus `/usr/lib64/libboost_cobalt.so.1.90.0` if a
+coroutine-flavored section is wanted. **No Conan, no network.**
+
+Research from primary sources only — Boost's own docs, the installed headers, and man pages for the
+syscalls underneath (see [[no-third-party-book-sourcing]]). Every example ours.
 
 ### Unrelated cleanup spotted (not this iteration)
 ch39 is titled "Benchmarking without lies" and ships a `--lie` flag. CLAUDE.md's banned-words rule

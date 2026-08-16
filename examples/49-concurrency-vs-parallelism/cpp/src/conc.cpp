@@ -77,11 +77,22 @@ struct Observations {
     std::atomic<bool> consensus{true};
     std::atomic<std::uint64_t> digest{0};
 
-    // Where each worker's burn-loop result goes to die. Without a sink the
-    // burn loop computes a value nobody reads, and both GCC and clang delete
-    // the whole thing -- workers then finish in microseconds, never overlap,
-    // and every observable below reports a sequential run no matter which
-    // model was asked for. This member is the difference between measuring
+    // Where each worker's burn-loop result goes to die. A burn loop whose
+    // result nobody reads is dead code, and a compiler that deletes it leaves
+    // workers finishing in microseconds, never overlapping -- so `concurrent`
+    // reports max_inflight=1 interleaves=0, the signature of a sequential run,
+    // no matter which model was asked for. Measured on this host at -O2, for
+    // the `concurrent` model over three runs each:
+    //
+    //   burn-loop body        sink      g++ 16.1.1       clang++ 22.1.8
+    //   serial chain          present   inflight 16      inflight 16   <- shipped
+    //   serial chain          absent    inflight 16      inflight 1
+    //   loop-invariant        present   inflight 1-2     inflight 1
+    //   loop-invariant        absent    inflight 1       inflight 1
+    //
+    // Neither the sink nor the dependency chain in the loop body is sufficient
+    // alone: drop either one and at least one of the two compilers optimizes
+    // the workload away. Together they are the difference between measuring
     // the scheduler and measuring the optimizer.
     std::atomic<std::uint64_t> sink{0};
 };
@@ -105,9 +116,12 @@ void worker(Observations& obs, int /*id*/) {
 
     for (int s = 0; s < kSamplesPerWorker; ++s) {
         // Burn a deterministic amount of CPU so the worker is a real, runnable
-        // task the scheduler has to place somewhere. Each iteration depends on
-        // the previous one, so this is a genuine serial dependency chain the
-        // optimizer cannot collapse or vectorize away.
+        // task the scheduler has to place somewhere. Each iteration hashes the
+        // previous iteration's value, so this is a genuine serial dependency
+        // chain: the optimizer cannot hoist it, collapse it, or vectorize it.
+        // An earlier version hashed a loop-invariant constant instead, and
+        // both compilers reduced the whole thing to almost nothing -- see the
+        // table on Observations::sink above.
         for (int b = 0; b < kBurnPerSample; ++b) {
             local = fnv1a(reinterpret_cast<const std::uint8_t*>(&local), sizeof local) + b;
         }
