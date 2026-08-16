@@ -117,6 +117,15 @@ else
     record fail "ninja" "not installed" "sudo dnf install -y ninja-build"
 fi
 
+# binutils: `nm` is a gate, not a convenience. Chapter 49 asserts STATICALLY
+# that an unchecked build contains no __glibcxx_assert_fail symbol, because
+# asserting on what an out-of-bounds read prints would be gating on UB.
+if command -v nm >/dev/null 2>&1; then
+    record ok "nm (binutils)" "$(nm --version 2>/dev/null | head -1)"
+else
+    record fail "nm (binutils)" "not installed" "sudo dnf install -y binutils"
+fi
+
 # ── Go ───────────────────────────────────────────────────────────────────
 # Any modern go works to bootstrap: the go.mod toolchain directive
 # auto-downloads go1.26.5 on first build.

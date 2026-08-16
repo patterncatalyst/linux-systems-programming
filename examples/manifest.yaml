@@ -201,3 +201,7 @@ examples:
     langs: [rust]
     mode: local
     timeout: 600
+  - id: 49-concurrency-vs-parallelism
+    langs: [cpp]
+    mode: local
+    timeout: 600
