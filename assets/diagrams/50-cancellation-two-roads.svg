@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 640" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="24" y="54" width="1112" height="278" rx="12" fill="#fdf7ef" stroke="#ddd"/>
+<text x="36" y="74" font-size="12" font-weight="700" fill="#1d1d1d">pthread_cancel — asynchronous, and it unwinds</text>
+<rect x="24" y="350" width="1112" height="180" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="36" y="370" font-size="12" font-weight="700" fill="#1d1d1d">std::jthread + stop_token — cooperative, C++20&#x27;s answer</text>
+<rect x="400" y="14" width="360" height="30" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="580.0" y="34.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">two roads out of a running thread</text>
+<rect x="56" y="96" width="250" height="110" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="181.0" y="141.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">worker parked</text>
+<text x="181.0" y="158.5" font-size="11.5" fill="#555555" text-anchor="middle">on a cancellation point</text>
+<text x="181.0" y="173.5" font-size="11.5" fill="#555555" text-anchor="middle">sleep(3), read(2), …</text>
+<rect x="346" y="96" width="250" height="110" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="471.0" y="141.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pthread_cancel(t)</text>
+<text x="471.0" y="158.5" font-size="11.5" fill="#555555" text-anchor="middle">glibc throws a forced unwind</text>
+<text x="471.0" y="173.5" font-size="11.5" fill="#555555" text-anchor="middle">through the target&#x27;s stack</text>
+<rect x="636" y="96" width="230" height="110" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="751.0" y="134.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">RAII really runs</text>
+<text x="751.0" y="151.0" font-size="11.5" fill="#555555" text-anchor="middle">~Guard() ran</text>
+<text x="751.0" y="166.0" font-size="11.5" fill="#555555" text-anchor="middle">cleanup handler ran</text>
+<text x="751.0" y="181.0" font-size="11.5" fill="#555555" text-anchor="middle">join → PTHREAD_CANCELED</text>
+<rect x="906" y="96" width="200" height="110" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="1006.0" y="134.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">better than</text>
+<text x="1006.0" y="151.0" font-size="11.5" fill="#555555" text-anchor="middle">its reputation:</text>
+<text x="1006.0" y="166.0" font-size="11.5" fill="#555555" text-anchor="middle">destructors are</text>
+<text x="1006.0" y="181.0" font-size="11.5" fill="#555555" text-anchor="middle">not skipped</text>
+<rect x="346" y="228" width="520" height="84" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="606.0" y="260.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">…but catch (...) without a rethrow swallows it</text>
+<text x="606.0" y="277.5" font-size="11.5" fill="#555555" text-anchor="middle">FATAL: exception not rethrown  →  SIGABRT, exit 134</text>
+<text x="606.0" y="292.5" font-size="11.5" fill="#555555" text-anchor="middle">ordinary defensive C++ turns a cancel into a dead process</text>
+<rect x="56" y="390" width="250" height="104" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="181.0" y="432.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">request_stop()</text>
+<text x="181.0" y="449.5" font-size="11.5" fill="#555555" text-anchor="middle">sets a flag</text>
+<text x="181.0" y="464.5" font-size="11.5" fill="#555555" text-anchor="middle">no exception, no unwind</text>
+<rect x="346" y="390" width="250" height="104" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="471.0" y="432.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">stop_token::stop_requested()</text>
+<text x="471.0" y="449.5" font-size="11.5" fill="#555555" text-anchor="middle">the target checks</text>
+<text x="471.0" y="464.5" font-size="11.5" fill="#555555" text-anchor="middle">when IT chooses to</text>
+<rect x="636" y="390" width="470" height="104" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="871.0" y="432.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">the target decides where it is safe to stop</text>
+<text x="871.0" y="449.5" font-size="11.5" fill="#555555" text-anchor="middle">no cancellation points, no forced unwind,</text>
+<text x="871.0" y="464.5" font-size="11.5" fill="#555555" text-anchor="middle">nothing a catch-all can accidentally swallow</text>
+<path d="M306,151 L346,151" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M596,151 L636,151" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M606,206 L606,228" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
+<path d="M306,442 L346,442" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M596,442 L636,442" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="40" y="560" font-size="11" fill="#1d1d1d" text-anchor="start">Both rows are real runs on this host (glibc 2.43). The upper row is why pthread_cancel is powerful; the dashed box is why C++ did not standardize it.</text>
+<text x="40" y="584" font-size="11" fill="#1d1d1d" text-anchor="start">The trap is not that cancellation skips cleanup — it does not. The trap is that the mechanism is an exception the caller must be careful never to catch.</text>
+<text x="40" y="608" font-size="11" fill="#1d1d1d" text-anchor="start">Both cancel cases are hard-gated in verify.lua, including the abort: exit 134 with &#x27;exception not rethrown&#x27; on stderr.</text>
+</svg>
