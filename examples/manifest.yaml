@@ -209,3 +209,9 @@ examples:
     langs: [cpp]
     mode: local
     timeout: 600
+  # 51 runs two deliberate deadlocks under timeout(1) (5s and 6s) on top of
+  # ~15 straced runs, so it needs more headroom than the Part 14 default.
+  - id: 51-std-threading
+    langs: [cpp]
+    mode: local
+    timeout: 900

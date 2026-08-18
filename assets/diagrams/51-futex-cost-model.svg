@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 640" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="24" y="54" width="1112" height="210" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="36" y="74" font-size="12" font-weight="700" fill="#1d1d1d">User space — atomic compare-exchange on the futex word, no kernel involved</text>
+<rect x="24" y="282" width="1112" height="232" rx="12" fill="#fdf7ef" stroke="#ddd"/>
+<text x="36" y="302" font-size="12" font-weight="700" fill="#1d1d1d">Kernel — futex(2), the syscall ch25 built by hand</text>
+<rect x="400" y="14" width="360" height="30" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="580.0" y="34.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">200,000 lock/unlock pairs, two ways</text>
+<rect x="56" y="96" width="300" height="140" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="206.0" y="141.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">baseline — no mutex</text>
+<text x="206.0" y="158.5" font-size="11.5" fill="#555555" text-anchor="middle">200,000 plain increments</text>
+<text x="206.0" y="173.5" font-size="11.5" fill="#555555" text-anchor="middle">the control</text>
+<text x="206.0" y="188.5" font-size="11.5" fill="#555555" text-anchor="middle">futex calls: 1</text>
+<text x="206.0" y="203.5" font-size="11.5" fill="#555555" text-anchor="middle">(that 1 is the loader, not a lock)</text>
+<rect x="400" y="96" width="330" height="140" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="565.0" y="141.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">uncontended — 1 thread</text>
+<text x="565.0" y="158.5" font-size="11.5" fill="#555555" text-anchor="middle">200,000 lock/unlock pairs</text>
+<text x="565.0" y="173.5" font-size="11.5" fill="#555555" text-anchor="middle">CAS succeeds every time</text>
+<text x="565.0" y="188.5" font-size="11.5" fill="#555555" text-anchor="middle">futex calls: 1</text>
+<text x="565.0" y="203.5" font-size="11.5" fill="#555555" text-anchor="middle">IDENTICAL to the baseline</text>
+<rect x="776" y="96" width="330" height="140" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="941.0" y="141.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">whole syscall profile: 61</text>
+<text x="941.0" y="158.5" font-size="11.5" fill="#555555" text-anchor="middle">execve, mmap, openat, read,</text>
+<text x="941.0" y="173.5" font-size="11.5" fill="#555555" text-anchor="middle">close — the dynamic loader.</text>
+<text x="941.0" y="188.5" font-size="11.5" fill="#555555" text-anchor="middle">The 200,000 pairs contributed</text>
+<text x="941.0" y="203.5" font-size="11.5" fill="#555555" text-anchor="middle">nothing to it.</text>
+<rect x="56" y="324" width="330" height="140" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="221.0" y="369.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">contended — 8 threads</text>
+<text x="221.0" y="386.5" font-size="11.5" fill="#555555" text-anchor="middle">the SAME 200,000 pairs</text>
+<text x="221.0" y="401.5" font-size="11.5" fill="#555555" text-anchor="middle">CAS fails often → sleep + wake</text>
+<text x="221.0" y="416.5" font-size="11.5" fill="#555555" text-anchor="middle">futex calls: 1844–3111</text>
+<text x="221.0" y="431.5" font-size="11.5" fill="#555555" text-anchor="middle">(5 runs; magnitude varies)</text>
+<rect x="430" y="324" width="300" height="140" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="580.0" y="369.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">the blocking primitives</text>
+<text x="580.0" y="386.5" font-size="11.5" fill="#555555" text-anchor="middle">condition_variable · latch</text>
+<text x="580.0" y="401.5" font-size="11.5" fill="#555555" text-anchor="middle">barrier · counting_semaphore</text>
+<text x="580.0" y="416.5" font-size="11.5" fill="#555555" text-anchor="middle">atomic::wait</text>
+<text x="580.0" y="431.5" font-size="11.5" fill="#555555" text-anchor="middle">4–6 futex calls each</text>
+<rect x="776" y="324" width="330" height="140" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="941.0" y="369.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">five type names,</text>
+<text x="941.0" y="386.5" font-size="11.5" fill="#555555" text-anchor="middle">one mechanism.</text>
+<text x="941.0" y="401.5" font-size="11.5" fill="#555555" text-anchor="middle">A thread that must sleep until</text>
+<text x="941.0" y="416.5" font-size="11.5" fill="#555555" text-anchor="middle">further notice has to tell the</text>
+<text x="941.0" y="431.5" font-size="11.5" fill="#555555" text-anchor="middle">kernel — there is no other way.</text>
+<path d="M565,236 L221,324" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="399.0" y="274.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">add contention</text>
+<text x="399.0" y="274.0" font-size="11" fill="#b8650a" text-anchor="middle">add contention</text>
+<path d="M730,394 L776,394" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<path d="M356,166 L400,166" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="40" y="546" font-size="11" fill="#1d1d1d" text-anchor="start">Same total work in all three cost cases — 200,000 increments — so only the contention differs, which is what makes the syscall counts comparable.</text>
+<text x="40" y="570" font-size="11" fill="#1d1d1d" text-anchor="start">An uncontended std::mutex costs no syscalls at all. What costs is contention: identical work, two orders of magnitude more kernel involvement.</text>
+<text x="40" y="594" font-size="11" fill="#1d1d1d" text-anchor="start">Counted from outside with strace -f -c -e trace=futex. Nothing here is a duration; only the SIGN of the comparison is gated (see ch39).</text>
+<text x="40" y="618" font-size="11" fill="#1d1d1d" text-anchor="start">Measured on the Fedora 44 reference host, glibc 2.43, GCC 16.1.1.</text>
+</svg>
