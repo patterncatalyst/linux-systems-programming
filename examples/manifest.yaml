@@ -215,3 +215,9 @@ examples:
     langs: [cpp]
     mode: local
     timeout: 900
+  # First Part 14 example with a third-party dependency: system Boost 1.90
+  # from boost-devel. Still local and offline -- no Conan, no network.
+  - id: 52-boost-thread
+    langs: [cpp]
+    mode: local
+    timeout: 600

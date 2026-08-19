@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 600" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="24" y="54" width="1112" height="430" rx="12" fill="#fdf7ef" stroke="#ddd"/>
+<text x="36" y="74" font-size="12" font-weight="700" fill="#1d1d1d">One mistake — catch (...) without a rethrow — against three cancellation models</text>
+<rect x="400" y="14" width="360" height="30" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="580.0" y="34.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">cancellation across ch50, ch52, ch51</text>
+<rect x="56" y="96" width="330" height="150" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="221.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">ch50 — pthread_cancel</text>
+<text x="221.0" y="163.5" font-size="11.5" fill="#555555" text-anchor="middle">glibc FORCED UNWIND</text>
+<text x="221.0" y="178.5" font-size="11.5" fill="#555555" text-anchor="middle">destructors DO run</text>
+<text x="221.0" y="193.5" font-size="11.5" fill="#555555" text-anchor="middle">but the unwind must propagate</text>
+<text x="221.0" y="208.5" font-size="11.5" fill="#555555" text-anchor="middle">asynchronous: any cancellation point</text>
+<rect x="416" y="96" width="330" height="150" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="581.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">ch52 — thread::interrupt()</text>
+<text x="581.0" y="163.5" font-size="11.5" fill="#555555" text-anchor="middle">an ORDINARY C++ exception</text>
+<text x="581.0" y="178.5" font-size="11.5" fill="#555555" text-anchor="middle">boost::thread_interrupted</text>
+<text x="581.0" y="193.5" font-size="11.5" fill="#555555" text-anchor="middle">thrown at defined points only</text>
+<text x="581.0" y="208.5" font-size="11.5" fill="#555555" text-anchor="middle">sleep_for, cv wait, join, …</text>
+<rect x="776" y="96" width="330" height="150" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="941.0" y="146.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">ch51 — stop_token</text>
+<text x="941.0" y="163.5" font-size="11.5" fill="#555555" text-anchor="middle">a FLAG, nothing thrown</text>
+<text x="941.0" y="178.5" font-size="11.5" fill="#555555" text-anchor="middle">request_stop() sets it</text>
+<text x="941.0" y="193.5" font-size="11.5" fill="#555555" text-anchor="middle">the target polls when it likes</text>
+<text x="941.0" y="208.5" font-size="11.5" fill="#555555" text-anchor="middle">cooperative, poll-only</text>
+<rect x="56" y="286" width="330" height="110" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="221.0" y="331.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">FATAL: exception not rethrown</text>
+<text x="221.0" y="348.5" font-size="11.5" fill="#555555" text-anchor="middle">SIGABRT — exit 134</text>
+<text x="221.0" y="363.5" font-size="11.5" fill="#555555" text-anchor="middle">the PROCESS dies, not the thread</text>
+<rect x="416" y="286" width="330" height="110" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="581.0" y="331.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">process survives — exit 0</text>
+<text x="581.0" y="348.5" font-size="11.5" fill="#555555" text-anchor="middle">a swallowed exception is a bug,</text>
+<text x="581.0" y="363.5" font-size="11.5" fill="#555555" text-anchor="middle">not a process kill</text>
+<rect x="776" y="286" width="330" height="110" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="941.0" y="331.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">nothing to swallow</text>
+<text x="941.0" y="348.5" font-size="11.5" fill="#555555" text-anchor="middle">there is no exception at all;</text>
+<text x="941.0" y="363.5" font-size="11.5" fill="#555555" text-anchor="middle">the risk is never stopping</text>
+<rect x="286" y="414" width="590" height="54" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="581.0" y="439.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">Boost sits between the two — catchable like an exception,</text>
+<text x="581.0" y="456.0" font-size="11.5" fill="#555555" text-anchor="middle">because that is exactly what it is</text>
+<path d="M221,246 L221,286" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M581,246 L581,286" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M941,246 L941,286" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="40" y="520" font-size="11" fill="#1d1d1d" text-anchor="start">All three rows are real runs on this host. The ch50 abort and the ch52 survival are both hard-gated, in their own chapters&#x27; harnesses.</text>
+<text x="40" y="544" font-size="11" fill="#1d1d1d" text-anchor="start">The difference is not how careful the caller is — it is what the mechanism IS. A forced unwind must propagate; an ordinary exception need not; a flag cannot be caught.</text>
+<text x="40" y="568" font-size="11" fill="#1d1d1d" text-anchor="start">Power runs left to right; safety runs right to left. Boost.Thread is the only one of the three that is both catchable and non-fatal when mishandled.</text>
+</svg>
