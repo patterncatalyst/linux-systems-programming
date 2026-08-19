@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 650" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="24" y="54" width="1112" height="196" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="36" y="74" font-size="12" font-weight="700" fill="#1d1d1d">Standardized — C++11 took Boost.Thread almost wholesale</text>
+<rect x="24" y="268" width="1112" height="250" rx="12" fill="#fdf7ef" stroke="#ddd"/>
+<text x="36" y="288" font-size="12" font-weight="700" fill="#1d1d1d">Left behind — still Boost-only in C++23 on this toolchain</text>
+<rect x="420" y="14" width="320" height="30" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="580.0" y="34.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">Boost.Thread → std::thread, 2011</text>
+<rect x="56" y="96" width="250" height="126" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="181.0" y="142.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">thread · mutex</text>
+<text x="181.0" y="159.0" font-size="11.5" fill="#555555" text-anchor="middle">lock_guard · unique_lock</text>
+<text x="181.0" y="174.0" font-size="11.5" fill="#555555" text-anchor="middle">condition_variable</text>
+<text x="181.0" y="189.0" font-size="11.5" fill="#555555" text-anchor="middle">→ became std:: verbatim</text>
+<rect x="326" y="96" width="250" height="126" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="451.0" y="142.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">future · promise</text>
+<text x="451.0" y="159.0" font-size="11.5" fill="#555555" text-anchor="middle">packaged_task · async</text>
+<text x="451.0" y="174.0" font-size="11.5" fill="#555555" text-anchor="middle">shared_future</text>
+<text x="451.0" y="189.0" font-size="11.5" fill="#555555" text-anchor="middle">→ became std::, minus .then()</text>
+<rect x="596" y="96" width="250" height="126" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="721.0" y="149.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">shared_mutex · barrier</text>
+<text x="721.0" y="166.5" font-size="11.5" fill="#555555" text-anchor="middle">→ C++17 and C++20</text>
+<text x="721.0" y="181.5" font-size="11.5" fill="#555555" text-anchor="middle">minus the upgrade lock</text>
+<rect x="866" y="96" width="240" height="126" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="986.0" y="142.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">the pattern:</text>
+<text x="986.0" y="159.0" font-size="11.5" fill="#555555" text-anchor="middle">the TYPES were taken,</text>
+<text x="986.0" y="174.0" font-size="11.5" fill="#555555" text-anchor="middle">the COMPOSITION and the</text>
+<text x="986.0" y="189.0" font-size="11.5" fill="#555555" text-anchor="middle">third lock state were not</text>
+<rect x="56" y="310" width="250" height="126" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="181.0" y="356.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">future::then() · when_all</text>
+<text x="181.0" y="373.0" font-size="11.5" fill="#555555" text-anchor="middle">compose without blocking</text>
+<text x="181.0" y="388.0" font-size="11.5" fill="#555555" text-anchor="middle">async(21).then(*2) = 42</text>
+<text x="181.0" y="403.0" font-size="11.5" fill="#555555" text-anchor="middle">std::future: no .then()</text>
+<rect x="326" y="310" width="250" height="126" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="451.0" y="348.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">upgrade_lock</text>
+<text x="451.0" y="365.5" font-size="11.5" fill="#555555" text-anchor="middle">a THIRD lock state:</text>
+<text x="451.0" y="380.5" font-size="11.5" fill="#555555" text-anchor="middle">shared vs readers,</text>
+<text x="451.0" y="395.5" font-size="11.5" fill="#555555" text-anchor="middle">exclusive vs upgraders</text>
+<text x="451.0" y="410.5" font-size="11.5" fill="#555555" text-anchor="middle">promotes without releasing</text>
+<rect x="596" y="310" width="250" height="126" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="721.0" y="356.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">thread::interrupt()</text>
+<text x="721.0" y="373.0" font-size="11.5" fill="#555555" text-anchor="middle">an ordinary C++ exception</text>
+<text x="721.0" y="388.0" font-size="11.5" fill="#555555" text-anchor="middle">at defined points</text>
+<text x="721.0" y="403.0" font-size="11.5" fill="#555555" text-anchor="middle">boost::thread_interrupted</text>
+<rect x="866" y="310" width="240" height="126" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="986.0" y="348.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">thread::attributes</text>
+<text x="986.0" y="365.5" font-size="11.5" fill="#555555" text-anchor="middle">set_stack_size(256 KiB)</text>
+<text x="986.0" y="380.5" font-size="11.5" fill="#555555" text-anchor="middle">→ observed 262144,</text>
+<text x="986.0" y="395.5" font-size="11.5" fill="#555555" text-anchor="middle">the same byte-for-byte</text>
+<text x="986.0" y="410.5" font-size="11.5" fill="#555555" text-anchor="middle">as ch50&#x27;s POSIX call</text>
+<rect x="326" y="452" width="520" height="48" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="586.0" y="481.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">std::upgrade_lock does not exist — not absent, undeclared</text>
+<path d="M181,222 L181,310" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M451,222 L451,310" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="40" y="556" font-size="11" fill="#1d1d1d" text-anchor="start">C++11 standardized Boost.Thread&#x27;s types nearly unchanged. What it did not take is specific and still missing 15 years later: composition, the upgrade lock, and per-thread attributes.</text>
+<text x="40" y="580" font-size="11" fill="#1d1d1d" text-anchor="start">The .then() contrast is checked by the compiler on every run — a concept evaluated against std::future&lt;int&gt; and boost::future&lt;int&gt; — rather than asserted by the author once.</text>
+<text x="40" y="604" font-size="11" fill="#1d1d1d" text-anchor="start">Measured on the Fedora 44 reference host: Boost 1.90.0 from boost-devel, BOOST_THREAD_VERSION=5, GCC 16.1.1. No Conan, no network.</text>
+<text x="40" y="628" font-size="11" fill="#1d1d1d" text-anchor="start">C++26&#x27;s std::execution is the standard&#x27;s answer to the composition gap — forward-looking in ch49, compared for real in ch56.</text>
+</svg>
