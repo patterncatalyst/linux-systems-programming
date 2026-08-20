@@ -120,3 +120,46 @@ S6 `_docs/53-coroutines.md` · S7 2 diagrams + catalogue · S8 gate matrix · S9
 `verify.lua` PASS/FAIL 0 with C and F running for real; runner 1 passed; `validate.py` OK;
 every chapter code block verbatim; footer states GCC 16.1.1 / clang 22.1.8, the frame
 sizes, and the HALO split as measured.
+
+## Outcome (2026-08-19)
+
+All steps complete. `verify.lua` → **PASS 32 / FAIL 0** with gate F (clang parity + the
+HALO contrast) running for real. Runner → 1 passed. `validate.py` → OK. Banned-words
+clean after one fix. **22/22 chapter code blocks verbatim.**
+
+### The overlap check worked
+
+Checking ch27 *before* planning (rather than mid-draft, as happened in r20) is what
+produced this chapter's angle. ch27 owns the mechanism; ch53 owns the cost. No epoll, no
+reactor, no awaitable-protocol tutorial anywhere in ch53, and the opening cites ch27
+explicitly.
+
+### Deltas
+
+- **`lifetime` had to be re-instrumented.** The first version counted `operator new` and
+  reported `leaked_frames=1 owned_frames=1` — identical numbers that demonstrated
+  nothing, since both halves allocate one frame. Switched to counting `operator delete`,
+  which runs only on `destroy()`: now `abandoned alloc=1 free=0` vs
+  `owned alloc=1 free=1`. The chapter states why that is the right counter.
+- **Two promise types, deliberately.** `Counted` uses `suspend_always` at initial suspend
+  so the frame provably outlives the call and nothing is elidable — that is what `frames`
+  needs. `Eager` uses `suspend_never` at both ends so elision is *permitted* — that is
+  what `halo` needs. A `halo` case built on `Counted` would have reported 1000
+  allocations under both compilers and supported the wrong conclusion entirely.
+- **One banned word** ("two honest qualifications") caught by the check and removed.
+
+### Measured, and worth keeping
+
+Frame sizes: trivial **32**, four ints + `char[256]` **304**, `char[4096]` **4128**.
+Against ch50's measured 8388608-byte thread stack: **262144x**, computed in the program.
+
+HALO across the shipped source, 1000 calls:
+
+| compiler | -O0 | -O1 | -O2 | -O3 |
+| --- | --- | --- | --- | --- |
+| g++ 16.1.1 | 1000 | 1000 | 1000 | 1000 |
+| clang++ 22.1.8 | 1000 | **0** | **0** | — |
+
+Gate C asserts only internal consistency, never that elision does or does not happen — a
+future GCC that starts eliding must not fail a test for improving. Gate F asserts the
+relationship (clang <= GCC), which stays true whichever way either compiler moves.
