@@ -221,3 +221,7 @@ examples:
     langs: [cpp]
     mode: local
     timeout: 600
+  - id: 53-coroutines
+    langs: [cpp]
+    mode: local
+    timeout: 600
