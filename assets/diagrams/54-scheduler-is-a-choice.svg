@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 600" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="24" y="54" width="544" height="330" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="36" y="74" font-size="12" font-weight="700" fill="#1d1d1d">Default: boost::fibers::algo::round_robin</text>
+<rect x="592" y="54" width="544" height="330" rx="12" fill="#fdf7ef" stroke="#ddd"/>
+<text x="604" y="74" font-size="12" font-weight="700" fill="#1d1d1d">One call later: algo::shared_work</text>
+<rect x="390" y="14" width="380" height="30" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="580.0" y="34.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">same 16 fibers, same work, one line apart</text>
+<rect x="56" y="96" width="480" height="96" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="296.0" y="134.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">16 fibers · one per-thread queue</text>
+<text x="296.0" y="151.5" font-size="11.5" fill="#555555" text-anchor="middle">a fiber never leaves the thread that created it</text>
+<text x="296.0" y="166.5" font-size="11.5" fill="#555555" text-anchor="middle">distinct_tids = 1</text>
+<rect x="56" y="210" width="480" height="76" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="296.0" y="246.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">ch49&#x27;s vocabulary: 16 tasks in flight,</text>
+<text x="296.0" y="263.0" font-size="11.5" fill="#555555" text-anchor="middle">one CPU occupied — concurrent, NOT parallel</text>
+<rect x="56" y="304" width="480" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="296.0" y="332.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">and that is a legitimate choice: no migration means</text>
+<text x="296.0" y="349.0" font-size="11.5" fill="#555555" text-anchor="middle">no cross-thread synchronisation to reason about</text>
+<rect x="616" y="96" width="496" height="96" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="864.0" y="134.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">the SAME 16 fibers · ONE shared queue</text>
+<text x="864.0" y="151.5" font-size="11.5" fill="#555555" text-anchor="middle">4 threads pull from it; a fiber can resume elsewhere</text>
+<text x="864.0" y="166.5" font-size="11.5" fill="#555555" text-anchor="middle">distinct_tids = 4</text>
+<rect x="616" y="210" width="496" height="76" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="864.0" y="246.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">concurrent AND parallel — the bottom-right</text>
+<text x="864.0" y="263.0" font-size="11.5" fill="#555555" text-anchor="middle">cell of ch49&#x27;s grid, reached by choosing it</text>
+<rect x="616" y="304" width="496" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="864.0" y="332.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">the price: your fiber&#x27;s data is now touched by</text>
+<text x="864.0" y="349.0" font-size="11.5" fill="#555555" text-anchor="middle">several threads, and you own that problem</text>
+<rect x="236" y="414" width="690" height="54" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="581.0" y="439.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">boost::fibers::use_scheduling_algorithm&lt;algo::shared_work&gt;();</text>
+<text x="581.0" y="456.0" font-size="11.5" fill="#555555" text-anchor="middle">one line — and it is yours to write, not a runtime&#x27;s to decide (contrast ch44&#x27;s Go)</text>
+<path d="M536,144 L616,144" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="40" y="506" font-size="11" fill="#1d1d1d" text-anchor="start">Both columns are real runs, tids collected with gettid() — the same kernel task id ch50 established. shared_work reported 4 of 4 on five consecutive runs.</text>
+<text x="40" y="530" font-size="11" fill="#1d1d1d" text-anchor="start">Go&#x27;s runtime makes this decision for you and mostly will not be argued with (ch44). Boost.Fiber makes you choose, which is more work and more control.</text>
+<text x="40" y="554" font-size="11" fill="#1d1d1d" text-anchor="start">verify.lua gates round_robin at exactly 1 tid and shared_work at more than 1 — the sign, never the magnitude, since the count is scheduler-dependent.</text>
+</svg>
