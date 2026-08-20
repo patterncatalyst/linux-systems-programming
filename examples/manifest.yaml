@@ -225,3 +225,9 @@ examples:
     langs: [cpp]
     mode: local
     timeout: 600
+  # shared_work spins up 4 threads and the guard-overflow case faults under
+  # timeout(1); -O0 on this TU also makes the build a touch slower.
+  - id: 54-boost-fiber
+    langs: [cpp]
+    mode: local
+    timeout: 900
