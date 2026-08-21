@@ -231,3 +231,9 @@ examples:
     langs: [cpp]
     mode: local
     timeout: 900
+  # 13 subcommands, several spinning up 8 threads, plus four straced runs.
+  # Uses an AF_UNIX socketpair -- nothing binds a port, so still mode: local.
+  - id: 55-boost-asio
+    langs: [cpp]
+    mode: local
+    timeout: 900

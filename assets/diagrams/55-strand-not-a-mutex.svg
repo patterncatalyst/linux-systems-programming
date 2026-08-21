@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 640" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="24" y="54" width="1112" height="250" rx="12" fill="#fdf7ef" stroke="#ddd"/>
+<text x="36" y="74" font-size="12" font-weight="700" fill="#1d1d1d">Same handler, same 8 threads, same io_context — only the executor differs</text>
+<rect x="24" y="322" width="1112" height="190" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="36" y="342" font-size="12" font-weight="700" fill="#1d1d1d">And a strand is not a mutex wearing a different name</text>
+<rect x="400" y="14" width="360" height="30" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="580.0" y="34.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">post(strand, h) vs post(io_context, h)</text>
+<rect x="56" y="96" width="500" height="126" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="306.0" y="142.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">post(strand, handler)</text>
+<text x="306.0" y="159.0" font-size="11.5" fill="#555555" text-anchor="middle">unsynchronized counter → 2000 of 2000, correct</text>
+<text x="306.0" y="174.0" font-size="11.5" fill="#555555" text-anchor="middle">max_inflight = 1 · overlaps = 0</text>
+<text x="306.0" y="189.0" font-size="11.5" fill="#555555" text-anchor="middle">8 threads ran handlers; no two ran at once</text>
+<rect x="596" y="96" width="510" height="126" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="851.0" y="142.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">post(io_context, handler)</text>
+<text x="851.0" y="159.0" font-size="11.5" fill="#555555" text-anchor="middle">the same counter → 1897 of 2000</text>
+<text x="851.0" y="174.0" font-size="11.5" fill="#555555" text-anchor="middle">max_inflight = 6 · overlaps = 1441</text>
+<text x="851.0" y="189.0" font-size="11.5" fill="#555555" text-anchor="middle">a real data race, visible as a wrong number</text>
+<rect x="246" y="240" width="670" height="48" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="581.0" y="262.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">the lost count is UB: reported, never gated</text>
+<text x="581.0" y="279.0" font-size="11.5" fill="#555555" text-anchor="middle">the OVERLAP is what verify.lua asserts</text>
+<rect x="56" y="362" width="500" height="110" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="306.0" y="407.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">std::mutex — BLOCKS the thread</text>
+<text x="306.0" y="424.5" font-size="11.5" fill="#555555" text-anchor="middle">contention → futex(FUTEX_WAIT) into the kernel</text>
+<text x="306.0" y="439.5" font-size="11.5" fill="#555555" text-anchor="middle">982 futex calls for 20,000 increments</text>
+<rect x="596" y="362" width="510" height="110" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="851.0" y="407.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">strand — DEFERS the handler</text>
+<text x="851.0" y="424.5" font-size="11.5" fill="#555555" text-anchor="middle">the thread returns to the pool and takes other work</text>
+<text x="851.0" y="439.5" font-size="11.5" fill="#555555" text-anchor="middle">61 futex calls for the identical 20,000</text>
+<path d="M556,159 L596,159" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<path d="M556,417 L596,417" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
+<text x="40" y="540" font-size="11" fill="#1d1d1d" text-anchor="start">Both mechanisms produce the correct answer. The difference is what happens to a thread that loses the race: a mutex puts it to sleep, a strand gives it something else to do.</text>
+<text x="40" y="564" font-size="11" fill="#1d1d1d" text-anchor="start">Futex counts measured with ch51&#x27;s method (strace -f -c -e trace=futex). Gated as a ratio, never as magnitudes — they move with scheduling.</text>
+<text x="40" y="588" font-size="11" fill="#1d1d1d" text-anchor="start">A strand costs no lock and no thread. What it costs instead is ordering: handlers on one strand can never run in parallel with each other, however many threads you have.</text>
+<text x="40" y="612" font-size="11" fill="#1d1d1d" text-anchor="start">Measured on the Fedora 44 reference host, Boost 1.90.0, GCC 16.1.1.</text>
+</svg>
