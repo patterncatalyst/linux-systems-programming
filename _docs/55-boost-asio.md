@@ -25,7 +25,7 @@ readiness, or `EAGAIN`.
 
 {% include excalidraw.html
    file="55-strand-not-a-mutex"
-   alt="The same handler, the same 8 threads and the same io_context posted two ways, and a lower band pricing the alternative. The upper left amber box, post(strand, handler), reports an unsynchronized counter reaching 2000 of 2000 and correct, with max_inflight equals 1 and overlaps equals 0, annotated that 8 threads ran handlers and no two ran at once. The upper right dashed ghost box, post(io_context, handler), reports the same counter reaching only 1897 of 2000 with max_inflight equals 6 and overlaps equals 1441 -- a real data race visible as a wrong number rather than a sanitizer warning -- annotated that the lost count is undefined behaviour and is reported rather than gated, while the overlap is what verify.lua asserts because it is measured with atomics and well defined. The lower band contrasts two correct mechanisms: std::mutex, which BLOCKS a thread into futex FUTEX_WAIT, at 982 futex calls for 20,000 increments, against an amber strand, which DEFERS the handler and returns the thread to the pool, at 61 futex calls for the identical 20,000 increments. A closing amber note observes that a strand costs no lock and no blocked thread, and pays instead in ordering. Footnotes record that the futex counts were measured with ch51's method, strace -f -c -e trace=futex, and are gated as a ratio rather than as magnitudes because they move with scheduling, and that everything was measured on the Fedora 44 reference host with Boost 1.90.0 and GCC 16.1.1."
+   alt="The same handler, the same 8 threads and the same io_context posted two ways, and a lower band pricing the alternative. The upper left amber box, post(strand, handler), reports an unsynchronized counter reaching 2000 of 2000 and correct, with max_inflight equals 1 and overlaps equals 0, annotated that 8 threads ran handlers and no two ran at once. The upper right dashed ghost box, post(io_context, handler), reports the same counter reaching only 1862 of 2000 with max_inflight equals 6 and overlaps equals 1492 -- a real data race visible as a wrong number rather than a sanitizer warning -- annotated that the lost count is undefined behaviour and is reported rather than gated, while the overlap is what verify.lua asserts because it is measured with atomics and well defined. The lower band contrasts two correct mechanisms: std::mutex, which BLOCKS a thread into futex FUTEX_WAIT, at 1022 futex calls for 20,000 increments, against an amber strand, which DEFERS the handler and returns the thread to the pool, at 52 futex calls for the identical 20,000 increments. A closing amber note observes that a strand costs no lock and no blocked thread, and pays instead in ordering. Footnotes record that the futex counts were measured with ch51's method, strace -f -c -e trace=futex, and are gated as a ratio rather than as magnitudes because they move with scheduling, and that everything was measured on the Fedora 44 reference host with Boost 1.90.0 and GCC 16.1.1."
    caption="Figure 55.1 — one handler, two executors: a strand serializes without a lock, and the arm without one loses increments for real" %}
 
 > **Tools used** — `g++` and `cmake` (host; gated by `scripts/check-host.sh` as
@@ -161,9 +161,9 @@ you cannot gate on the output of undefined behavior.** A run that loses nothing
 at all is entirely legal, and a test that failed on it would be wrong, not the
 run.
 
-The magnitudes bear that out. Five consecutive runs on this host lost 22, 110,
-104, 44, and 24 increments — Figure 55.1 records yet another one, at 1897 of
-2000. Every one of those is the same defect and none of them is a number to
+The magnitudes bear that out. Figure 55.1 records the run quoted above, at 1862
+of 2000; five further runs on this host lost 22, 110, 104, 44, and 24 increments
+instead. Every one of those is the same defect and none of them is a number to
 quote as *the* answer. Over those same runs `overlaps` was 1375 to 1507 and
 `max_inflight` 5 to 6, never remotely near zero, which is why the overlap is the
 assertion: it is measured with atomics, it is well defined, and it is a real
@@ -571,8 +571,9 @@ reported <code>counter=2000 max_inflight=1 overlaps=0</code> and
 <code>nostrand</code> reported <code>counter=1862 lost=138 max_inflight=6
 overlaps=1492</code> for the identical handler, with five further runs losing 22,
 110, 104, 44 and 24 (overlaps 1375-1507) — the variation is why the lost count is
-reported and never gated, and Figure 55.1 records a further run at 1897 of 2000
-with 1441 overlaps; <code>strand-cost</code> and <code>mutex-cost</code> both
+reported and never gated. Figure 55.1 was regenerated from this session's numbers
+and records that same run (1862 of 2000, 1492 overlaps, 52 against 1022 futex
+calls); <code>strand-cost</code> and <code>mutex-cost</code> both
 reported <code>counter=20000 correct=yes</code> at 52 versus 1022 futex calls in
 the gated run, with three further pairs at 52/54/55 against 1022/992/965;
 <code>gather</code> cost exactly <strong>1</strong> socket write-family syscall

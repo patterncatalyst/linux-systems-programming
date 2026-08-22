@@ -170,9 +170,15 @@ counts, the syscall counts, and the tid counts as measured.
 ### Numbers as re-measured 2026-08-21 (what the chapter quotes)
 `nostrand` counter=1862 lost=138 max_inflight=6 overlaps=1492; five further runs lost
 22, 110, 104, 44, 24 with overlaps 1375-1507. Futex: strand 52 vs mutex 1022 in the gated
-run, plus 52/54/55 against 1022/992/965. Figure 55.1 was rendered from an earlier run
-(1897 of 2000, 1441 overlaps, 982/61 futex) — the chapter says so explicitly rather than
-re-rendering, because the varying magnitude IS the lesson about not gating on UB.
+run, plus 52/54/55 against 1022/992/965. **Figure 55.1 was regenerated 2026-08-22** to
+this session's numbers (was 1897/1441 and 982/61 from the checkpoint session). No spec
+script for these figures is committed, so the paired `.svg` + `.excalidraw` were edited in
+place: the SVG text is `text-anchor="middle"` on a fixed `x`, and the excalidraw text
+elements carry a `width` of exactly `len(text) * 6.05` at `fontSize` 11, which is what a
+re-render must reproduce. Dump the excalidraw with `indent=1` to match
+`generate_diagram.py` and keep the diff small. Prose carrying those four numbers lives in
+four places: the chapter's `alt=` text, the "What the gate asserts" paragraph, the status
+footer, and the `assets/diagrams/README.md` catalogue row.
 Deterministic and unchanged: gather=1 `sendmsg`, separate=4 `sendto`, 56 bytes; tids
 1 / 8 / 4 / 4; digest `0x481984990deee5ff` on all 13 cases and under clang.
 

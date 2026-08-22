@@ -13,8 +13,8 @@
 <text x="306.0" y="189.0" font-size="11.5" fill="#555555" text-anchor="middle">8 threads ran handlers; no two ran at once</text>
 <rect x="596" y="96" width="510" height="126" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
 <text x="851.0" y="142.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">post(io_context, handler)</text>
-<text x="851.0" y="159.0" font-size="11.5" fill="#555555" text-anchor="middle">the same counter → 1897 of 2000</text>
-<text x="851.0" y="174.0" font-size="11.5" fill="#555555" text-anchor="middle">max_inflight = 6 · overlaps = 1441</text>
+<text x="851.0" y="159.0" font-size="11.5" fill="#555555" text-anchor="middle">the same counter → 1862 of 2000</text>
+<text x="851.0" y="174.0" font-size="11.5" fill="#555555" text-anchor="middle">max_inflight = 6 · overlaps = 1492</text>
 <text x="851.0" y="189.0" font-size="11.5" fill="#555555" text-anchor="middle">a real data race, visible as a wrong number</text>
 <rect x="246" y="240" width="670" height="48" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
 <text x="581.0" y="262.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">the lost count is UB: reported, never gated</text>
@@ -22,11 +22,11 @@
 <rect x="56" y="362" width="500" height="110" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="306.0" y="407.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">std::mutex — BLOCKS the thread</text>
 <text x="306.0" y="424.5" font-size="11.5" fill="#555555" text-anchor="middle">contention → futex(FUTEX_WAIT) into the kernel</text>
-<text x="306.0" y="439.5" font-size="11.5" fill="#555555" text-anchor="middle">982 futex calls for 20,000 increments</text>
+<text x="306.0" y="439.5" font-size="11.5" fill="#555555" text-anchor="middle">1022 futex calls for 20,000 increments</text>
 <rect x="596" y="362" width="510" height="110" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
 <text x="851.0" y="407.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">strand — DEFERS the handler</text>
 <text x="851.0" y="424.5" font-size="11.5" fill="#555555" text-anchor="middle">the thread returns to the pool and takes other work</text>
-<text x="851.0" y="439.5" font-size="11.5" fill="#555555" text-anchor="middle">61 futex calls for the identical 20,000</text>
+<text x="851.0" y="439.5" font-size="11.5" fill="#555555" text-anchor="middle">52 futex calls for the identical 20,000</text>
 <path d="M556,159 L596,159" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <path d="M556,417 L596,417" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <text x="40" y="540" font-size="11" fill="#1d1d1d" text-anchor="start">Both mechanisms produce the correct answer. The difference is what happens to a thread that loses the race: a mutex puts it to sleep, a strand gives it something else to do.</text>
