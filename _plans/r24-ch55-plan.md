@@ -155,12 +155,26 @@ counts, the syscall counts, and the tid counts as measured.
   `55-topologies-and-gather`.
 - `validate.py` → OK.
 
-### REMAINING WORK (resume here)
-1. **`examples/55-boost-asio/README.md` is STILL `_template` TEXT.** Rewrite it.
-2. **Write `_docs/55-boost-asio.md`.** Front matter `part:` must be exactly
-   `"Compendium: C++ Concurrency"`. Spine + both `Figure 55.x` includes.
-3. Gate matrix: validate.py, verbatim-block check, banned words, cross-ref resolve.
-4. PR (autonomous through PR; the user merges), then confirm the post-merge deploy.
+### REMAINING WORK — DONE (2026-08-21)
+1. ~~`examples/55-boost-asio/README.md`~~ rewritten.
+2. ~~`_docs/55-boost-asio.md`~~ written — 32 KB, `part: "Compendium: C++ Concurrency"`,
+   full spine, both `Figure 55.x` includes, Tools used box.
+3. Gate matrix, all re-run on the host this session:
+   - `LSP_LANG=cpp REPO_ROOT=… lua verify.lua` → **PASS 48 / FAIL 0** (C, D, E, F, G real)
+   - `python3 scripts/test-all-examples.py --only 55-boost-asio` → **1 passed**
+   - `python3 scripts/validate.py` → **OK**
+   - verbatim-block check → 12/12 blocks match `asiodemo.cpp` / `verify.lua` / `CMakeLists.txt`
+   - banned words → none; cross-refs ch09/22/27/39/46/49/50/51/52/53/54 all resolve
+4. PR — remaining.
+
+### Numbers as re-measured 2026-08-21 (what the chapter quotes)
+`nostrand` counter=1862 lost=138 max_inflight=6 overlaps=1492; five further runs lost
+22, 110, 104, 44, 24 with overlaps 1375-1507. Futex: strand 52 vs mutex 1022 in the gated
+run, plus 52/54/55 against 1022/992/965. Figure 55.1 was rendered from an earlier run
+(1897 of 2000, 1441 overlaps, 982/61 futex) — the chapter says so explicitly rather than
+re-rendering, because the varying magnitude IS the lesson about not gating on UB.
+Deterministic and unchanged: gather=1 `sendmsg`, separate=4 `sendto`, 56 bytes; tids
+1 / 8 / 4 / 4; digest `0x481984990deee5ff` on all 13 cases and under clang.
 
 ### Captured transcripts (all real runs this session — quote these)
 ```
