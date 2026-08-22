@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 620" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
+<defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
+<rect x="24" y="54" width="1112" height="234" rx="12" fill="#fafafa" stroke="#ddd"/>
+<text x="36" y="74" font-size="12" font-weight="700" fill="#1d1d1d">Who runs the handlers — same 400 posts, four shapes of run()</text>
+<rect x="24" y="306" width="1112" height="190" rx="12" fill="#fdf7ef" stroke="#ddd"/>
+<text x="36" y="326" font-size="12" font-weight="700" fill="#1d1d1d">One buffer SEQUENCE is one syscall</text>
+<rect x="410" y="14" width="340" height="30" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
+<text x="580.0" y="34.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">the shape is yours to choose</text>
+<rect x="48" y="96" width="250" height="110" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="173.0" y="134.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">one thread, one context</text>
+<text x="173.0" y="151.0" font-size="11.5" fill="#555555" text-anchor="middle">ioc.run() on main</text>
+<text x="173.0" y="166.0" font-size="11.5" fill="#555555" text-anchor="middle">distinct_tids = 1</text>
+<text x="173.0" y="181.0" font-size="11.5" fill="#555555" text-anchor="middle">no synchronisation needed</text>
+<rect x="318" y="96" width="250" height="110" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="443.0" y="134.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">N threads, one context</text>
+<text x="443.0" y="151.0" font-size="11.5" fill="#555555" text-anchor="middle">8 x ioc.run(), shared queue</text>
+<text x="443.0" y="166.0" font-size="11.5" fill="#555555" text-anchor="middle">distinct_tids = 8</text>
+<text x="443.0" y="181.0" font-size="11.5" fill="#555555" text-anchor="middle">handlers need a strand</text>
+<rect x="588" y="96" width="250" height="110" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="713.0" y="134.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">one context per thread</text>
+<text x="713.0" y="151.0" font-size="11.5" fill="#555555" text-anchor="middle">no sharing, no handoff</text>
+<text x="713.0" y="166.0" font-size="11.5" fill="#555555" text-anchor="middle">distinct_tids = 4</text>
+<text x="713.0" y="181.0" font-size="11.5" fill="#555555" text-anchor="middle">each loop owns its fds</text>
+<rect x="858" y="96" width="250" height="110" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="983.0" y="134.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">asio::thread_pool(4)</text>
+<text x="983.0" y="151.0" font-size="11.5" fill="#555555" text-anchor="middle">owns its own threads</text>
+<text x="983.0" y="166.0" font-size="11.5" fill="#555555" text-anchor="middle">distinct_tids = 4</text>
+<text x="983.0" y="181.0" font-size="11.5" fill="#555555" text-anchor="middle">no run() call at all</text>
+<rect x="286" y="222" width="590" height="48" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
+<text x="581.0" y="244.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">tids from gettid() — ch50&#x27;s instrument and ch49&#x27;s</text>
+<text x="581.0" y="261.0" font-size="11.5" fill="#555555" text-anchor="middle">vocabulary, applied to an I/O runtime</text>
+<rect x="56" y="348" width="500" height="110" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
+<text x="306.0" y="393.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">asio::write(sock, array&lt;const_buffer,4&gt;)</text>
+<text x="306.0" y="410.5" font-size="11.5" fill="#555555" text-anchor="middle">→ 1 socket write-family syscall (sendmsg, 4 iovecs)</text>
+<text x="306.0" y="425.5" font-size="11.5" fill="#555555" text-anchor="middle">56 bytes, one trip into the kernel</text>
+<rect x="596" y="348" width="510" height="110" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
+<text x="851.0" y="393.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">four separate asio::write calls</text>
+<text x="851.0" y="410.5" font-size="11.5" fill="#555555" text-anchor="middle">→ 4 socket write-family syscalls (sendto)</text>
+<text x="851.0" y="425.5" font-size="11.5" fill="#555555" text-anchor="middle">the same 56 bytes, four trips</text>
+<path d="M556,403 L596,403" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+<text x="40" y="524" font-size="11" fill="#1d1d1d" text-anchor="start">Identical bytes reach the peer either way — the gate checks that too. What differs is the number of times the process crosses into the kernel.</text>
+<text x="40" y="548" font-size="11" fill="#1d1d1d" text-anchor="start">This is the readv/writev machinery Part 5 covered, reached by handing Asio a buffer sequence instead of assembling an iovec array by hand.</text>
+<text x="40" y="572" font-size="11" fill="#1d1d1d" text-anchor="start">Syscall counts are deterministic and are gated exactly; plain write(2) is excluded because it is this program&#x27;s own stdout.</text>
+<text x="40" y="596" font-size="11" fill="#1d1d1d" text-anchor="start">Nothing binds a port: the I/O cases use an AF_UNIX socketpair via local::connect_pair, so the example stays offline and unprivileged.</text>
+</svg>
