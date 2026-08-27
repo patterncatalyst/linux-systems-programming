@@ -1,0 +1,9 @@
+{
+    "version": "0.5",
+    "requires": [
+        "stdexec/nvhpc-26.05#c5722201d64c798040e29980ef463a7c%1787496138.2231429"
+    ],
+    "build_requires": [],
+    "python_requires": [],
+    "config_requires": []
+}

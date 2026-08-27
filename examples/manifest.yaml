@@ -237,3 +237,8 @@ examples:
     langs: [cpp]
     mode: local
     timeout: 900
+
+  - id: 56-capstone-comparison
+    langs: [cpp]
+    mode: local
+    timeout: 1800
