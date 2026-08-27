@@ -167,4 +167,31 @@ P2300 — reference implementation live at `nvhpc-26.05`, standard library still
 ## Status
 
 - [x] Overlap check - [x] Host audit - [x] D1 feasibility proven (both compilers, pinned tag)
-- [ ] S1 - [ ] S2 - [ ] S3 - [ ] S4 - [ ] S5 - [ ] S6 - [ ] S7 - [ ] S8 - [ ] S9 - [ ] PR
+- [x] S1 - [x] S2 - [x] S3 - [x] S4 - [x] S5 - [x] S6 - [x] S7 - [x] S8 - [x] S9 - [ ] PR
+
+### COMPLETE (2026-08-26)
+
+Gate matrix, all run on the host:
+- `verify.lua` → **PASS 57 / FAIL 0** (B, C, D, E, F all real)
+- **SKIP path proven** → **PASS 52 / FAIL 0** with `conan` hidden from PATH and
+  `cpp/build/conan` deleted; gate E printed its informational SKIP. This is the
+  acceptance criterion that mattered and it is what fedora:44 CI does.
+- runner → 1 passed · `validate.py` → OK · 9/9 chapter code blocks verbatim ·
+  banned words none · ch39/46/49-55 cross-refs resolve
+
+Measured, and what the chapter quotes:
+- all seven models → `total=0xb75768f6610642a0`; digest `0x481984990deee5ff`
+- tids: 1 / 1 / 1 (sequential, coroutine, fiber) · 8 (pthreads, std-thread,
+  boost-thread, asio, senders)
+- futex: 1 / 1 / 1 · 230 / 427 / 451 · **51** (strand) · 562 (senders).
+  Spans over further runs: locks 230-549, strand 51-65, senders 562-582.
+
+Deviations from the plan, both deliberate:
+1. **Diagram spec IS committed** at `assets/diagrams/specs/56.py`, against the
+   established convention of throwing specs away. Regenerating Figure 55.1 by
+   hand in r24 cost real effort; this makes the next number correction a re-run.
+   Flagged to the user rather than done silently.
+2. The `conan` preset builds **Release**, not RelWithDebInfo. CMakeDeps gates
+   include dirs behind `$<$<CONFIG:Release>:...>`, so a mismatch makes
+   `find_package` succeed while the headers stay invisible. Became the
+   chapter's "an error the build catches".
