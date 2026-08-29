@@ -96,23 +96,43 @@ nothing.
 **Fixed** with `sudo dnf -y update libstdc++ libgcc` on `systems-target`; the
 guest now provides `GLIBCXX_3.4.36` and all seven VM cpp examples pass.
 
-### OPEN — the `lab-ready` snapshot still has the old runtime
+### RESOLVED (2026-08-28) — both snapshots refreshed
 
-The snapshot is dated **2026-07-18** and predates the host's update. Anything that
-reverts the guest (`scripts/lab/revert-vm.sh`, or the runner's `--revert-between`)
-restores libstdc++ 16.1.1 and every C++ VM demo breaks again.
+The snapshots were dated **2026-07-18** and predated the host's update, so any
+revert (`scripts/lab/revert-vm.sh`, or the runner's `--revert-between`) restored
+libstdc++ 16.1.1 and re-broke every C++ VM demo.
 
-**Decision for the user** — re-snapshotting overwrites the lab's known-good
-baseline, so it was not done unilaterally:
+`systems-peer` was found to carry **the same drift** (16.1.1-2, max
+`GLIBCXX_3.4.35`). The full matrix had not caught it because no C++ binary is
+deployed to the peer, but snapshotting it unchanged would have baked the same
+latent defect back in.
 
-```sh
-scripts/lab/snapshot-vm.sh systems-target lab-ready   # after the dnf update
+Both guests were updated (`dnf -y update libstdc++ libgcc` → 16.2.1-2,
+`GLIBCXX_3.4.36`), their accumulated run artifacts removed — `~/app`, `~/JSON`,
+`/tmp/lsp*` on the target; `~/chatterd`, `~/beacons.txt`, `~/peer.{out,err}`,
+`~/tcpdump.err` on the peer, all of which postdated the July snapshot and would
+have made the new baseline dirtier than the old one — and both re-snapshotted:
+
+```
+lab-ready   2026-08-28 21:20:04 -0400   running   (systems-target)
+lab-ready   2026-08-28 21:20:10 -0400   running   (systems-peer)
 ```
 
-This is also a **reader-facing hazard**, not just a local one: any reader whose
-host is newer than their lab guest hits exactly this, and the failure presents as
-a broken demo rather than as a version problem. Worth a troubleshooting note in
-ch02 (lab setup) — not written yet.
+**Verified by reverting, not by assuming.** After
+`revert-vm.sh systems-target lab-ready`, the guest reported
+`libstdc++-16.2.1-2.fc44` / `GLIBCXX_3.4.36`, and:
+
+```
+python3 scripts/test-all-examples.py --mode vm --lang cpp
+8 passed, 0 failed, 0 skipped
+```
+
+All eight VM cpp examples, including `41-capstone-fleet`, which spans both guests
+and LGTM. The fix survives a revert, which is what the defect required.
+
+Still worth doing: a **ch02 troubleshooting note**, since this is reader-facing.
+Any reader whose host outpaces their lab guest hits it, and it presents as a
+broken demo rather than a version problem.
 
 ## Also found, not fixed — ch39 violates the project's own banned-words rule
 
