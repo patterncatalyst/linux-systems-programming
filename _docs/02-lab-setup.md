@@ -185,8 +185,77 @@ it as `OTEL_EXPORTER_OTLP_ENDPOINT` through `env` explicitly, because `sudo`
 strips the environment — without that, a privileged guest binary would fall
 back to its own localhost and its telemetry would never reach the host's
 observability stack. This works because host builds and the guest are both
-Fedora 44 (glibc parity); the in-VM toolchains are the fallback when that
-assumption breaks.
+Fedora 44. That parity holds when the guests are provisioned and lapses as the
+host keeps updating, which "When the guest falls behind the host" describes.
+
+### When the guest falls behind the host
+
+Deploying a host build assumes the guest can still run it. Both machines start
+as Fedora 44, so they can. Then the host takes updates, as workstations do,
+while the guest stays where its snapshot left it. From then on the host
+compiler emits binaries against runtime symbols the guest does not have.
+
+Here is that failure, exactly as it appeared on this lab:
+
+```
+[host]$ TARGET=systems-target ./demo.sh cpp run
+→ copying app to fedora@192.168.124.7:/home/fedora/app
+/home/fedora/app: /lib64/libstdc++.so.6: version `GLIBCXX_3.4.36' not found (required by /home/fedora/app)
+```
+
+**How it presents.** Run through a demo's own harness, the binary never
+starts, and every assertion downstream reports a symptom of the demo: a port
+that never opened, a Landlock line that never printed, an OOM kill that never
+happened. The loader message above names the cause, and it appears only when
+you run the binary directly.
+
+**The tell is which languages fail.** On the run that found this, six examples
+failed on the guest and every one of them failed in C++ alone, with Go and Rust
+passing on the same guest in the same run. The asymmetry has a cause: Go and
+Rust link their runtimes statically, so the guest's libraries do not affect
+them, while the C++ binaries load the guest's `libstdc++`. When one language
+fails on the guest and the others pass, check the runtime before the code.
+
+**Compare symbol versions, which the loader checks.** Compiler versions can
+agree while the runtimes differ, because the compiler and the runtime are
+separate packages that update independently. On this host, `g++ --version`
+said 16.1.1 and the guest's `rpm -q libstdc++` said 16.1.1, while the host's
+own libstdc++ had moved to 16.2.1. The highest `GLIBCXX_` version on each side
+shows the gap:
+
+```bash
+[host]$ strings /lib64/libstdc++.so.6 | grep -oE 'GLIBCXX_3\.4\.[0-9]+' | sort -V | tail -1
+GLIBCXX_3.4.36
+[vm]$  strings /lib64/libstdc++.so.6 | grep -oE 'GLIBCXX_3\.4\.[0-9]+' | sort -V | tail -1
+GLIBCXX_3.4.35
+```
+
+Guest lower than host means host builds cannot run there. The same check works
+for glibc with `GLIBC_` in place of `GLIBCXX_`.
+
+The fix is to bring the guest forward and then **re-snapshot it**, so that the
+next revert keeps the update:
+
+```bash
+[vm]$   sudo dnf -y update libstdc++ libgcc
+[host]$ ./scripts/lab/snapshot-vm.sh systems-target lab-ready
+```
+
+Apply it to **every** guest. On this lab `systems-peer` carried the same drift
+with no symptom, because no C++ binary is deployed to it; re-snapshotting it
+unchanged would have kept the drift for the first example that needs it.
+
+Then confirm the fix survives a revert by reverting and re-running:
+
+```bash
+[host]$ ./scripts/lab/revert-vm.sh systems-target lab-ready
+[host]$ python3 scripts/test-all-examples.py --mode vm --lang cpp
+8 passed, 0 failed, 0 skipped
+```
+
+An update applied only to the running guest lasts until the next revert. The
+in-VM toolchains remove the question altogether: a binary built on the guest
+links against the guest's own runtime.
 
 ## Build, run, observe
 
@@ -258,10 +327,16 @@ guest's own `uname` in your terminal.
 - Snapshot `lab-ready` after provisioning, revert after destructive demos —
   and trust `/var/log/lab-ready` plus a guest kernel string in your output,
   not assumptions.
+- **Host/guest parity holds at provisioning and drifts afterwards.** A snapshot
+  fixes the guest's packages while the workstation keeps updating, and host-built
+  binaries then fail on the guest for a missing `GLIBCXX_` or `GLIBC_` symbol,
+  which the demo harness reports as a failing demo. The tell is C++ failing where
+  Go and Rust pass, because those two link statically. Compare symbol versions,
+  update every guest, and **re-snapshot** so the next revert keeps the fix.
 
 Next, the third and final piece of setup: the Podman **LGTM observability
 stack**, so every later demo has somewhere to send its telemetry.
 
 ---
 
-<p><span class="status status--verified">verified</span> — both guests were provisioned from Fedora-Cloud-Base-Generic-44-1.7 on this host (target 4 GB at 192.168.124.7, peer 2 GB at 192.168.124.95); <code>/var/log/lab-ready</code> read back <code>bpftrace v0.24.2</code> and kernel <code>6.19.10-300.fc44</code> on both; <code>lab-ready</code> snapshots exist on both; and <code>deploy-to-vm.sh</code> ran the host-built C++ and Go binaries on <code>systems-target</code>, printing the guest kernel string <code>6.19.10-300.fc44.x86_64</code> versus <code>7.1</code> locally.</p>
+<p><span class="status status--verified">verified</span> — both guests were provisioned from Fedora-Cloud-Base-Generic-44-1.7 on this host (target 4 GB at 192.168.124.7, peer 2 GB at 192.168.124.95); <code>/var/log/lab-ready</code> read back <code>bpftrace v0.24.2</code> and kernel <code>6.19.10-300.fc44</code> on both; <code>lab-ready</code> snapshots exist on both; and <code>deploy-to-vm.sh</code> ran the host-built C++ and Go binaries on <code>systems-target</code>, printing the guest kernel string <code>6.19.10-300.fc44.x86_64</code> versus <code>7.1</code> locally. The <strong>&ldquo;When the guest falls behind the host&rdquo;</strong> section was added later and is verified separately, on the same lab: the host&rsquo;s <code>libstdc++</code> reached <code>16.2.1-2.fc44</code> (<code>libstdc++.so.6.0.36</code>, max <code>GLIBCXX_3.4.36</code>) while both guests sat at <code>16.1.1-2.fc44</code> (<code>libstdc++.so.6.0.35</code>, max <code>GLIBCXX_3.4.35</code>) behind snapshots taken before the update, and every host-built C++ binary then failed on the guest with the quoted <code>version `GLIBCXX_3.4.36&#39; not found</code>. A full-matrix run reproduced the asymmetry the section describes — six VM examples failing in C++ while Go and Rust passed on the same guest in the same run — and the quoted diagnostic commands, the <code>dnf</code> fix, and the re-snapshot were all run here: after <code>revert-vm.sh systems-target lab-ready</code> the guest reported <code>GLIBCXX_3.4.36</code> and <code>test-all-examples.py --mode vm --lang cpp</code> reported the quoted <code>8 passed, 0 failed, 0 skipped</code>, including the two-guest <code>41-capstone-fleet</code>. <code>systems-peer</code> was confirmed to carry the same drift while showing no symptom. Not exercised: <span class="status status--unverified">unverified</span> — the <code>GLIBC_</code> form of the symbol check is stated by analogy and was not the failure encountered here, which was <code>GLIBCXX_</code> only; and building inside the guest with the in-VM toolchains is named as the standing fallback but is not exercised by any example in this book.</p>
