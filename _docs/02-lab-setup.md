@@ -185,15 +185,15 @@ it as `OTEL_EXPORTER_OTLP_ENDPOINT` through `env` explicitly, because `sudo`
 strips the environment — without that, a privileged guest binary would fall
 back to its own localhost and its telemetry would never reach the host's
 observability stack. This works because host builds and the guest are both
-Fedora 44 — but that parity is a *starting* condition, not a standing one, and
-the next section is about what happens when it lapses.
+Fedora 44. That parity holds when the guests are provisioned and lapses as the
+host keeps updating, which "When the guest falls behind the host" describes.
 
 ### When the guest falls behind the host
 
 Deploying a host build assumes the guest can still run it. Both machines start
-as Fedora 44, so they can. Then the host gets updated — as workstations do —
-and the guest does not, because a snapshot froze it. From then on your host
-compiler emits binaries against runtime symbols the guest has never heard of.
+as Fedora 44, so they can. Then the host takes updates, as workstations do,
+while the guest stays where its snapshot left it. From then on the host
+compiler emits binaries against runtime symbols the guest does not have.
 
 Here is that failure, exactly as it appeared on this lab:
 
@@ -203,26 +203,25 @@ Here is that failure, exactly as it appeared on this lab:
 /home/fedora/app: /lib64/libstdc++.so.6: version `GLIBCXX_3.4.36' not found (required by /home/fedora/app)
 ```
 
-**Note what this does not look like.** Run through a demo's own harness rather
-than by hand, that binary simply never starts, and every assertion downstream
-fails describing the demo instead of the cause — a port that never opened, a
-Landlock line that never printed, an OOM kill that never happened. The message
-above is the only place the truth appears, and you see it only if you run the
-binary directly.
+**How it presents.** Run through a demo's own harness, the binary never
+starts, and every assertion downstream reports a symptom of the demo: a port
+that never opened, a Landlock line that never printed, an OOM kill that never
+happened. The loader message above names the cause, and it appears only when
+you run the binary directly.
 
 **The tell is which languages fail.** On the run that found this, six examples
 failed on the guest and every one of them failed in C++ alone, with Go and Rust
-passing on the same guest in the same run. That asymmetry is not a coincidence
-and it is not a C++ bug: Go and Rust link their runtimes statically, so they do
-not care what the guest ships. If one language fails on the guest and the others
-pass, suspect the runtime before you suspect your code.
+passing on the same guest in the same run. The asymmetry has a cause: Go and
+Rust link their runtimes statically, so the guest's libraries do not affect
+them, while the C++ binaries load the guest's `libstdc++`. When one language
+fails on the guest and the others pass, check the runtime before the code.
 
-**Do not diagnose this by comparing compiler versions.** They will agree and
-prove nothing, because the compiler and the runtime are separate packages that
-move independently. On this host, `g++ --version` said 16.1.1 and the guest's
-`rpm -q libstdc++` said 16.1.1 — while the *host's* libstdc++ had moved to
-16.2.1 underneath both. Compare the symbol versions the loader actually cares
-about, on each side:
+**Compare symbol versions, which the loader checks.** Compiler versions can
+agree while the runtimes differ, because the compiler and the runtime are
+separate packages that update independently. On this host, `g++ --version`
+said 16.1.1 and the guest's `rpm -q libstdc++` said 16.1.1, while the host's
+own libstdc++ had moved to 16.2.1. The highest `GLIBCXX_` version on each side
+shows the gap:
 
 ```bash
 [host]$ strings /lib64/libstdc++.so.6 | grep -oE 'GLIBCXX_3\.4\.[0-9]+' | sort -V | tail -1
@@ -234,20 +233,19 @@ GLIBCXX_3.4.35
 Guest lower than host means host builds cannot run there. The same check works
 for glibc with `GLIBC_` in place of `GLIBCXX_`.
 
-The fix is to bring the guest forward, and then — the half that is easy to
-forget — **to re-snapshot, because otherwise the next revert undoes it**:
+The fix is to bring the guest forward and then **re-snapshot it**, so that the
+next revert keeps the update:
 
 ```bash
 [vm]$   sudo dnf -y update libstdc++ libgcc
 [host]$ ./scripts/lab/snapshot-vm.sh systems-target lab-ready
 ```
 
-Do it on **every** guest, not just the one that failed. On this lab
-`systems-peer` carried the identical drift and had shown no symptom at all,
-because no C++ binary is ever deployed to it — re-snapshotting it unchanged
-would have preserved a defect that had simply not been triggered yet.
+Apply it to **every** guest. On this lab `systems-peer` carried the same drift
+with no symptom, because no C++ binary is deployed to it; re-snapshotting it
+unchanged would have kept the drift for the first example that needs it.
 
-Then prove it stuck, by reverting and re-running rather than by assuming:
+Then confirm the fix survives a revert by reverting and re-running:
 
 ```bash
 [host]$ ./scripts/lab/revert-vm.sh systems-target lab-ready
@@ -255,10 +253,9 @@ Then prove it stuck, by reverting and re-running rather than by assuming:
 8 passed, 0 failed, 0 skipped
 ```
 
-A fix that lives only in the running guest is not a fix; it is a countdown to
-the next revert. And if you would rather not track this at all, the in-VM
-toolchains are the standing fallback — build on the guest and the question of
-whose runtime is newer never arises.
+An update applied only to the running guest lasts until the next revert. The
+in-VM toolchains remove the question altogether: a binary built on the guest
+links against the guest's own runtime.
 
 ## Build, run, observe
 
@@ -330,13 +327,12 @@ guest's own `uname` in your terminal.
 - Snapshot `lab-ready` after provisioning, revert after destructive demos —
   and trust `/var/log/lab-ready` plus a guest kernel string in your output,
   not assumptions.
-- **Host/guest parity is a starting condition, not a standing one.** A snapshot
-  freezes the guest while your workstation keeps updating, and host-built
-  binaries then fail on the guest for a missing `GLIBCXX_`/`GLIBC_` symbol —
-  presenting as a broken demo, never as a version problem. The tell is C++
-  failing where Go and Rust pass, because those two link statically. Compare
-  symbol versions rather than compiler versions, fix every guest rather than the
-  one that failed, and **re-snapshot** — otherwise the next revert undoes it.
+- **Host/guest parity holds at provisioning and drifts afterwards.** A snapshot
+  fixes the guest's packages while the workstation keeps updating, and host-built
+  binaries then fail on the guest for a missing `GLIBCXX_` or `GLIBC_` symbol,
+  which the demo harness reports as a failing demo. The tell is C++ failing where
+  Go and Rust pass, because those two link statically. Compare symbol versions,
+  update every guest, and **re-snapshot** so the next revert keeps the fix.
 
 Next, the third and final piece of setup: the Podman **LGTM observability
 stack**, so every later demo has somewhere to send its telemetry.
