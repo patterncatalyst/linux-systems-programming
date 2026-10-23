@@ -2,20 +2,20 @@
 title: "Errors, three ways"
 order: 5
 part: "Foundations"
-description: "One error's journey from a failing write(2) into std::expected, a wrapped Go error, and a Rust Result — copyx establishes the book's error taxonomy, the strerror(3) message contract, and the EINTR retry policy every later chapter reuses."
+description: "One error's journey from a failing write(2) into std::expected, a wrapped Go error, and a Rust Result: copyx establishes the book's error taxonomy, the strerror(3) message contract, and the EINTR retry policy every later chapter reuses."
 duration: "45 minutes"
 ---
 
 Chapter 4 walked a syscall down to the boundary and back, and ended on the
 detail this chapter is built from: when a syscall fails, the kernel does not
-throw, log, or explain — it puts a small negative integer in a register and
+throw, log, or explain: it puts a small negative integer in a register and
 returns. Everything your language calls an "error" is constructed, in user
-space, from that one number. This chapter takes a single program — `copyx`, a
-file copier — and writes it three times so you can watch the *same* kernel
+space, from that one number. This chapter takes a single program, `copyx`, a
+file copier, and writes it three times so you can watch the *same* kernel
 failure become a `std::expected`, a wrapped Go `error`, and a Rust `Result`,
 and still come out the other side as byte-identical output and the same exit
-code. Along the way it fixes the policies the rest of the book never
-renegotiates: what EINTR means, what a short write demands, and which side of
+code. Along the way it fixes the policies every later chapter in this book
+relies on: what EINTR means, what a short write demands, and which side of
 a failure owns the exit code.
 
 The code is in `examples/05-errors-three-ways/`. `./demo.sh` there builds all
@@ -24,29 +24,29 @@ states the behavior contract each one must satisfy.
 
 {% include excalidraw.html
    file="05-error-flow-three-ways"
-   alt="One failure's journey: write(2) on /dev/full returns -ENOSPC in the kernel; in user space that becomes errno 28, which fans out into three columns — C++23's std::expected with std::error_code mapping into a Failure struct, Go's unix.Errno wrapped into *opError with Unwrap for errors.Is/As, and Rust's Result with Errno mapped via map_err into a thiserror CopyError variant — all three converging on one outcome box: exit 3 and the line copyx: write /dev/full: No space left on device."
-   caption="Figure 5.1 — one failure, three spellings, one contract: ENOSPC from write(2) to the user, in each type system" %}
+   alt="One failure's journey: write(2) on /dev/full returns -ENOSPC in the kernel; in user space that becomes errno 28, which fans out into three columns (C++23's std::expected with std::error_code mapping into a Failure struct, Go's unix.Errno wrapped into *opError with Unwrap for errors.Is/As, and Rust's Result with Errno mapped via map_err into a thiserror CopyError variant), all three converging on one outcome box: exit 3 and the line copyx: write /dev/full: No space left on device."
+   caption="Figure 5.1: one failure, three spellings, one contract: ENOSPC from write(2) to the user, in each type system" %}
 
-> **Tools used** — `strace`, `head`, `cmp`, `ls`, `python3` (host); `bpftrace`
+> **Tools used**: `strace`, `head`, `cmp`, `ls`, `python3` (host); `bpftrace`
 > (lab VM, exercised in Part 8). Everything here is checked by
 > `scripts/check-host.sh`, ships with Fedora, or is preinstalled in the lab VMs.
 
 ## errno is an ABI, not a variable
 
 On x86-64 Linux, a failing syscall returns a value between -1 and -4095 in
-`rax`; the number is the negated error code. `ENOSPC` is 28 — not "usually
-28", but 28 by kernel ABI, stable for decades, the same for every language
+`rax`; the number is the negated error code. `ENOSPC` is 28: not "usually
+28" but 28 by kernel ABI, stable for decades, the same for every language
 and libc on the platform. What differs is the unwrapping. glibc's syscall
 stubs check the return, store the positive code into the thread-local
 `errno`, and hand C a `-1`. Go's runtime makes the syscall itself and returns
-the code as an ordinary value — `unix.Errno` is just `uintptr` with an
+the code as an ordinary value: `unix.Errno` is just `uintptr` with an
 `Error()` method; there is no global to race on. Rust's `rustix` does the
 same trick: `Errno` is a wrapper around the raw code, delivered in the `Err`
 arm of a `Result`, never through ambient state.
 
 That shared integer is why a cross-language error *policy* is even possible.
 Whatever type each language dresses the failure in, the bottom of the stack
-is the same number with the same `strerror(3)` text — and `copyx` treats that
+is the same number with the same `strerror(3)` text, and `copyx` treats that
 text as part of its interface. The behavior contract, identical in all three
 implementations:
 
@@ -66,11 +66,11 @@ Two syscall-level policies are also part of the contract, because they will
 be true of every program in this book. First, **EINTR is retried**. A
 `read(2)` or `write(2)` interrupted by a signal before transferring anything
 fails with `EINTR`; nothing happened, so the only correct response is to
-reissue the call — treating it as an error turns every signal into data
+reissue the call; treating it as an error turns every signal into data
 corruption at a distance. Second, **short writes are resumed**. `write(2)` is
 allowed to accept fewer bytes than you offered; the loop must advance past
 what the kernel took and continue. (The third sibling, `EAGAIN`, means "would
-block" on a non-blocking descriptor — not an error either, but a scheduling
+block" on a non-blocking descriptor, not an error either, but a scheduling
 fact; it becomes central when epoll arrives in the Files and I/O part.) One
 more subtlety the contract encodes: the write side must *observe*
 `close(2)`, because deferred I/O errors can surface there; the read side's
@@ -82,7 +82,7 @@ Each implementation has the same skeleton: a phase-tagged error type, a
 retrying `read_some`, a resuming `write_all`, and a `copy_file` that maps
 each failure onto the taxonomy. The error types come first, because they are
 where the three type systems diverge most visibly. C++
-(`examples/05-errors-three-ways/cpp/src/main.cpp`) uses a plain struct —
+(`examples/05-errors-three-ways/cpp/src/main.cpp`) uses a plain struct:
 
 ```cpp
 struct Failure {
@@ -91,7 +91,7 @@ struct Failure {
 };
 ```
 
-— because by the time `copy_file` fails, classification is *done*: the
+This works because by the time `copy_file` fails, classification is *done*: the
 message is rendered and the exit code chosen. Go
 (`examples/05-errors-three-ways/go/main.go`) cannot stop there, since Go
 errors are expected to stay inspectable:
@@ -128,7 +128,7 @@ enum CopyError {
 ```
 
 Now the core loops. The three excerpts below are the real `write_all` and
-`copy_file` from each implementation — read one, then diff it mentally
+`copy_file` from each implementation, read one, then diff it mentally
 against the next:
 
 {% include codetabs.html langs="C++|Go|Rust" %}
@@ -311,17 +311,17 @@ fn copy_file(src_path: &str, dst_path: &str) -> Result<u64, CopyError> {
 }
 ```
 
-The loops are structurally identical — a 64 KiB buffer, read until a zero
-return means EOF, `write_all` per chunk, then a checked close — but each
+The loops are structurally identical (a 64 KiB buffer, read until a zero
+return means EOF, `write_all` per chunk, then a checked close) but each
 language spends its effort differently. **C++** builds the discipline out of
 `std::expected`: every fallible helper returns
 `std::expected<T, std::error_code>`, `last_error()` snapshots `errno` into
 `std::generic_category()` (the category for POSIX errno values; Chapter 1's
-`uname` wrapper used `system_category` — for Linux errno they render the
+`uname` wrapper used `system_category`; for Linux errno they render the
 same, and the book standardizes on `generic_category` from here on), and the
 move-only RAII `Fd` guarantees no descriptor outlives its owner. The
-asymmetry between `dst->close()` — explicit, `[[nodiscard]]`, result mapped
-to exit 3 — and `src` being closed silently by the destructor *is* the close
+asymmetry between `dst->close()` (explicit, `[[nodiscard]]`, result mapped
+to exit 3) and `src` being closed silently by the destructor *is* the close
 policy from the contract, written in types. **Go** threads one `error` value
 through everything: `readSome` detects EINTR with
 `errors.Is(err, unix.EINTR)` rather than `err == unix.EINTR`, so the check
@@ -330,7 +330,7 @@ from whatever it is handed using `errors.As`, and `main` gets the exit code
 back the same way. Note also what Go must do that the others get free: its
 errno strings are lowercase ("no such file or directory"), so `strerror`
 capitalizes the first rune to match glibc. **Rust** lets `?` do the
-propagation and `map_err` do the classification — each call site names its
+propagation and `map_err` do the classification: each call site names its
 variant, so forgetting to classify a failure is a compile error, and
 `exit_code()` is an exhaustive `match` the compiler re-checks whenever a
 variant is added. Its `strerror` has the inverse problem to Go's: `Errno`
@@ -340,18 +340,18 @@ suffix is stripped to keep the three outputs byte-identical.
 ### Errors, three ways
 
 `copyx` is the policy statement for the thread that runs through every
-chapter, so state the doctrine plainly. In **C++**, errors that are part of
-normal operation — a missing file, a full disk — travel as values
+chapter, so the doctrine deserves a direct statement here. In **C++**, errors that are part of
+normal operation (a missing file, a full disk) travel as values
 (`std::expected`), and exceptions are reserved for *subsystem boundaries*:
 the places where a whole component (a parser, a plugin, a request handler)
 fails as a unit and someone several frames up owns the recovery. Inside
 syscall-adjacent code, exceptions obscure control flow exactly where you need
 to see it. In **Go**, the equivalent line is drawn between `error` and
 `panic`: an `error` is a result, a `panic` is a bug (index out of range, nil
-map write) — `copyx` returns errors for everything the kernel can say and
+map write), `copyx` returns errors for everything the kernel can say and
 would panic only on programmer mistakes. In **Rust**, the same line separates
 `Result` from `panic!`; the book's examples are written to be correct under
-`panic = "abort"`, which means a panic is never part of the error path — it
+`panic = "abort"`, which means a panic is never part of the error path; it
 is a crash you fix. On the library-versus-application split: `thiserror`
 (used here) is for code whose *callers* match on error variants; `anyhow` is
 for binaries that only report. `copyx` is a binary, but its exit codes make
@@ -360,14 +360,14 @@ typed enum earns its boilerplate.
 
 ### Concurrency lens
 
-`copyx` is deliberately single-threaded — one loop, one buffer, no shared
-state — but the error machinery is already concurrency-load-bearing. C's
+`copyx` is deliberately single-threaded (one loop, one buffer, no shared
+state), but the error machinery already matters for concurrency. C's
 `errno` is thread-local precisely so two threads failing simultaneously do
 not corrupt each other's error state, and `last_error()` copies it into a
 value *immediately* because the very next libc call on the same thread may
 overwrite it. Go and Rust sidestep the global entirely: the errno arrives as
 a return value, so there is nothing thread-local to protect. And the EINTR
-policy is really a concurrency policy in disguise — signals are asynchronous
+policy is really a concurrency policy in disguise: signals are asynchronous
 interruptions, and a program whose I/O loops retry EINTR is one whose
 correctness does not depend on when a signal lands. That property gets
 load-tested in the Processes, Signals, Privilege part, when `pmon` starts
@@ -380,7 +380,7 @@ handling real signals around these same loops.
 ```
 
 The walkthrough runs the taxonomy per language. Reproduce it by hand against
-any of the three binaries — shown here with a 200 000-byte source (sized so
+any of the three binaries, shown here with a 200 000-byte source (sized so
 the final read comes up short of the 64 KiB buffer):
 
 ```bash
@@ -399,20 +399,20 @@ exit=3
 Then run the same three cases with `./go/bin/app` and
 `./rust/target/release/app`: on this host all three produced the identical
 three lines and the identical exit codes 0, 2, 3, and `cmp src.bin dst.bin`
-exited 0 for each copy — byte-identical output from byte-identical input,
+exited 0 for each copy, byte-identical output from byte-identical input,
 which is the whole claim of the chapter. `/dev/full` is the tool that makes
 the ENOSPC case repeatable: `ls -li /dev/full` shows a character device with
 major:minor `1, 7`, a kernel-provided device whose write handler always
-returns `-ENOSPC` — a full disk on tap, no root required. The book's runner
+returns `-ENOSPC`, a full disk on tap, no root required. The book's runner
 (`python3 scripts/test-all-examples.py --only 05-errors-three-ways`) drives
-eleven behavioral checks per language through `verify.lua` — including the
-empty-source edge case (`copied 0 bytes`, exit 0) — and reported
+eleven behavioral checks per language through `verify.lua`, including the
+empty-source edge case (`copied 0 bytes`, exit 0), and reported
 `PASS PASS PASS` on this host.
 
 ## Cross-check: watch the error being born
 
 Everything above shows the error *after* each runtime dressed it up.
-`strace -e trace=write` shows the moment it exists — the failing `write(2)`
+`strace -e trace=write` shows the moment it exists: the failing `write(2)`
 itself. On the C++ binary:
 
 ```bash
@@ -426,23 +426,23 @@ write(2, "\n", 1
 
 Read it bottom-up from the failure: one 65 536-byte `write` to descriptor 4
 (the destination; 3 is the source) fails with `ENOSPC`, and the *next* writes
-are to descriptor 2 — the program printing its own error message. The entire
+are to descriptor 2: the program printing its own error message. The entire
 journey in Figure 5.1 happened between those two lines, in user space,
 invisible to the kernel. The Rust binary (`strace -e trace=write
 ./rust/target/release/app src.bin /dev/full`) fails identically but emits the
 message as six separate little writes (`"copyx: "`, `"write "`,
-`"/dev/full"`, …) — `eprintln!` writing each format fragment straight to
+`"/dev/full"`, …), `eprintln!` writing each format fragment straight to
 unbuffered stderr. The Go binary (add `-f`; the runtime has threads) shows
-the failing 65 536-byte write on descriptor **5**, not 4 — this trace shows
+the failing 65 536-byte write on descriptor **5**, not 4; this trace shows
 why: the runtime is already holding
 `/sys/fs/cgroup/.../cpu.max` open on descriptor 3 for its container-aware
 scheduling, so the source and destination land one higher. Three runtimes,
-three descriptor layouts and stderr habits — and one identical failing
+three descriptor layouts and stderr habits, and one identical failing
 syscall, one identical message, one identical `+++ exited with 3 +++`.
 
-> **On the lab VM** — <span class="status status--unverified">unverified</span>:
-> the aggregate view of this chapter — *which* errnos your whole system's
-> syscalls are failing with, live — belongs to eBPF tooling in the class of
+> **On the lab VM**: <span class="status status--unverified">unverified</span>:
+> the aggregate view of this chapter (*which* errnos your whole system's
+> syscalls are failing with, live) belongs to eBPF tooling in the class of
 > bpftrace one-liners counting negative syscall returns by errno. That is not
 > runnable on this host without privileges; Chapter 30 (Debugging part)
 > exercises it in the `systems-target` VM against these same binaries.
@@ -453,8 +453,8 @@ syscall, one identical message, one identical `+++ exited with 3 +++`.
   register, `ENOSPC` is 28 everywhere on the platform, and glibc's
   thread-local `errno`, Go's `unix.Errno` value, and rustix's `Errno` are
   three deliveries of the same integer.
-- `copyx`'s taxonomy — exit 2 for the source side, 3 for the destination
-  side, reasons in `strerror(3)` form — is expressible in all three type
+- `copyx`'s taxonomy (exit 2 for the source side, 3 for the destination
+  side, reasons in `strerror(3)` form) is expressible in all three type
   systems: `std::expected` mapped into a `Failure`, an `*opError` with
   `Unwrap` keeping `errors.Is`/`As` truthful, and a `thiserror` enum whose
   `exit_code()` the compiler keeps exhaustive.
@@ -466,10 +466,10 @@ syscall, one identical message, one identical `+++ exited with 3 +++`.
   catch the exact syscall where an error is born, before any runtime
   touches it.
 
-Next, the second thread that never stops: **concurrency, three ways** — the
+Next, the second thread that never stops: **concurrency, three ways**: the
 same worker pool as `std::jthread`s and atomics, goroutines and channels,
 and scoped threads under `Send`/`Sync`.
 
 ---
 
-<p><span class="status status--verified">verified</span> — all evidence in this chapter was produced on the Fedora 44 host this session: each of the three binaries printed <code>copied 200000 bytes</code> (exit 0) with <code>cmp</code> exiting 0, <code>copyx: nope.bin: No such file or directory</code> (exit 2), and <code>copyx: write /dev/full: No space left on device</code> (exit 3); the strace excerpt is real output showing <code>write(4, …, 65536) = -1 ENOSPC</code> before the exit-3; the Go trace showed the failing write on descriptor 5 with <code>cpu.max</code> held on 3, and the Rust trace showed the fragmented stderr writes; <code>ls -li /dev/full</code> showed the <code>1, 7</code> character device; and <code>scripts/test-all-examples.py --only 05-errors-three-ways</code> reported PASS for cpp, go, and rust (3 passed, 0 failed, 0 skipped). The lab-VM eBPF callout above is the one unverified item, deferred to Chapter 30.</p>
+<p><span class="status status--verified">verified</span>: all evidence in this chapter was produced on the Fedora 44 host this session: each of the three binaries printed <code>copied 200000 bytes</code> (exit 0) with <code>cmp</code> exiting 0, <code>copyx: nope.bin: No such file or directory</code> (exit 2), and <code>copyx: write /dev/full: No space left on device</code> (exit 3); the strace excerpt is real output showing <code>write(4, …, 65536) = -1 ENOSPC</code> before the exit-3; the Go trace showed the failing write on descriptor 5 with <code>cpu.max</code> held on 3, and the Rust trace showed the fragmented stderr writes; <code>ls -li /dev/full</code> showed the <code>1, 7</code> character device; and <code>scripts/test-all-examples.py --only 05-errors-three-ways</code> reported PASS for cpp, go, and rust (3 passed, 0 failed, 0 skipped). The lab-VM eBPF callout above is the one unverified item, deferred to Chapter 30.</p>

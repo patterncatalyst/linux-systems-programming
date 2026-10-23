@@ -33,9 +33,9 @@ contract, and the paired positive/negative verification in full.
 {% include excalidraw.html
    file="33-seccomp-filter-flow"
    alt="Two stacked bands. The top userspace band shows fwatch issuing a syscall such as epoll_wait, read, or socket, beside a note that this is classic BPF -- you write the filter, Part 8's bpftrace only observes. The bottom kernel band shows the filter running on every syscall entry: a BPF_LD_ABS load of the syscall number and architecture, a compiled jump table of 26 entries for cpp and rust or 39 for go, a match arrow to SECCOMP_RET_ALLOW that returns control to the caller, and a no-match arrow down to the filter's default action. Two default-action boxes sit side by side: SCMP_ACT_ERRNO(EPERM), the one fwatch actually installs, where the process keeps running and sees EPERM on socket(2); and a dashed, unused SCMP_ACT_KILL_PROCESS box, where a separate probe program's getpid() call ends the whole process with SIGSYS. Footer notes report the real guest transcript: socket(AF_INET,...) = -1 EPERM under fwatch's filter, and the ACT_KILL_PROCESS probe's getpid() ending in killed by SIGSYS (core dumped)."
-   caption="Figure 33.1 — a syscall's path through fwatch's seccomp-bpf filter: one cBPF program, run again on every entry, deciding ALLOW versus its default action" %}
+   caption="Figure 33.1: a syscall's path through fwatch's seccomp-bpf filter: one cBPF program, run again on every entry, deciding ALLOW versus its default action" %}
 
-> **Tools used** — `strace` (host and `systems-target` VM, to build and
+> **Tools used**: `strace` (host and `systems-target` VM, to build and
 > confirm the syscall profile), `cmake`+`ninja`/`go build`/`cargo` (the
 > Python runner's build phase, host, all three toolchains), `ssh`/`scp`
 > (via `scripts/test-all-examples.py --mode vm` and its staging step onto
@@ -112,7 +112,7 @@ sandboxed process regaining privilege through a setuid binary it execs.
 
 ## `SCMP_ACT_ERRNO` versus `SCMP_ACT_KILL`
 
-`fwatch` deliberately chose `SCMP_ACT_ERRNO(EPERM)`, not
+`fwatch` chose `SCMP_ACT_ERRNO(EPERM)`, not
 `SCMP_ACT_KILL_PROCESS`, as its default action, and the difference is
 observable, not cosmetic. With `ACT_ERRNO`, a denied syscall returns `-1`
 with `errno` set and the calling code continues to run -- the process can
@@ -120,7 +120,7 @@ log the denial, clean up, and exit on its own terms; that is what makes
 `probe --forbidden-syscall`'s own `EPERM`-and-continue behavior possible.
 With `ACT_KILL_PROCESS`, a denied syscall never returns at all: the kernel
 delivers an uncatchable `SIGSYS` and the process dies mid-instruction. To
-see the contrast for real rather than assert it, a small standalone probe
+observe the contrast directly rather than assert it, a small standalone probe
 (not part of `fwatch`, built only to observe this) installs a filter
 allowing only `write`/`exit_group`/`rt_sigreturn` under
 `SCMP_ACT_KILL_PROCESS`, then calls the unlisted `getpid()`:
@@ -184,7 +184,7 @@ misbehave the moment it ran on the guest.
 {% include excalidraw.html
    file="33-landlock-ruleset"
    alt="Two stacked bands. The top band builds the ruleset: landlock_create_ruleset called first with NULL/0/VERSION to probe the ABI, returning 9 on the host versus 7 on the systems-target guest despite both being Fedora 44 kernels; then landlock_create_ruleset(attr) with handled_access_fs set to READ_FILE and READ_DIR, feeding into landlock_add_rule binding a PATH_BENEATH rule to one directory's O_PATH file descriptor; then prctl(PR_SET_NO_NEW_PRIVS,1) feeding into landlock_restrict_self, marked irrevocable, with a note that Go's build also passes the TSYNC flag here to cover every OS thread already running. The bottom band shows the filesystem view after restrict_self: the sandboxed directory /tmp/lsp33-watch-sandbox with READ_FILE and READ_DIR still allowed and the watch loop working normally, beside /tmp/lsp33-outside-target/secret.txt where open(O_RDONLY) returns EACCES, with an arrow from the ruleset's restrict_self box down to each outcome, solid to the grant and dashed to the denial. A footer note across the bottom states that handled_access_net was left at zero in this ruleset, and that Landlock's TCP bind/connect rights have existed since ABI 4 and UDP rights only since ABI 10 -- so even at ABI 7 or 9 a Landlock-only sandbox does not cover the network by itself."
-   caption="Figure 33.2 — the Landlock ruleset/rule model, with the ABI probed live rather than assumed and the real grant/deny split from this chapter's probes" %}
+   caption="Figure 33.2: the Landlock ruleset/rule model, with the ABI probed live rather than assumed and the real grant/deny split from this chapter's probes" %}
 
 **What Landlock can and cannot do.** Filesystem mediation --
 open/read/write/execute/rename, scoped to a path -- has been solid since
@@ -298,7 +298,7 @@ needed just to name it as a rule target), bind the rule with
 `no_new_privs` already be set. Rust's `landlock` crate (source in
 `rust/src/main.rs`) compresses the same four calls into one builder chain
 -- `Ruleset::default().handle_access(...).create()?.add_rule(...)?.restrict_self()?`
--- and adds one thing the raw syscall path does not give you for free: it
+-- and adds one thing the raw syscall path does not give you automatically: it
 checks the returned `RulesetStatus`, so a kernel that silently
 best-effort-ignores an unsupported right is caught (`bail!` if
 `status.ruleset != RulesetStatus::FullyEnforced`) instead of quietly
@@ -339,8 +339,8 @@ worked" from "the sandbox is broken."
 
 Both Landlock and seccomp are, by default, **per-thread** kernel state --
 they restrict the calling thread, not automatically every thread in the
-process. That is invisible in C++ and Rust here because both builds are
-deliberately single-threaded before the sandbox goes on: `main` calls
+process. That is invisible in C++ and Rust here because both builds stay
+single-threaded before the sandbox goes on: `main` calls
 `apply_landlock` and `install_seccomp` before the epoll loop starts any
 concurrency of its own, so "the calling thread" and "the whole process"
 are the same thing.
@@ -484,7 +484,7 @@ start being something a container runtime installs *for* it.
 
 ---
 
-<p><span class="status status--verified">verified</span> — every transcript
+<p><span class="status status--verified">verified</span>: every transcript
 and number above was produced this session, reproduced on both the plain
 host (kernel <code>7.1</code>, libseccomp 2.6.0, GCC
 16.1.1, Go 1.26.5, Rust/Cargo 1.97.1) and the <code>systems-target</code>

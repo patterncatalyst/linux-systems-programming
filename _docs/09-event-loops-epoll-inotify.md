@@ -2,20 +2,20 @@
 title: "Event loops: epoll and inotify"
 order: 9
 part: "Files and I/O"
-description: "The readiness model — nonblocking fds multiplexed by one epoll loop, level versus edge triggering, inotify's per-watch queues and overflow, and timerfd/signalfd as ordinary readable fds — as fwatch v1 grows a real-time watch subcommand and Go's select turns out to be the same kernel machinery wearing channels."
+description: "The readiness model: nonblocking fds multiplexed by one epoll loop, level versus edge triggering, inotify's per-watch queues and overflow, and timerfd/signalfd as ordinary readable fds, as fwatch v1 grows a real-time watch subcommand and Go's select turns out to be the same kernel machinery wearing channels."
 duration: 50 minutes
 ---
 
 Chapter 8 closed on a question durability cannot answer: "which of ten
-thousand fds is ready?" This chapter answers it with the **readiness model**
-— the kernel will tell you *when an fd has something for you*, and a program
+thousand fds is ready?" This chapter answers it with the **readiness model**:
+the kernel will tell you *when an fd has something for you*, and a program
 built on that promise never blocks anywhere except the one call that asks.
 `fwatch` v1 keeps the polling-era `snapshot` and `diff` subcommands from
 Chapters 7 and 8 and adds `watch`: a real-time watcher that reports
 `created`/`modified`/`deleted` per file, debounced 100 ms per path. The C++
-and Rust versions build it the explicit way — one `epoll` loop over three
-kernel fds (inotify, timerfd, signalfd), a single thread, nothing hidden —
-while the Go version inverts the picture: the runtime's netpoller owns the
+and Rust versions build it the explicit way: one `epoll` loop over three
+kernel fds (inotify, timerfd, signalfd), a single thread, every step visible
+in source, while the Go version inverts the picture: the runtime's netpoller owns the
 epoll loop, and the same three event sources surface as channels in a
 `select`. Same kernel machinery, two programming surfaces, and by the end
 you will have watched both under `strace` and read epoll's own interest list
@@ -28,10 +28,10 @@ codes all three languages share.
 
 {% include excalidraw.html
    file="09-event-loop-anatomy"
-   alt="Two bands. In the user-space band, four loop steps run left to right — arm timerfd, epoll_wait, dispatch on the data token, drain and act — with a return arrow labeled loop. In the kernel band, an eventpoll interest-list box holds tfd 3, 4, 5, fed by three source boxes: the inotify fd with wd 1 and mask 0x3c6, the CLOCK_MONOTONIC timerfd, and the signalfd carrying blocked SIGINT and SIGTERM; an amber readiness arrow carries EPOLLIN and the token back up into epoll_wait."
-   caption="Figure 9.1 — the anatomy of fwatch watch: one loop, three event sources; every fd number, token, and mask in this figure reappears verbatim in the /proc inspection later in the chapter" %}
+   alt="Two bands. In the user-space band, four loop steps run left to right (arm timerfd, epoll_wait, dispatch on the data token, drain and act) with a return arrow labeled loop. In the kernel band, an eventpoll interest-list box holds tfd 3, 4, 5, fed by three source boxes: the inotify fd with wd 1 and mask 0x3c6, the CLOCK_MONOTONIC timerfd, and the signalfd carrying blocked SIGINT and SIGTERM; an amber readiness arrow carries EPOLLIN and the token back up into epoll_wait."
+   caption="Figure 9.1: the anatomy of fwatch watch: one loop, three event sources; every fd number, token, and mask in this figure reappears verbatim in the /proc inspection later in the chapter" %}
 
-> **Tools used** — `strace`, `mktemp`, `stat`, `ls`, `python3` (host);
+> **Tools used**: `strace`, `mktemp`, `stat`, `ls`, `python3` (host);
 > `bpftrace` (lab VM, exercised in Part 8). Everything here is checked by
 > `scripts/check-host.sh`, ships with Fedora, or is preinstalled in the lab VMs.
 
@@ -39,25 +39,25 @@ codes all three languages share.
 
 A blocking `read(2)` couples two things that have no business being coupled:
 *waiting* for data and *moving* it. With one input source that is fine; with
-three, a blocking read on the wrong fd deadlocks you — while you wait for a
+three, a blocking read on the wrong fd deadlocks you: while you wait for a
 file event, the timeout you promised never fires. The classic escape was one
 thread per source; the scalable escape is to decouple: put every fd in
-**nonblocking** mode (`IN_NONBLOCK`, `TFD_NONBLOCK`, `SFD_NONBLOCK` — all
+**nonblocking** mode (`IN_NONBLOCK`, `TFD_NONBLOCK`, `SFD_NONBLOCK`, all
 `O_NONBLOCK` under different names), so `read` either returns data
 immediately or fails with `EAGAIN`, and delegate all the *waiting* to one
 syscall that can wait on everything at once.
 
 That syscall is `epoll_wait(2)`, and its shape explains its scalability. You
-create a kernel object with `epoll_create1(2)` — it is itself an fd, of type
-`anon_inode:[eventpoll]` — then *register* interest once per fd with
+create a kernel object with `epoll_create1(2)` (it is itself an fd, of type
+`anon_inode:[eventpoll]`) then *register* interest once per fd with
 `epoll_ctl(EPOLL_CTL_ADD, …)`. The registration carries two things: an event
-mask (`EPOLLIN` — readable) and a caller-chosen 64-bit cookie
+mask (`EPOLLIN`, readable) and a caller-chosen 64-bit cookie
 (`epoll_event.data`) the kernel returns verbatim when that fd fires. The
 interest list lives **in the kernel**, which is the whole advantage over the
 older `poll(2)`/`select(2)`: those pass the entire fd set on every call, so
 each wait is O(fds); epoll pays the setup cost once and each wakeup returns
 only the fds that are actually ready. `fwatch` has three fds so any of them
-would work — the point of learning epoll on three is that the loop is
+would work; the point of learning epoll on three is that the loop is
 *identical* at thirty thousand, which is where Part 6's network servers take
 it.
 
@@ -67,10 +67,10 @@ Registration has one decision that changes program correctness, not just
 performance: **when** does a ready fd count as ready again?
 
 - **Level-triggered** (the default): `epoll_wait` reports the fd as long as
-  data *remains* — a fact about the fd's state. Forget to read everything and
+  data *remains*, a fact about the fd's state. Forget to read everything and
   the next wait simply reports it again.
 - **Edge-triggered** (`EPOLLET`): the fd is reported only on the
-  *transition* to readable — a fact about a state change. Miss data and no
+  *transition* to readable, a fact about a state change. Miss data and no
   further wakeup comes until *new* data arrives; the only correct consumer
   is one that drains the fd to `EAGAIN` on every wakeup, without exception.
 
@@ -78,26 +78,26 @@ This book uses level triggering everywhere it writes an epoll loop, because
 level converts a whole class of lost-wakeup bugs into mere extra wakeups.
 The discipline it demands instead is smaller but real: **consume what made
 the fd readable**. That is why the loop below reads the timerfd's 8-byte
-expiration counter even though it only wants "the timer fired" — leave those
+expiration counter even though it only wants "the timer fired"; leave those
 8 bytes and the timerfd stays readable, `epoll_wait` returns instantly
 forever, and your loop spins at 100% CPU. Note that `fwatch` drains its
 inotify fd to `EAGAIN` anyway: with level triggering that is an optimization
 (fewer wakeups per burst, and each burst is timestamped coherently); under
 edge it would be the difference between working and silently stalling.
 
-> **EPOLLONESHOT caveat** — there is a third mode you should know exists
+> **EPOLLONESHOT caveat**: there is a third mode you should know exists
 > before you need it. When *multiple threads* call `epoll_wait` on one epoll
 > fd, a level-triggered fd that still has data can be reported to two
 > threads at once, and even an edge can race a second event while thread one
 > is mid-read. `EPOLLONESHOT` disarms the registration after each report;
 > the owning thread must re-arm with `EPOLL_CTL_MOD` when done. It is the
-> standard fix for multi-threaded epoll — and the reason this book's
+> standard fix for multi-threaded epoll, and the reason this book's
 > single-threaded loops do not need it. One loop, one thread, no re-arm
 > protocol: that simplicity is a feature, not a limitation.
 
 Interestingly, the readiness style is observable per implementation: the
 strace later in this chapter shows Go's netpoller registering our inotify fd
-with `EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLET` — the runtime is an
+with `EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLET`: the runtime is an
 edge-triggered consumer (it always drains to `EAGAIN` and parks goroutines
 on the transition), while our C++ and Rust loops register plain level
 `EPOLLIN`.
@@ -105,28 +105,28 @@ on the transition), while our C++ and Rust loops register plain level
 ## inotify: per-watch queues, and where they overflow
 
 `inotify_init1(2)` returns an fd; `inotify_add_watch(2)` attaches a **watch**
-to an inode — directory or file — with a mask of event types, and returns a
+to an inode (directory or file) with a mask of event types, and returns a
 small integer *watch descriptor* (`wd`) that names the watch in every event.
 `fwatch` watches one directory with six mask bits: `IN_CREATE`, `IN_MODIFY`,
-`IN_ATTRIB`, `IN_DELETE`, `IN_MOVED_FROM`, `IN_MOVED_TO` — together `0x3c6`,
+`IN_ATTRIB`, `IN_DELETE`, `IN_MOVED_FROM`, `IN_MOVED_TO`, together `0x3c6`,
 a number you will meet again in `/proc`. Reading the fd yields packed
-variable-length records — `wd`, `mask`, `cookie`, `len`, then `len` bytes of
-NUL-padded name — so all three implementations walk a byte buffer, stepping
+variable-length records (`wd`, `mask`, `cookie`, `len`, then `len` bytes of
+NUL-padded name), so all three implementations walk a byte buffer, stepping
 by `sizeof(header) + len`. A record with `len == 0` is an event on the
 watched object itself (we skip those), and a rename arrives as a
 `IN_MOVED_FROM`/`IN_MOVED_TO` pair joined by `cookie`.
 
 Semantics worth being precise about: events queue **per inotify instance**,
 in order, and the kernel already coalesces *identical adjacent* events. The
-queue is finite — on this host `/proc/sys/fs/inotify/max_queued_events` is
-16384 (with `max_user_watches` 524288 and `max_user_instances` 512) — and
+queue is finite: on this host `/proc/sys/fs/inotify/max_queued_events` is
+16384 (with `max_user_watches` 524288 and `max_user_instances` 512), and
 when it fills, the kernel does not block the writer and does not drop
 silently: it appends one `IN_Q_OVERFLOW` event and discards until you catch
 up. A correct watcher treats `IN_Q_OVERFLOW` as "my view is stale,
-re-scan" — which is exactly why `fwatch` kept its `snapshot`/`diff`
+re-scan," which is exactly why `fwatch` kept its `snapshot`/`diff`
 subcommands: the polling machinery from Chapters 7 and 8 is the recovery
 path for the event machinery of Chapter 9. Also note what a directory watch does
-*not* give you: recursion. Subdirectories need their own watches — the cost
+*not* give you: recursion. Subdirectories need their own watches, the cost
 model behind editors and sync clients burning thousands of `wd`s.
 
 ## Everything is an fd: timerfd and signalfd
@@ -136,14 +136,14 @@ can join the loop, and Linux has spent two decades converting non-fd events
 into fds. `fwatch` uses two of them. `timerfd_create(2)` gives a timer whose
 expiration makes an fd readable; reading it returns an 8-byte count of
 expirations since the last read. The C++ and Rust loops run exactly **one**
-timer for two jobs — each iteration re-arms it (one-shot) to
+timer for two jobs: each iteration re-arms it (one-shot) to
 `min(overall deadline, earliest debounce due)`, so whichever deadline is
 nearest is the one wakeup that gets scheduled. One subtlety hides in
 `arm_timer`: an `it_value` of all zeros means *disarm*, so a deadline that
-is already past is clamped to one nanosecond — "fire immediately" and "never
+is already past is clamped to one nanosecond: "fire immediately" and "never
 fire" are one bit pattern apart.
 
-`signalfd(2)` does the same for signals — with a prerequisite that trips
+`signalfd(2)` does the same for signals, with a prerequisite that trips
 everyone once: you must **block** the signals first (`sigprocmask(2)`),
 otherwise they are still delivered asynchronously to a handler and the fd
 reads nothing. Blocked-then-read, SIGINT stops being a control-flow
@@ -155,22 +155,22 @@ the shutdown path itself is just another `case` in the dispatch.
 
 ## How the code works
 
-Two data structures carry the whole design. `pending` — `std::map<std::string,
+Two data structures carry the whole design. `pending` (`std::map<std::string,
 Pending>` in C++, `BTreeMap<String, Pending>` in Rust, `map[string]*pendingEvent`
-in Go — maps each path to its coalesced event kind and its debounce deadline
+in Go) maps each path to its coalesced event kind and its debounce deadline
 (`due = now + 100ms`); ordered maps are chosen deliberately so a batch flush
 prints in name order and `verify.lua` can assert output deterministically
 (Go sorts the keys at flush time instead). The second structure is the token:
 C++ registers each fd with `data.u32` set to `tok_inotify`/`tok_timer`/
 `tok_signal` (Rust: `TOK_INOTIFY = 0` … `TOK_SIGNAL = 2`), so dispatch is a
-`switch` on a number the kernel echoes back — no fd comparisons, no lookup
+`switch` on a number the kernel echoes back, no fd comparisons, no lookup
 table. Coalescing is one shared `merge` rule: within a window, delete wins,
 a fresh create stays `created` through later writes, and delete-then-recreate
-reads as `modified` — the same visible truth `diff` would have reported.
+reads as `modified`, the same visible truth `diff` would have reported.
 
-Setup is four fallible constructions — `inotify_init1` + `inotify_add_watch`,
+Setup is four fallible constructions (`inotify_init1` + `inotify_add_watch`,
 `timerfd_create`, `sigprocmask` + `signalfd`, `epoll_create1` + three
-`epoll_ctl` ADDs — every fd owned by Chapter 7's RAII wrapper (`Fd` in C++,
+`epoll_ctl` ADDs); every fd owned by Chapter 7's RAII wrapper (`Fd` in C++,
 `OwnedFd`-backed nix types in Rust, `os.File` in Go). Then the loop; here it
 is in all three languages, verbatim from
 `examples/09-event-loops-epoll-inotify/`:
@@ -347,18 +347,18 @@ is in all three languages, verbatim from
     }
 ```
 
-C++ and Rust are the same program in two spellings — arm, wait forever
+C++ and Rust are the same program in two spellings: arm, wait forever
 (`-1` / `EpollTimeout::NONE`; the timerfd *is* the timeout), dispatch by
 token, drain or consume, `EINTR` retries the wait. The one visible library
 difference: nix's `inotify.read_events()` does the record-walking that C++
 does by hand over `buf`, returning parsed events with `Option<OsString>`
-names — same bytes, one abstraction up.
+names, same bytes, one abstraction up.
 
 Go's excerpt has no epoll in it, and that is the entire point. Its `watch`
 is built from a goroutine and four channel operations: `readEvents` (in
 `examples/09-event-loops-epoll-inotify/go/main.go`) wraps the `O_NONBLOCK`
-inotify fd in an `os.File` — the act that registers it with the runtime's
-**netpoller** — and calls `f.Read` in a loop. That read *looks* blocking,
+inotify fd in an `os.File` (the act that registers it with the runtime's
+**netpoller**) and calls `f.Read` in a loop. That read *looks* blocking,
 but because the fd is nonblocking and registered, the runtime parks the
 *goroutine* (not an OS thread) until its epoll loop reports readiness, then
 resumes it to walk the same packed records (`unix.SizeofInotifyEvent`,
@@ -366,8 +366,8 @@ resumes it to walk the same packed records (`unix.SizeofInotifyEvent`,
 sources never touch an fd in user code: `time.After` is the timeout,
 a `time.Timer` re-armed to the earliest `due` is the debounce (`rearm`
 mirrors the C++ `arm_timer` computation exactly), and `signal.Notify`
-delivers SIGINT/SIGTERM on a channel. `select` is `epoll_wait` one level up
-— it blocks until any source is ready and dispatches — except the "fds" are
+delivers SIGINT/SIGTERM on a channel. `select` is `epoll_wait` one level up:
+it blocks until any source is ready and dispatches, except the "fds" are
 channels and the kernel machinery is rented from the runtime.
 
 ### Errors, three ways
@@ -380,32 +380,32 @@ with `.and_then(…)` so the first failure short-circuits with its
 `fwatch: watch: /no/such/dir: No such file or directory`, exit 1. Go gets
 `unix.ENOENT` back from `inotify_add_watch`, matches it with
 `errors.Is(err, unix.ENOENT)` to emit the friendlier
-`no such directory`, and — because the raw fd is not yet wrapped in an
-`os.File` at that point — must `unix.Close(ifd)` manually on that one path:
+`no such directory`, and, because the raw fd is not yet wrapped in an
+`os.File` at that point, must `unix.Close(ifd)` manually on that one path:
 the seam between raw-fd code and RAII-style ownership is exactly one line
 wide, and it is the line you forget. Rust's `anyhow::Context` builds the
 same chain declaratively (`.with_context(|| dir.to_string())`), printed with
 `{err:#}` to get `context: cause` in one line. Runtime errors inside the
-loop split by kind: `EINTR` is not an error (retry the wait — explicitly in
+loop split by kind: `EINTR` is not an error (retry the wait, explicitly in
 C++/Rust, invisibly in Go), `EAGAIN` on the inotify fd is the *success* case
 "queue drained", and anything else aborts with context. Usage errors exit 2,
-runtime failures exit 1, clean shutdown — timeout or signal — exits 0; all
+runtime failures exit 1, clean shutdown (timeout or signal) exits 0; all
 three verified below.
 
 ### Concurrency lens
 
-Count the threads doing *your* work: one in C++, one in Rust — and one
+Count the threads doing *your* work: one in C++, one in Rust, and one
 goroutine plus `main` in Go, multiplexed by the runtime onto its thread
 pool. The single-threaded epoll design is not an accident, it is the
 concurrency *strategy*: since only one thread touches `pending`, there are
 no locks, no atomics, and no `EPOLLONESHOT` re-arm protocol; the event loop
 serializes everything by construction. Go reaches the same freedom-from-locks
-differently — `pending` is confined to the `select` goroutine, and other
-concerns communicate by channel — which is Chapter 6's "share memory by
+differently: `pending` is confined to the `select` goroutine, and other
+concerns communicate by channel, which is Chapter 6's "share memory by
 communicating" applied to I/O. The costs surface in `strace`: idle for 400 ms,
 the C++ watcher makes exactly **1** `epoll_wait` call (armed once, sleeps,
 fires at the deadline), while the Go binary makes **10** `epoll_pwait` calls
-across its threads — the netpoller is consulted by the scheduler, not just
+across its threads: the netpoller is consulted by the scheduler, not just
 by your `select`, and no `timerfd_create` or `signalfd4` ever appears
 because Go implements timers in the runtime and signals via handlers feeding
 channels. Neither number is wrong; one design spends syscalls to buy an
@@ -438,7 +438,7 @@ Two lines, not four: the create and the immediate append landed in one 100 ms
 debounce window and `merge` kept `created`; the `rm` 400 ms later was its own
 window. Send SIGINT instead of waiting and the last line becomes
 `fwatch: exiting (signal)` (observed, exit 0). The book's harness agrees on
-the full behavior matrix — `python3 scripts/test-all-examples.py --only
+the full behavior matrix: `python3 scripts/test-all-examples.py --only
 09-event-loops-epoll-inotify` reports `PASS` for cpp, go, and rust
 (3 passed, 0 failed, 0 skipped).
 
@@ -468,14 +468,14 @@ read(4, "\1\0\0\0\0\0\0\0", 8)          = 8
 
 Every mechanism from this chapter is on one screen. The `data=0` wakeups are
 the inotify token, `data=0x1` the timer token. The first inotify drain
-returns **64 bytes — two packed records in one read** (the create, mask
+returns **64 bytes: two packed records in one read** (the create, mask
 `\0\1\0\0` = `IN_CREATE`, and the append, coalesced by our merge into one
 output line), followed by the mandatory `EAGAIN`. The delete arrives later as
 one 32-byte record with mask `\0\2\0\0` = `IN_DELETE`. Three timer wakeups,
 three 8-byte expiration reads: two debounce flushes and the final deadline.
 Total `epoll_wait` calls for the whole session: five.
 
-Second — and this is the part few people ever look at — epoll's interest
+Second, and this is a part few people look at, epoll's interest
 list is inspectable. With a watcher running (PID via `$!`):
 
 ```bash
@@ -499,10 +499,10 @@ it_value: (2, 694650159)
 The eventpoll fdinfo *is* Figure 9.1: three `tfd` (target fd) rows, our
 tokens 0/1/2 in the `data` column, `events: 19` = `EPOLLIN|EPOLLERR|EPOLLHUP`
 (the error bits are always reported; you never register them). The inotify
-fdinfo shows `wd:1`, our exact mask `3c6`, and the watched inode `142a5` —
+fdinfo shows `wd:1`, our exact mask `3c6`, and the watched inode `142a5`,
 hex for 82597, which `stat -c '%i'` on the watched directory confirms. The
 timerfd fdinfo shows `clockid: 1` (`CLOCK_MONOTONIC`) and, caught mid-run,
-`it_value: (2, 694650159)` — about 2.69 s remaining on a 3000 ms run, i.e.
+`it_value: (2, 694650159)`, about 2.69 s remaining on a 3000 ms run, i.e.
 armed to the overall deadline because no debounce was pending.
 
 Third, the Go binary on the same session, tracing what *our code never
@@ -519,21 +519,21 @@ epoll_pwait(5, [], 128, 799, NULL, 0) = 0
 
 The runtime built its own epoll instance, registered its wakeup fd, then
 added our inotify fd (4) **edge-triggered** with an opaque runtime cookie
-where we used token integers — 9 `epoll_pwait` calls in this run, issued
+where we used token integers: 9 `epoll_pwait` calls in this run, issued
 from several threads, none from `main.go`. The idle comparison quantifies
 the two architectures: over a 400 ms idle watch, `strace -c` shows the C++
 binary making exactly 1 `epoll_wait`, 1 `epoll_create1`, 1 `timerfd_create`,
 1 `timerfd_settime`, 1 `signalfd4`, and 1 `inotify_add_watch`; the Rust
 binary is syscall-for-syscall identical (the same six calls, once each); the
-Go binary makes 10 `epoll_pwait` and zero timerfd/signalfd calls. Two tools
-— the trace and `/proc` — one consistent story: readiness is a kernel fact,
+Go binary makes 10 `epoll_pwait` and zero timerfd/signalfd calls. Two tools,
+the trace and `/proc`, tell one consistent story: readiness is a kernel fact,
 and both surfaces are views of it.
 
-<p><span class="status status--unverified">unverified</span> — <strong>On the
-lab VM:</strong> the kernel-side view of this loop — watching wakeup sources
+<p><span class="status status--unverified">unverified</span>: <strong>On the
+lab VM:</strong> the kernel-side view of this loop, watching wakeup sources
 fire with bpftrace on <code>tracepoint:syscalls:sys_enter_epoll_wait</code>
 and kprobes on the eventpoll internals, and forcing a real
-<code>IN_Q_OVERFLOW</code> by shrinking <code>max_queued_events</code> —
+<code>IN_Q_OVERFLOW</code> by shrinking <code>max_queued_events</code>,
 needs root and a disposable kernel, so it is not run here; chapter 30
 (Debugging part) exercises exactly this on <code>systems-target</code>.</p>
 
@@ -541,28 +541,28 @@ needs root and a disposable kernel, so it is not run here; chapter 30
 
 - Readiness decouples waiting from reading: nonblocking fds, one
   `epoll_wait`, and a kernel-side interest list you can literally read back
-  from `/proc/<pid>/fdinfo/<epfd>` — tokens, masks, and all.
+  from `/proc/<pid>/fdinfo/<epfd>`: tokens, masks, and all.
 - Level triggering plus "consume what woke you" is the book's default;
   edge demands drain-to-`EAGAIN` always (Go's netpoller does exactly that,
   registering with `EPOLLET`), and `EPOLLONESHOT` exists for the
   multi-threaded case this design avoids.
 - inotify queues events per instance with per-watch `wd`s and a finite
-  queue (16384 here) that overflows into `IN_Q_OVERFLOW` — the signal to
+  queue (16384 here) that overflows into `IN_Q_OVERFLOW`, the signal to
   fall back to `snapshot`/`diff`; watches do not recurse.
-- timerfd and signalfd turn timeouts and SIGINT into readable fds — one
+- timerfd and signalfd turn timeouts and SIGINT into readable fds: one
   re-armed one-shot timer served both the debounce and the deadline, and a
   blocked-then-read signal became an ordinary dispatch case.
 - Go's goroutine + channels + `select` is the same machinery inverted: 6
   explicit setup syscalls and 1 wait for C++/Rust idle, versus 10 runtime
   `epoll_pwait`s and no timerfd/signalfd for Go.
 
-Next, **io_uring**: the completion model — instead of the kernel telling you
-an fd is *ready* so you can do the work, you submit the work and the kernel
-tells you it is *done*.
+Next, **io_uring**: the completion model, where instead of the kernel
+telling you an fd is *ready* so you can do the work, you submit the work and
+the kernel tells you it is *done*.
 
 ---
 
-<p><span class="status status--verified">verified</span> — all evidence in
+<p><span class="status status--verified">verified</span>: all evidence in
 this chapter was produced on the Fedora 44 reference host (kernel
 7.1, strace 7.1) this session: the runner reported
 <code>PASS</code> for cpp, go, and rust (3 passed, 0 failed, 0 skipped); the
@@ -572,7 +572,7 @@ a.txt</code>, <code>event: deleted a.txt</code>, <code>fwatch: exiting
 (signal)</code> with exit 0 (missing dir exited 1, bad usage 2); the C++
 strace excerpt is real trimmed output (5 <code>epoll_wait</code>s, the
 64-byte two-record inotify read, the <code>EAGAIN</code>s, three 8-byte
-timerfd reads); the <code>/proc</code> quotes are real (<code>tfd</code>
+timerfd reads); the <code>/proc</code> output matches the live run (<code>tfd</code>
 rows 3/4/5 with data 0/1/2, <code>mask:3c6</code>, <code>ino:142a5</code>
 matching <code>stat -c '%i'</code> = 82597, <code>clockid: 1</code>,
 <code>it_value: (2, 694650159)</code>); the Go trace showed

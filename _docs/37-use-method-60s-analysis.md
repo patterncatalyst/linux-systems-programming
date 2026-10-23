@@ -2,24 +2,24 @@
 title: "The USE method in 60 seconds: a checklist that runs the real tools, not a shortcut around them"
 order: 37
 part: "Observability"
-description: "loadmix is Brendan Gregg's Utilization/Saturation/Errors checklist as a runnable program — a saturation generator that pegs one resource at a time, and an analyze mode that shells out to uptime, vmstat, mpstat, iostat, sar, and pidstat exactly as a human would, parses each tool's plain-text table by column name from its own header row, runs the five interval samplers concurrently so a 60-second checklist costs 60 seconds and not five minutes, and names the resource whose Saturation signal fired hardest."
+description: "loadmix is Brendan Gregg's Utilization/Saturation/Errors checklist as a runnable program: a saturation generator that pegs one resource at a time, and an analyze mode that shells out to uptime, vmstat, mpstat, iostat, sar, and pidstat exactly as a human would, parses each tool's plain-text table by column name from its own header row, runs the five interval samplers concurrently so a 60-second checklist costs 60 seconds and not five minutes, and names the resource whose Saturation signal fired hardest."
 duration: "50 minutes"
 ---
 
-Chapter 36's `sysagent` built a USE-method collector from first principles —
+Chapter 36's `sysagent` built a USE-method collector from first principles:
 reading `/proc/stat`, `/proc/net`, `/proc/diskstats`, and cgroup PSI directly,
 no external process, no tool you'd have to trust. That is the right call for a
 program that runs continuously in production. But it is not how most engineers
 actually triage a system that's in trouble *right now*: they SSH in and reach
 for `uptime`, `vmstat 1`, `mpstat -P ALL 1`, `iostat -xz 1`, `pidstat 1`, and
-`free`, running the checklist Brendan Gregg popularized as "the USE method" —
+`free`, running the checklist Brendan Gregg popularized as "the USE method":
 for every resource, ask whether it's **Utilized**, **Saturated**, or
-**Erroring** — because those tools already exist, are already trusted, and
+**Erroring**, because those tools already exist, are already trusted, and
 already parse a live system correctly. `loadmix` is that checklist wired into
 a program: a saturation generator that pegs one resource on command, and an
 `analyze` mode that runs the real tools exactly as a human would, reads their
-plain-text tables the way a human reads them — by column *name*, from each
-tool's own header row — and tells you which resource is in trouble and why.
+plain-text tables the way a human reads them (by column *name*, from each
+tool's own header row) and tells you which resource is in trouble and why.
 
 The code is in `examples/37-use-method-60s-analysis/`. The run script there
 builds/sets up and runs it; its `README.md` covers what it does and how to
@@ -27,13 +27,13 @@ drive it.
 
 {% include excalidraw.html
    file="37-use-method-checklist"
-   alt="A pipeline diagram of loadmix analyze. Left column, four sequential pre-samples run once at start: uptime, dmesg tail, top -b -n1, and ss -s, each landing in a single printed 'tool' line. Center, a band labeled 'five interval samplers, spawned concurrently' containing five parallel boxes — vmstat 1 N, mpstat -P ALL 1 N, iostat -xz 1 N, sar -n DEV 1 N, and pidstat 1 N — each writing to its own temp file, all five joined by a single wait so the band's total wall time is N seconds, not 5N; a note under the band reads 'N-second checklist costs ~N seconds'. Right, each sampler's output feeds a column-name parser (Row::get against the tool's own header row) into a 4x3 signal matrix: rows cpu/mem/io/net, columns Utilization/Saturation/Errors, each cell a fired=true-or-false verdict against a fixed threshold — cpu's Saturation threshold shown as cpus+2 to make the guest-relative scaling visible. An arrow from the matrix's Saturation column into a final verdict box reads 'resource with the highest Saturation-value/threshold ratio wins'. A small inset box below the diagram shows the saturate side: app --resource cpu|mem|io|net --seconds N spinning a worker pool that the analyze pipeline, run concurrently against it, is able to see and attribute."
-   caption="Figure 37.1 — the analyze pipeline: four one-shot pre-samples, five interval samplers run concurrently, column-name parsing into a 4×3 USE signal matrix, and the highest-Saturation-ratio verdict" %}
+   alt="A pipeline diagram of loadmix analyze. Left column, four sequential pre-samples run once at start: uptime, dmesg tail, top -b -n1, and ss -s, each landing in a single printed 'tool' line. Center, a band labeled 'five interval samplers, spawned concurrently' containing five parallel boxes (vmstat 1 N, mpstat -P ALL 1 N, iostat -xz 1 N, sar -n DEV 1 N, and pidstat 1 N) each writing to its own temp file, all five joined by a single wait so the band's total wall time is N seconds, not 5N; a note under the band reads 'N-second checklist costs ~N seconds'. Right, each sampler's output feeds a column-name parser (Row::get against the tool's own header row) into a 4x3 signal matrix: rows cpu/mem/io/net, columns Utilization/Saturation/Errors, each cell a fired=true-or-false verdict against a fixed threshold, cpu's Saturation threshold shown as cpus+2 to make the guest-relative scaling visible. An arrow from the matrix's Saturation column into a final verdict box reads 'resource with the highest Saturation-value/threshold ratio wins'. A small inset box below the diagram shows the saturate side: app --resource cpu|mem|io|net --seconds N spinning a worker pool that the analyze pipeline, run concurrently against it, is able to see and attribute."
+   caption="Figure 37.1: the analyze pipeline: four one-shot pre-samples, five interval samplers run concurrently, column-name parsing into a 4×3 USE signal matrix, and the highest-Saturation-ratio verdict" %}
 
-> **Tools used** — `uptime`, `dmesg`, `top`, `ss`, `vmstat`, `free`
+> **Tools used**: `uptime`, `dmesg`, `top`, `ss`, `vmstat`, `free`
 > (procps-ng/util-linux/iproute2, base Fedora on the `systems-target` guest)
 > plus `mpstat`, `iostat`, `sar`, `pidstat` (the `sysstat` package, installed
-> by the guest's own cloud-init) — all on the `systems-target` VM, which
+> by the guest's own cloud-init), all on the `systems-target` VM, which
 > `loadmix analyze` invokes directly as subprocesses. No tool here is
 > `loadmix`-specific; this chapter's whole premise is that the checklist is
 > the same nine commands you'd type by hand.
@@ -51,7 +51,7 @@ app analyze [--seconds N]                    run the checklist and name
 ```
 
 `--resource cpu` spins a pool of worker threads doing nothing but xorshift
-arithmetic — no syscalls, no allocation in the hot loop, pure CPU. `--resource
+arithmetic, no syscalls, no allocation in the hot loop, pure CPU. `--resource
 mem` touches 1.35× the guest's `MemTotal` across a worker pool, deliberately
 overshooting available RAM to push real pages into swap. `--resource io`
 opens one file per worker with `O_DSYNC` and `pwrite`s a 16 KiB buffer of
@@ -61,14 +61,14 @@ net` floods UDP datagrams over loopback from a pool of senders to one
 receiver. Each saturator prints a `loadmix: start ...` line with the
 resource, requested duration, and worker count, runs for (approximately)
 that duration, and prints a `loadmix: done ... ops= bytes=` line. `analyze`
-does none of that — it induces no load of its own, and instead spends its
+does none of that; it induces no load of its own, and instead spends its
 `--seconds` window watching the system through the same nine tools listed
 above.
 
 ## Parsing by column name, not position
 
-The single design decision that makes `analyze` durable — the reason it
-survives a `sysstat` or `procps-ng` version bump that reorders columns — is
+The single design decision that makes `analyze` durable (the reason it
+survives a `sysstat` or `procps-ng` version bump that reorders columns) is
 that every parser reads a tool's header row first and looks fields up by
 *name* against that row, never by a hardcoded index. `Row` (C++), `row` (Go),
 and `Row` (Rust) all express the same idea: a table row is a name list zipped
@@ -183,7 +183,7 @@ fn make_row(
 ```
 
 `header_skip`/`data_skip` exist because a header row and its data rows don't
-always start aligned — `mpstat -P ALL`'s `Average:` rows both begin with a
+always start aligned: `mpstat -P ALL`'s `Average:` rows both begin with a
 label token (`Average: CPU` / `Average: all`) that has to be skipped before
 `%idle` in the header lines up with the actual idle percentage in the data.
 `parse_mpstat` puts this together end to end: it scans every line looking for
@@ -295,7 +295,7 @@ parsers (`parse_vmstat`, `parse_iostat`, `parse_sar_pkts`) each carry one more
 quirk worth knowing before you read the source: `vmstat` has no `Average:`
 line at all, and its first sample is a since-boot average rather than a live
 interval, so `parse_vmstat` scans every data row, discards row 0, and takes
-the *max* of `r` (the run queue) across the rest — the steady-state
+the *max* of `r` (the run queue) across the rest, the steady-state
 saturation signal, not one diluted by averaging across the whole window.
 `iostat -xz` has the identical since-boot-first-row quirk, plus `-z` hides
 idle devices entirely, so `parse_iostat` tracks block boundaries with its own
@@ -303,8 +303,8 @@ idle devices entirely, so `parse_iostat` tracks block boundaries with its own
 
 ## How the code works
 
-`cmd_analyze` runs in three phases. First, four one-shot pre-samples —
-`uptime`, `dmesg | tail -n 5`, `top -b -n1`, `ss -s` — each captured through
+`cmd_analyze` runs in three phases. First, four one-shot pre-samples
+(`uptime`, `dmesg | tail -n 5`, `top -b -n1`, `ss -s`) each captured through
 `run_capture`, the one function in the file with a real failure mode (the
 shell itself failing to start), which is why it's the one that returns
 `std::expected`/`error`/`Result` per this book's convention. `dmesg` on an
@@ -313,8 +313,8 @@ for that string and reports `status=denied` rather than treating it as a
 capture failure, because an unprivileged `analyze` run is the common case,
 not an edge case.
 
-Second, the five interval samplers — `vmstat`, `mpstat -P ALL`, `iostat -xz`,
-`sar -n DEV`, `pidstat`, each invoked as `<tool> 1 N` — are spawned
+Second, the five interval samplers (`vmstat`, `mpstat -P ALL`, `iostat -xz`,
+`sar -n DEV`, `pidstat`, each invoked as `<tool> 1 N`) are spawned
 **concurrently**, each redirected to its own temp file, and only then
 joined. This matters more than it looks: each of those five commands blocks
 for `N` seconds sampling at a 1-second interval, so running them one after
@@ -338,34 +338,34 @@ net   Utilization: pkts/s    >= 2000       Saturation: pkts/s     >= 8000
 cpu's Saturation threshold is the one that scales with the machine it's
 running on rather than being a flat number: `cpus + 2`, so a run queue longer
 than the guest's own core count plus a little headroom means threads are
-genuinely waiting for a CPU that isn't there — the textbook definition of
+waiting for a CPU that isn't there, the textbook definition of
 saturation, not an arbitrary constant that would be wrong on a differently
 sized host. Errors is printed for every resource but always `fired=false`,
 because this chapter's saturators induce load, not kernel-logged faults; the
 line exists so the U/S/E triple is complete and so a future chapter that
 *does* wire in `dmesg`-sourced error counts has somewhere to plug them in.
 The verdict is whichever resource has the highest `Saturation value /
-Saturation threshold` ratio — not the highest raw Saturation value, which
+Saturation threshold` ratio, not the highest raw Saturation value, which
 would let net's `8000`-scale threshold always lose to cpu's `4`-scale one
 regardless of which resource is actually worse off.
 
 ## Errors, three ways
 
 `loadmix` has one failure surface and one exit code for it: a **usage
-error** — no `--resource`/`--seconds` given at all, an unrecognized
+error** (no `--resource`/`--seconds` given at all, an unrecognized
 `--resource` value, `--seconds 0` or negative, or an unrecognized flag to
-`analyze` — prints the two-line usage banner to stderr and exits **2**. C++
+`analyze`) prints the two-line usage banner to stderr and exits **2**. C++
 funnels every parse path through `usage()` and returns `2` from `main`; Go
 calls `usage()` then `os.Exit(2)`; Rust calls `usage()` then
 `std::process::exit(2)`. There is no separate "runtime error" exit code here,
-unlike Chapter 39's codec-bug path or Chapter 40's connection-refused path —
+unlike Chapter 39's codec-bug path or Chapter 40's connection-refused path;
 `analyze`'s subprocess calls are designed to degrade gracefully instead of
 failing the whole run: a denied `dmesg`, an empty `ss -s`, or a sampler that
 produces no data rows all show up as a `0.00`/`denied`/empty field in the
 output rather than a non-zero exit, because the entire point of a diagnostic
 checklist is that it still reports *something* under the same restricted
 privileges a real on-call engineer would have. A successful run of either
-mode — saturate or analyze — exits **0**.
+mode (saturate or analyze) exits **0**.
 
 ## Concurrency lens
 
@@ -374,14 +374,14 @@ worker pool that loops until `stop_requested() || now >= deadline`, then join.
 C++'s pool is a `std::vector<std::jthread>`; Go's is a `sync.WaitGroup` over
 goroutines with `sync/atomic` counters; Rust's is `std::thread::scope`, the
 `jthread` analogue where worker threads are RAII-joined when the scope block
-ends. All three converge on identical worker-count formulas — `max(4, cpus*3)`
-for cpu, `max(4, cpus*4)` for io and net, `max(2, cpus)` for mem — and
+ends. All three converge on identical worker-count formulas (`max(4, cpus*3)`
+for cpu, `max(4, cpus*4)` for io and net, `max(2, cpus)` for mem) and
 identical atomic counters accumulated across the pool.
 
-Where the three languages genuinely diverge is in how the parent thread stays
+Where the three languages diverge is in how the parent thread stays
 alive long enough for that deadline to matter. C++'s `std::jthread` runs
 `request_stop()` *before* `join()` in its destructor, which means the instant
-the enclosing scope's spawn loop finishes, every worker is told to stop —
+the enclosing scope's spawn loop finishes, every worker is told to stop,
 before the deadline the workers are checking has had any chance to arrive.
 Left alone, this was a real bug in the first cut of this example: every
 saturator exited in single-digit milliseconds regardless of `--seconds`,
@@ -420,7 +420,7 @@ close and trigger the RAII-driven stop-then-join:
 Go and Rust never needed this hack, because in both ports each worker checks
 its *own* deadline directly inside its loop condition (`time.Now().Before(deadline)`,
 `Instant::now() < deadline`) rather than waiting on an external stop signal
-raised by the parent — the parent simply calls `wg.Wait()` / lets
+raised by the parent; the parent simply calls `wg.Wait()` / lets
 `thread::scope` return, which blocks until every worker's own loop condition
 has already become false on its own. There is no analogue of `jthread`'s
 stop-before-join ordering to fight, because nothing external tells these
@@ -428,8 +428,8 @@ workers to stop early; they stop themselves, on schedule, and the parent's
 join is purely a rendezvous rather than part of the termination signal.
 
 The second, unrelated concurrency story in this chapter is `analyze`'s five
-interval samplers, spawned as five real OS processes — `fork`+`execvp` in
-C++, `exec.Command` on five goroutines in Go, `Command::spawn` in Rust — with
+interval samplers, spawned as five real OS processes (`fork`+`execvp` in
+C++, `exec.Command` on five goroutines in Go, `Command::spawn` in Rust) with
 a single joint wait afterward. This isn't thread concurrency inside the
 program at all; it's five independent subprocesses racing the wall clock
 together so that, as the source comment puts it, "a 12s analyze window costs
@@ -444,7 +444,7 @@ together so that, as the source comment puts it, "a 12s analyze window costs
 This is a **VM example**: the saturation signals only mean something measured
 against a real, otherwise-quiet kernel, so `verify.lua` stages the built
 binary directly to `/tmp/lsp37-<lang>/app` on `systems-target` via plain
-`scp`/`ssh` and drives it there — not through `demo.sh <lang> run
+`scp`/`ssh` and drives it there, not through `demo.sh <lang> run
 TARGET=...`, whose `deploy-to-vm.sh` wraps commands in `ssh -t` and injects
 CRLF that breaks the tool's plain-text output.
 
@@ -468,11 +468,11 @@ analyze: verdict resource=cpu ratio=0.75
 analyze: done
 ```
 
-`dmesg status=denied` is expected — the guest's unprivileged `fedora` user
-gets `Operation not permitted` from `dmesg`, and `analyze` reports that
-plainly rather than failing. This run finished in **10.417s** wall-clock for
+`dmesg status=denied` is expected: the guest's unprivileged `fedora` user
+gets `Operation not permitted` from `dmesg`, and `analyze` reports it
+rather than failing. This run finished in **10.417s** wall-clock for
 a `--seconds 10` window, confirming the five samplers really do run
-concurrently — five serial `<tool> 1 10` invocations would have taken close
+concurrently; five serial `<tool> 1 10` invocations would have taken close
 to 50 seconds.
 
 Now the payoff: a background saturator, then a concurrent checklist run
@@ -492,7 +492,7 @@ analyze: done
 
 `busy_pct` rose from the idle baseline of **1.34** to **100.00**; `run_queue`
 rose from **3.00** to **7.00–8.00** across three independent captures on this
-2-vCPU guest — comfortably clearing both the `busy_pct >= 60` and
+2-vCPU guest, comfortably clearing both the `busy_pct >= 60` and
 `run_queue >= cpus+2 = 4` thresholds by a wide margin, every time.
 Utilization fired true, and the verdict landed on `cpu`: `analyze`, run
 concurrently against a background `loadmix --resource cpu` saturator it knows
@@ -525,51 +525,51 @@ example                        cpp   go    rust
 
 ## Cross-check: the same load, seen two ways
 
-The load-attribution run above is itself a cross-check — `analyze`'s verdict
+The load-attribution run above is itself a cross-check: `analyze`'s verdict
 is only trustworthy if it agrees with what you already know is true, since
 you launched the saturator yourself. But it's worth pairing `analyze`'s own
 report against `top`'s independent view, captured in the very same run: `top
 -b -n1`'s `%Cpu(s)` line read `97.8 us, 2.2 sy, 0.0 id` while `mpstat`'s
 `busy_pct` (100.0 − `%idle`) read `100.00`. The two numbers come from
-different tools sampling at different instants over different windows —
-`top` a single one-shot snapshot, `mpstat` an average over the whole
-`analyze --seconds` window — so they are not expected to match to the decimal
+different tools sampling at different instants over different windows
+(`top` a single one-shot snapshot, `mpstat` an average over the whole
+`analyze --seconds` window), so they are not expected to match to the decimal
 place, and they don't; what they agree on is the story: this guest's CPUs are
 saturated, not idle, not lightly loaded. A verdict that `mpstat` alone
-disagreed with `top` about — one reporting near-idle while the other reported
-saturated — would be the sign of a parsing bug, not measurement noise, since
+disagreed with `top` about (one reporting near-idle while the other reported
+saturated) would be the sign of a parsing bug, not measurement noise, since
 both tools are reading the same underlying `/proc/stat` counters through
 different sampling windows.
 
 ## What you learned
 
-- **The USE method is a checklist, not a tool** — for every resource, ask
+- **The USE method is a checklist, not a tool**: for every resource, ask
   whether it's Utilized, Saturated, or Erroring, against a threshold you
   choose up front. `loadmix analyze` is that checklist wired into a program
   that runs the same nine commands (`uptime`, `dmesg`, `top`, `ss`, `vmstat`,
   `mpstat`, `iostat`, `sar`, `pidstat`, `free`) a person would run by hand.
 - **Parse plain-text tool output by column name, from the tool's own header
-  row, never by hardcoded position** — `Row::get`/`row.getOr` walk a name
+  row, never by hardcoded position**: `Row::get`/`row.getOr` walk a name
   list to find the field a caller asked for, which is what keeps every
   parser correct across a `sysstat` or `procps-ng` version that reorders
   columns.
-- **Run independent interval samplers concurrently, not serially** — five
+- **Run independent interval samplers concurrently, not serially**: five
   `<tool> 1 N` processes spawned together and joined once made a
   `--seconds 10` checklist finish in 10.417s instead of the ~50s five serial
   invocations would have cost.
 - **A saturation threshold should scale with the machine it runs on where
-  that's the accurate signal** — cpu's `run_queue >= cpus + 2` uses the
+  that's the accurate signal**: cpu's `run_queue >= cpus + 2` uses the
   guest's own core count, unlike net's flat `8000 pkts/s`, because "threads
   waiting for a CPU" only means something relative to how many CPUs exist.
 - **`std::jthread`'s RAII order (`request_stop()` before `join()`) can silence
-  a worker before its own deadline ever fires** — the fix is holding the
+  a worker before its own deadline ever fires**: the fix is holding the
   parent scope open with `sleep_until(deadline)`; Go and Rust never needed
   the workaround because each worker checks its own deadline directly rather
   than waiting on an externally raised stop signal.
 - **`analyze`, run concurrently against a background `--resource cpu`
   saturator it knows nothing about, correctly attributed the load**:
   `busy_pct` 1.34 → 100.00, `run_queue` 3.00 → 7.00–8.00, Utilization fired
-  true, verdict `cpu` — stable across three independent attempts on the lab
+  true, verdict `cpu`, stable across three independent attempts on the lab
   guest.
 
 Chapter 38 takes the numbers this checklist prints to a terminal and sends
@@ -579,7 +579,7 @@ happens.
 
 ---
 
-<p><span class="status status--verified">verified</span> — on the
+<p><span class="status status--verified">verified</span>: on the
 <code>systems-target</code> lab guest (Fedora 44, kernel
 <code>6.19.10-300.fc44</code>, 2 vCPU nested KVM) this session:
 <code>python3 scripts/test-all-examples.py --only
@@ -604,5 +604,5 @@ showing no OOM-kill and full memory/swap recovery after exit. Not exercised:
 a privileged <code>dmesg</code> capture (the guest's unprivileged
 <code>fedora</code> account reports <code>status=denied</code>, which
 <code>analyze</code> treats as an expected, non-failing path) and any run
-outside the lab guest — this is a VM example whose saturation signals are
+outside the lab guest; this is a VM example whose saturation signals are
 only meaningful against a real, otherwise-quiet kernel.</p>

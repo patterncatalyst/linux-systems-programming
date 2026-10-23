@@ -7,23 +7,23 @@ duration: "50 minutes"
 ---
 
 Chapter 45 opened this part with three suites that watch a whole fleet from
-outside — Cockpit's console, SystemTap's kernel modules, PCP's pull-based
-metrics — and none of them cared what language produced the process they
+outside (Cockpit's console, SystemTap's kernel modules, PCP's pull-based
+metrics), and none of them cared what language produced the process they
 were watching. This chapter turns all the way around: one language, one
 small program, and every tool that touches it before it ever runs. Chapter
-31 already gave C++ one paragraph of toolbelt each — `perf`, `clang-tidy`,
-GCC's `-fanalyzer` — on the way to covering Go and Rust too. This chapter
+31 already gave C++ one paragraph of toolbelt each (`perf`, `clang-tidy`,
+GCC's `-fanalyzer`) on the way to covering Go and Rust too. This chapter
 reopens exactly that toolchain and does not move on. `toolbox` is a single
-C++23 binary, engineered so that every tool pointed at it — two compilers,
+C++23 binary, engineered so that every tool pointed at it (two compilers,
 a build-system generator, a package manager, a static analyzer, a
-formatter, a debugger that needs help understanding a custom type — has
+formatter, a debugger that needs help understanding a custom type) has
 something concrete to catch or confirm, not just a clean exit.
 
 The shape of the problem is specific to C++. Go ships one command
 (`go build`) and Rust ships one command (`cargo build`); C++ ships a
-language standard and leaves the rest — which compiler, which generator,
+language standard and leaves the rest (which compiler, which generator,
 which package manager, whether the debugger understands your types out of
-the box — as choices a project has to make explicit. `toolbox` makes seven
+the box) as choices a project has to make explicit. `toolbox` makes seven
 of those choices as seven named `CMakePresets.json` configurations, pins a
 Conan 2 dependency to an exact, committed lockfile, and prints one
 deterministic digest so that GCC and clang can be asked, byte for byte,
@@ -32,24 +32,24 @@ whether they agree.
 {% include excalidraw.html
    file="46-cmake-preset-graph"
    alt="A tree diagram. At the top, a hidden _base configure preset (generator Ninja, binaryDir sourceDir/build/presetName) fans out to six visible presets: release (RelWithDebInfo, GCC), debug (Debug, GCC), asan (Debug + -fsanitize=address,undefined), and ubsan (Debug + -fsanitize=undefined -fno-sanitize-recover=undefined) sit in one column; release-clang and debug-clang sit beside them, each drawn inheriting from release/debug respectively with an arrow labeled inherits plus a CMAKE_CXX_COMPILER=clang++ override. Each of the six feeds its own build/<presetName> directory box below it. A seventh preset, conan, also inherits _base but is drawn held apart in a dashed box labeled isolated -- only reachable when TOOLBOX_ENABLE_CONAN=ON, needed by no other preset, so the default build never touches Conan. A caption note names which preset the parity gate uses (release vs release-clang), which the UBSan gate uses (ubsan), and which gdb uses (debug)."
-   caption="Figure 46.1 — the CMakePresets inheritance graph: one _base config fanning out to release/debug/asan/ubsan and their clang twins, each into build/${presetName}, with the Conan sub-target preset held apart so the default build needs no Conan" %}
+   caption="Figure 46.1: the CMakePresets inheritance graph, one _base config fanning out to release/debug/asan/ubsan and their clang twins, each into build/${presetName}, with the Conan sub-target preset held apart so the default build needs no Conan" %}
 
-> **Tools used** — `cmake` and `ninja` (host; both are hard requirements in
+> **Tools used**: `cmake` and `ninja` (host; both are hard requirements in
 > `scripts/check-host.sh`), `g++` and `clang++` (host; both are hard
 > requirements in `scripts/check-host.sh`), `clang-tidy` and `clang-format`
 > (host; ship from the same LLVM toolchain `check-host.sh` verifies via
 > `clang`, but are not separately gated by it), `gdb` plus its Python
 > pretty-printer extension (host; `gdb` is a hard requirement in
 > `scripts/check-host.sh`), `conan` (host; a soft/warn entry in
-> `scripts/check-host.sh` — a missing Conan degrades that section's gate to
+> `scripts/check-host.sh`; a missing Conan degrades that section's gate to
 > an informational `SKIP:`, it never fails the example), and `ccache`/`mold`
 > (host; demonstrated in this chapter's recipes but absent on the reference
 > host, so those two sections are marked unverified below). No VM, no root,
-> no LGTM stack — `examples/46-cpp-toolbox` is `mode: local` in
+> no LGTM stack: `examples/46-cpp-toolbox` is `mode: local` in
 > `examples/manifest.yaml`.
 
 Because the C++ toolchain is itself the subject, `examples/46-cpp-toolbox/`
-ships `langs: [cpp]` only — a Go or Rust build would have nothing new to
+ships `langs: [cpp]` only: a Go or Rust build would have nothing new to
 say about a `CMakePresets.json` file or a `.clang-tidy` config. Every code
 block below is a plain fenced `cpp`/`console`/`json` block, the way Chapter
 44's Go runtime chapter presented Go alone; there is no language-tab
@@ -77,11 +77,11 @@ every other preset inherits from:
 ```
 
 `hidden: true` keeps `_base` out of every preset-selection UI and off
-`cmake --list-presets` — it exists only to be inherited from, never chosen
+`cmake --list-presets`: it exists only to be inherited from, never chosen
 directly. The one line worth reading twice is `binaryDir`:
 {% raw %}`"${sourceDir}/build/${presetName}"`{% endraw %} means every preset
-that inherits `_base` gets its own build directory for free, named after
-itself — `build/release`, `build/debug`, `build/asan`, and so on — with no
+that inherits `_base` gets its own build directory automatically, named after
+itself (`build/release`, `build/debug`, `build/asan`, and so on) with no
 preset having to repeat the path. `{% raw %}${presetName}{% endraw %}` is
 CMake Presets' own variable, resolved at configure time to whichever
 preset's name you passed to `--preset`; it is not something this chapter's
@@ -100,7 +100,7 @@ own below):
 | `debug-clang` | `debug` | clang | same as `debug`, compiler overridden |
 
 `release-clang` and `debug-clang` show the other half of `inherits`: they
-inherit from `release`/`debug` — not from `_base` — and add exactly two
+inherit from `release`/`debug` (not from `_base`) and add exactly two
 cache variables on top:
 
 ```json
@@ -115,20 +115,20 @@ cache variables on top:
     },
 ```
 
-Everything else — the `RelWithDebInfo` build type, `binaryDir`, compile
-commands export — comes along from `release` unchanged; only the compiler
+Everything else (the `RelWithDebInfo` build type, `binaryDir`, compile
+commands export) comes along from `release` unchanged; only the compiler
 differs. That is the whole mechanism the parity gate below leans on: two
 presets that are identical except for which compiler builds them. `asan`
-and `ubsan` look similar to each other but serve different jobs on
-purpose: `asan` combines `-fsanitize=address,undefined` with no
-`-fno-sanitize-recover` — a general bug-hunting build that keeps running
-and reports every violation it finds — while `ubsan` adds
+and `ubsan` look similar to each other but serve different jobs:
+`asan` combines `-fsanitize=address,undefined` with no
+`-fno-sanitize-recover` (a general bug-hunting build that keeps running
+and reports every violation it finds), while `ubsan` adds
 `-fno-sanitize-recover=undefined`, so the *first* undefined-behavior
 violation aborts the process immediately with a nonzero exit. That
 determinism is exactly what a gate that has to produce a fixed exit code
 needs, which is why "UBSan recipe" below reaches for `ubsan`, not `asan`.
 
-`buildPresets` is a flat, 1:1 mirror of the seven configure presets — each
+`buildPresets` is a flat, 1:1 mirror of the seven configure presets: each
 build preset just names the configure preset it drives:
 
 ```json
@@ -144,13 +144,13 @@ build preset just names the configure preset it drives:
 ```
 
 Once a configure preset exists, its build preset is `cmake --build
---preset <name>` and nothing more — no per-preset generator flags, no
+--preset <name>` and nothing more: no per-preset generator flags, no
 target list, because `binaryDir` and `generator` already came from
 `_base`.
 
 ## Conan 2 lockfiles
 
-The seventh preset, `conan`, is the odd one out on purpose:
+The seventh preset, `conan`, is the odd one out by design:
 
 ```json
     {
@@ -175,9 +175,9 @@ if(TOOLBOX_ENABLE_CONAN)
 endif()
 ```
 
-Only the `conan` preset turns it `ON`; every other preset — including
+Only the `conan` preset turns it `ON`; every other preset (including
 `release`, what `./demo.sh cpp build` and fedora:44's CI build-smoke both
-use — never evaluates `cpp/conan/` and never needs Conan installed at all.
+use) never evaluates `cpp/conan/` and never needs Conan installed at all.
 That isolation is the whole design decision this section is about: a
 tutorial reader without Conan on `PATH` still gets a clean default build,
 and CI never has to install a package manager it doesn't otherwise need.
@@ -230,11 +230,11 @@ pins one exact package revision, timestamp included:
 
 `conan install conan --output-folder=build/conan --build=missing
 --lockfile=conan/conan.lock` resolves against that exact revision, not
-whatever `fmt/11.0.2` happens to mean on the day someone else runs it — the
+whatever `fmt/11.0.2` happens to mean on the day someone else runs it: the
 same discipline `go.sum`/`Cargo.lock` give the other two languages,
 expressed in Conan's own lockfile format. On this host, that install, the
-`conan` preset's configure and build, and the resulting binary all ran for
-real:
+`conan` preset's configure and build, and the resulting binary all ran
+successfully:
 
 ```console
 $ conan install conan -of build/conan --build=missing --lockfile=conan/conan.lock   # fmt/11.0.2 from lockfile
@@ -243,7 +243,7 @@ $ ./build/conan/toolbox-conan-demo  →  toolbox-conan: fmt sub-target ok   (exi
 ```
 
 `toolbox-conan-demo`'s own source is three lines that only exist to prove
-the link succeeded — it never touches `toolbox`'s digest, so nothing about
+the link succeeded; it never touches `toolbox`'s digest, so nothing about
 Conan can affect the GCC-vs-clang parity story below:
 
 ```cpp
@@ -255,11 +255,11 @@ int main() {
 }
 ```
 
-## GCC-vs-clang parity — and where the two compilers disagree
+## GCC-vs-clang parity, and where the two compilers disagree
 
 `toolbox report` exists to make a hard question answerable with a `diff`:
 does the *exact same source*, built by two different compilers, produce
-the exact same bytes? Making that question answerable at all takes care —
+the exact same bytes? Making that question answerable at all takes care:
 floats round differently, pointer values differ between runs, timestamps
 differ by definition, and unordered-container iteration order is
 compiler- and library-defined. `toolbox report` avoids every one of those
@@ -306,9 +306,9 @@ independently built binaries, one compiled by GCC 16.1.1, one by clang
 22.1.8, from the identical source, land on the identical 64-bit digest,
 `0x481984990deee5ff`.
 
-Byte-identical *output* does not mean byte-identical *diagnostics* — GCC
-and clang disagree constantly about how to phrase the same finding, which
-is worth seeing directly rather than taking on faith. Two comparisons run
+Byte-identical *output* does not mean byte-identical *diagnostics*: GCC
+and clang disagree constantly about how to phrase the same finding, and
+seeing it directly beats taking it on faith. Two comparisons run
 this session, against this exact source, make the point at both ends of
 the build: compile time and run time.
 
@@ -332,10 +332,10 @@ toolbox.cpp:30:55: error: expected ';' at end of declaration
 ```
 
 GCC keeps parsing past the missing `;` and reports the error where it
-first becomes unrecoverable — line 31, the *next* statement — with a
+first becomes unrecoverable (line 31, the *next* statement), with a
 message phrased around what it expected there (`','` or `';'` before
-`std`). clang stops exactly where the semicolon should have gone — line
-30, column 55, the true end of the broken declaration — and even offers a
+`std`). clang stops exactly where the semicolon should have gone (line
+30, column 55, the true end of the broken declaration) and even offers a
 fix-it caret pointing at the missing character. Same bug, two real and
 differently useful answers to "where is it."
 
@@ -357,7 +357,7 @@ SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior toolbox.cpp:43:32
 ```
 
 Column 34 is the literal `1` in `max_value + 1`; column 32 is the `+`
-operator itself — GCC's libubsan blames the operand, clang's blames the
+operator itself: GCC's libubsan blames the operand, clang's blames the
 operation, and only clang's runtime appends a `SUMMARY:` line by default.
 Neither is wrong. Both are real diagnostics for the identical undefined
 behavior, and `verify.lua`'s own assertion (quoted in "Errors, three ways"
@@ -388,8 +388,8 @@ int cmd_defect_overflow() {
 
 `volatile` is doing real work in that function, not decoration: without
 it, a compiler is entitled to see `INT_MAX + 1` as a compile-time constant
-expression and either fold it away or reject the translation unit outright
-— neither of which is the point. Marking `max_value` `volatile` forces the
+expression and either fold it away or reject the translation unit outright,
+neither of which is the point. Marking `max_value` `volatile` forces the
 addition to happen at run time, where only a sanitizer or the CPU's own
 overflow flag can catch it.
 
@@ -397,26 +397,26 @@ overflow flag can catch it.
 implementation quoted above; `src/smell.hpp`/`smell.cpp` hold one
 deliberate, behavior-preserving defect for clang-tidy to find (next
 section). Nothing in any of the four files depends on which compiler built
-it — no `#ifdef __clang__`, no compiler-specific pragma — which is exactly
+it (no `#ifdef __clang__`, no compiler-specific pragma), which is exactly
 what makes the parity claim a claim about the *language standard*, not
 about code written to please one compiler over another.
 
 {% include excalidraw.html
    file="46-toolbox-pipeline"
    alt="One source box, toolbox.cpp plus digest and smell translation units, splits into two build arrows -- one through GCC, one through clang -- each landing in its own build/<preset> binary. Both binaries feed into a report command box, and their outputs converge on an amber diff box marked empty, the byte-identical parity gate, digest=0x481984990deee5ff. Below the source box, a static-analysis arm branches off into clang-tidy (flagging performance-unnecessary-value-param in smell.cpp) and clang-format --dry-run --Werror (clean on tracked sources, nonzero on a misformatted fixture). A separate runtime arm branches into the ubsan build, which traps the seeded signed-integer overflow with an abort icon, and the debug build, which feeds gdb plus a Python pretty-printer producing Digest(0x481984990deee5ff). Two dashed accelerator boxes, ccache and mold, sit off to the side labeled shown, not verified on this host."
-   caption="Figure 46.2 — the toolbox pipeline: one source built by two compilers into byte-identical output (the parity gate), with static tools (clang-tidy, clang-format) and runtime tools (UBSan, gdb pretty-printers) around it, and ccache/mold as optional accelerators" %}
+   caption="Figure 46.2: the toolbox pipeline, one source built by two compilers into byte-identical output (the parity gate), with static tools (clang-tidy, clang-format) and runtime tools (UBSan, gdb pretty-printers) around it, and ccache/mold as optional accelerators" %}
 
 ## Errors, three ways
 
 With one language and one binary, "three ways" means three different
 *tools* surfacing an error about the same source, not three languages
-producing the same message. The compile-time diagnostic above — GCC's
+producing the same message. The compile-time diagnostic above (GCC's
 `expected ',' or ';' before 'std'` against clang's `expected ';' at end of
-declaration` for an identical missing semicolon — is the first: a mistake
+declaration` for an identical missing semicolon) is the first: a mistake
 the compiler itself refuses to build past.
 
 The second is a finding a compiler never flags at all, because nothing
-about it is *wrong* — only wasteful. `src/smell.hpp` documents its own
+about it is *wrong*, only wasteful. `src/smell.hpp` documents its own
 defect:
 
 ```cpp
@@ -477,44 +477,44 @@ checks.expect_match(ubsan_run.out, "runtime error: signed integer overflow",
 Three surfaces, three different moments a defect becomes visible: a
 compiler refusing to finish parsing, a static analyzer reading a
 compile-commands database with no execution at all, and a sanitizer
-watching one specific arithmetic operation at run time — and every one of
+watching one specific arithmetic operation at run time; every one of
 them names a different line, or a different column on the same line, for
 a reason grounded in how that particular tool works.
 
 ## Concurrency lens: the build graph's own parallelism
 
-Every earlier concurrency lens in this book — Chapter 25's threads,
-Chapter 44's GMP scheduler — asked how a *running program* multiplexes
+Every earlier concurrency lens in this book (Chapter 25's threads,
+Chapter 44's GMP scheduler) asked how a *running program* multiplexes
 work. This chapter's build has no threads of its own to watch, but the
 tool building it does: Ninja's default job count is bounded by the host's
 CPU count, and every one of `toolbox`'s translation units that has no
-dependency on another can compile in parallel — `cmake --build --preset
+dependency on another can compile in parallel: `cmake --build --preset
 release -- -j$(nproc)` (or simply `-j`, Ninja's own auto-detected default)
 hands `digest.cpp`, `smell.cpp`, and `toolbox.cpp` to as many parallel
 `g++`/`clang++` invocations as there are idle cores, then serializes only
 at the final link, the one step that needs every object file to exist
 first. Three translation units is too small a graph to *see* that
 parallelism move the needle on this chapter's own build times, but the
-dependency shape — many independent compiles fanning in to one serial
-link — is the same shape a much larger C++ project's build graph has at
+dependency shape (many independent compiles fanning in to one serial
+link) is the same shape a much larger C++ project's build graph has at
 any size, just wider.
 
 The link step itself is where a second, differently-parallel tool would
 matter more directly: `mold`, "a Modern Linker," parallelizes symbol
 resolution and section layout internally, the way a traditional
-single-threaded linker (`ld.bfd`) never does — this book's own earlier
+single-threaded linker (`ld.bfd`) never does. This book's own earlier
 concurrency lenses (Chapter 44's M:N scheduler, Chapter 25's thread pool)
 are about overlapping *independent* units of work, and `mold`'s internal
 design is the identical idea applied to the one step Ninja itself cannot
 parallelize away, because a link has to see every object file at once.
 `mold` is demonstrated, not verified, in "lint, format, sanitize,
-ccache, mold" below — it is absent on the reference host, so its
+ccache, mold" below: it is absent on the reference host, so its
 speed-up is a documented recipe here, not a measured number.
 
 ## gdb pretty-printers
 
 `Digest` is a one-field aggregate, and without help gdb prints exactly
-that — a raw struct, no more legible than reading the eight bytes by
+that: a raw struct, no more legible than reading the eight bytes by
 hand. `cpp/toolbox-printers.py` teaches gdb what the field means:
 
 ```python
@@ -542,7 +542,7 @@ def register_printers():
 return a printer object if you know how to render its type, or `None` to
 let gdb (or the next registered printer) try something else. Matching on
 `t.tag == "Digest"` after `strip_typedefs()` means the printer fires
-regardless of `const`/reference qualifiers on the value gdb hands it —
+regardless of `const`/reference qualifiers on the value gdb hands it:
 `Digest`, `const Digest&`, and `Digest&` all normalize to the same tag.
 `cpp/.gdbinit` is what loads it:
 
@@ -561,18 +561,18 @@ Breakpoint 1, (anonymous namespace)::cmd_report () at .../toolbox.cpp:30
 $1 = Digest(0x481984990deee5ff)
 ```
 
-`$1 = Digest(0x481984990deee5ff)` — the exact same digest the parity gate
+`$1 = Digest(0x481984990deee5ff)` is the exact same digest the parity gate
 printed above, this time read straight out of the stopped process's stack
 by a debugger that would otherwise have shown `{fnv = 5202111637775040511}`
 (the same 64-bit value, decimal, with no field name to explain what it
 is). The pretty-printer changes nothing about what gdb *has*; it only
 changes how much of that the type system throws away by default.
 
-## Lint, format, sanitize, ccache, mold — the recipes
+## Lint, format, sanitize, ccache, mold: the recipes
 
-**clang-tidy** and **clang-format** were both exercised for real above and
+**clang-tidy** and **clang-format** were both run above and
 in "Errors, three ways"; the format half of that pair is worth showing on
-its own, because — unlike a `warning:` — a clean formatter run is silent,
+its own, because, unlike a `warning:`, a clean formatter run is silent,
 and its *effect* is only visible in the exit code:
 
 ```console
@@ -600,7 +600,7 @@ PointerAlignment: Left
 AllowShortFunctionsOnASingleLine: Inline
 ```
 
-**Sanitizing** is the `asan`/`ubsan` presets already covered above —
+**Sanitizing** is the `asan`/`ubsan` presets already covered above:
 `cmake --preset ubsan && cmake --build --preset ubsan` is the exact
 recipe `verify.lua` runs for the hard-gated overflow catch; `cmake
 --preset asan` is the same idea without `-fno-sanitize-recover`, for
@@ -608,7 +608,7 @@ exploratory bug-hunting where you want the process to keep running and
 report every violation instead of aborting on the first.
 
 **ccache** and **mold** are the two tools this chapter shows without
-being able to verify on the reference host — neither is installed here:
+being able to verify on the reference host: neither is installed here:
 
 ```console
 $ command -v ccache; echo "exit=$?"
@@ -621,7 +621,7 @@ The recipe for each is real, just not run: adding
 `"CMAKE_CXX_COMPILER_LAUNCHER": "ccache"` to a preset's `cacheVariables`
 makes every compile invocation go through `ccache` first, which hashes the
 preprocessed source plus compiler flags and serves a cache hit instead of
-re-invoking the compiler on an unchanged translation unit — the second
+re-invoking the compiler on an unchanged translation unit: the second
 build of an unchanged tree turning into a cache lookup instead of a
 recompile is the effect a real run would show. `mold` swaps in as the
 linker with `"CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=mold"`, and a binary it
@@ -639,7 +639,7 @@ footer below marks them accordingly.
 
 That builds the `release` preset (GCC). Hand-running the two compilers'
 builds side by side is what "GCC-vs-clang parity" above quoted verbatim;
-the deliberately seeded defects follow the same shape:
+the seeded defects follow the same shape:
 
 ```console
 [host]$ ./cpp/build/release/toolbox report
@@ -662,7 +662,7 @@ PASS 20 / FAIL 0
 ```
 
 Twenty real assertions, none of them a bare exit code: the GCC/clang
-parity chain (build both, run both, diff both, match the literal digest —
+parity chain (build both, run both, diff both, match the literal digest,
 seven assertions on its own), the `ubsan` build and its exact runtime-error
 substring, the `debug` build and gdb's pretty-printed `Digest`, the
 `clang-tidy` check-name token, `clang-format`'s clean-tracked/dirty-fixture
@@ -672,13 +672,13 @@ pair, and the Conan install-configure-build-run chain ending in
 ## Cross-check: two compilers, one digest
 
 The claim this chapter is built around is falsifiable in the strictest
-sense — either two independently-built binaries print the same 64-bit
-number or they don't — and it was actually checked, not assumed. GCC
+sense: either two independently-built binaries print the same 64-bit
+number or they don't, and it was checked, not assumed. GCC
 16.1.1 and clang 22.1.8 are different compiler front-ends, different
 optimizers, and different code generators, sharing nothing but the C++23
 standard and the source text `toolbox.cpp`/`digest.hpp`/`digest.cpp`
 compile from. `diff <(release/toolbox report) <(release-clang/toolbox
-report)` — empty, exit 0 — is the cross-check the parity section already
+report)` (empty, exit 0) is the cross-check the parity section already
 walked through in detail: it is not "the same shape of output," it is the
 identical byte sequence, `digest=0x481984990deee5ff`, arrived at by two
 compilers that disagree, demonstrably, about how to phrase both a
@@ -718,28 +718,28 @@ needed.
 ## Where this sits next to the book's other tooling chapters
 
 Three earlier chapters already covered pieces of this ground, and this
-chapter deliberately does not re-teach any of them:
+chapter does not re-teach any of them:
 
 - **Chapter 31** ("Per-Language Toolbelts") gave C++ one column of a
-  three-language *profiling* comparison — `perf`, `clang-tidy`,
-  `-fanalyzer` — next to Go's `pprof` and Rust's `cargo flamegraph`. This
+  three-language *profiling* comparison (`perf`, `clang-tidy`,
+  `-fanalyzer`) next to Go's `pprof` and Rust's `cargo flamegraph`. This
   chapter is the opposite shape: one language, covered in depth, and it
   never profiles anything.
 - **Chapter 28** ("gdb and Remote Debugging") is where `gdb`'s core
-  mechanics live — reading a core file, `gdbserver`/`target remote`,
+  mechanics live: reading a core file, `gdbserver`/`target remote`,
   `rust-gdb`'s type-aware rendering. This chapter assumes all of that and
   adds exactly one new idea: a pretty-printer *you write* for *your own*
   type, not one that ships with libstdc++.
 - **Chapter 29** ("valgrind, Sanitizers, and Miri") built the full five-bug
   ASan/UBSan/TSan/valgrind/miri catch-or-miss matrix. This chapter uses
-  exactly one corner of that matrix — UBSan on a signed-integer overflow —
+  exactly one corner of that matrix (UBSan on a signed-integer overflow)
   and spends its real depth budget on CMake presets and Conan lockfiles
   instead, ground Chapter 29 never touches.
 
-What is genuinely new here — preset inheritance mechanics, a committed
+What is new here (preset inheritance mechanics, a committed
 Conan 2 lockfile, cross-compiler byte parity, a hand-written gdb Python
 printer, and `.clang-tidy`/`.clang-format` authored rather than merely
-invoked — has no earlier chapter to point back to instead.
+invoked) has no earlier chapter to point back to instead.
 
 ## What you learned
 
@@ -753,24 +753,24 @@ invoked — has no earlier chapter to point back to instead.
 - **A Conan sub-target can be real and still not gate the default build**:
   `cpp/conan/`'s `conanfile.py` + committed `conan.lock` (`fmt/11.0.2`,
   exact revision) only builds when the isolated `conan` preset turns
-  `TOOLBOX_ENABLE_CONAN` on — the `release` preset, `./demo.sh cpp build`,
+  `TOOLBOX_ENABLE_CONAN` on; the `release` preset, `./demo.sh cpp build`,
   and fedora:44's CI build-smoke never evaluate `cpp/conan/` at all.
 - **Byte-identical output and identical diagnostics are different
   claims**: GCC 16.1.1 and clang 22.1.8 produced the exact same
   `digest=0x481984990deee5ff` for `toolbox report` (empty `diff`), while
   disagreeing on where to anchor a missing-semicolon error (line 31 vs.
   line 30, column 55) and how to phrase the identical UBSan trap (column
-  34 vs. 32, with or without a `SUMMARY:` line) — the standard fixes the
+  34 vs. 32, with or without a `SUMMARY:` line); the standard fixes the
   first, not the second.
 - **A pretty-printer is a lookup function, not magic**: `toolbox-printers.py`'s
   `_lookup` matches on `val.type.unqualified().strip_typedefs().tag ==
-  "Digest"` and hands back an object with a `to_string()` method — the same
+  "Digest"` and hands back an object with a `to_string()` method, the same
   three-line contract behind every pretty-printer libstdc++ ships, applied
   here to a type this chapter wrote itself.
 - **Not every recipe in a toolchain chapter can be verified on every
-  host**: `ccache` and `mold` are real, documented recipes — a
+  host**: `ccache` and `mold` are real, documented recipes (a
   `CMAKE_CXX_COMPILER_LAUNCHER` cache variable and a `.comment`-section
-  check — that this chapter shows without a cache hit or a linked binary
+  check) that this chapter shows without a cache hit or a linked binary
   to point at, because neither tool is installed on the reference host;
   the footer below marks exactly that gap and nothing more.
 
@@ -779,7 +779,7 @@ reference-depth treatment this chapter gave C++.
 
 ---
 
-<p><span class="status status--verified">verified</span> — on the Fedora 44
+<p><span class="status status--verified">verified</span>: on the Fedora 44
 reference host this session (kernel 7.1, GCC 16.1.1, clang
 22.1.8, CMake 4.3.0, Ninja, gdb 17.2, Conan 2.30.0):
 <code>LSP_LANG=cpp REPO_ROOT=$(cd ../.. && pwd) lua verify.lua</code> reported
@@ -804,12 +804,12 @@ was clean on the tracked sources and nonzero on
 diagnostic-wording comparisons (the missing-semicolon compile error and the
 ad hoc clang-built UBSan trap) were captured live this session against this
 same source but are illustrative asides, not part of <code>verify.lua</code>'s
-gated count — wording like this is expected to drift across compiler point
+gated count; wording like this is expected to drift across compiler point
 releases, which is why the gate itself only matches the fixed substring
 <code>runtime error: signed integer overflow</code>. Not exercised:
 <code>ccache</code> and <code>mold</code> are both <span class="status
-status--unverified">unverified</span> — <code>command -v ccache</code> and
+status--unverified">unverified</span>: <code>command -v ccache</code> and
 <code>command -v mold</code> both exit 1 on this host, so their recipes
 above are shown as documented commands, with no cache-hit or linked-binary
 output to quote. <code>examples/manifest.yaml</code> marks this example
-<code>mode: local</code> — no VM or LGTM path applies.</p>
+<code>mode: local</code>; no VM or LGTM path applies.</p>

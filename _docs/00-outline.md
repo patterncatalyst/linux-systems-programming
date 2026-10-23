@@ -2,11 +2,11 @@
 title: "Outline"
 order: 0
 part: "Setting Up"
-description: "The full arc of this book — fourteen parts, forty-nine chapters, six programs that grow with you, three languages the whole way."
+description: "The full arc of this book: fourteen parts, forty-nine chapters, six programs that grow with you, three languages the whole way."
 ---
 
-This book teaches Linux systems programming three times at once — in modern
-**C++23**, **Go**, and **Rust** — for developers who already program and want to
+This book teaches Linux systems programming three times at once, in modern
+**C++23**, **Go**, and **Rust**, for developers who already program and want to
 understand what their code asks of the kernel. Every hands-on chapter ships a
 runnable example implemented idiomatically in all three languages, presented in
 switchable code tabs, and every example doubles as a standalone demo.
@@ -14,14 +14,14 @@ switchable code tabs, and every example doubles as a standalone demo.
 {% include excalidraw.html
    file="00-course-map"
    alt="Course map: four journey stages - Foundations, Core systems, Operating context, and Mastery - shown as bands containing the fourteen parts with their chapter ranges, and the six artifacts fwatch, shmkv, chatterd, pmon, bugfarm, and sysagent along the bottom, each with an arrow to the part where it grows."
-   caption="Figure 0.1 — the course at a glance." %}
+   caption="Figure 0.1: the course at a glance." %}
 
 Two threads run through the whole book and never stop:
 
-- **Errors, three ways** — how `errno` becomes `std::expected`, a wrapped Go
+- **Errors, three ways**: how `errno` becomes `std::expected`, a wrapped Go
   `error`, or a Rust `Result`, and what a *policy* for `EINTR`, `EAGAIN`, and
   partial failure looks like in each language.
-- **The concurrency lens** — which of the three concurrency models each
+- **The concurrency lens**: which of the three concurrency models each
   chapter's example leans on (`std::jthread` and atomics, goroutines and
   channels, ownership and `Send`/`Sync`), and why.
 
@@ -34,7 +34,7 @@ artifacts that grow chapter by chapter:
 |---|---|---|
 | `pmon` | a process supervisor: fork/exec, signals, pidfds, privilege dropping, namespaces, pid 1 | 11 → 14, 18 → 19, 32, 34, 41 |
 | `fwatch` | a file watcher: polling → inotify/epoll → io_uring → sandboxed with Landlock | 07 → 10, 33, 41 |
-| `shmkv` | an mmap-backed key-value store shared across processes — and across languages | 16, 20 |
+| `shmkv` | an mmap-backed key-value store shared across processes, and across languages | 16, 20 |
 | `chatterd` | a peer-to-peer chat daemon: TCP → epoll at scale → UDP discovery → async → low-latency | 21 → 27, 34, 38, 40, 41 |
 | `sysagent` | a metrics agent reading /proc, /sys, and cgroups, exporting OpenTelemetry | 36 → 38, 41 |
 | `bugfarm` | a corpus of seeded bugs for learning gdb, valgrind, sanitizers, and eBPF tools | 28 → 31 |
@@ -54,7 +54,7 @@ artifacts that grow chapter by chapter:
 | **Debugging** | gdb and remote debugging, valgrind vs sanitizers vs miri, eBPF observation tools, per-language toolbelts | 28–31 |
 | **Containers and Virtualization** | namespaces and cgroups, seccomp and Landlock, our programs in containers, KVM and the isolation spectrum | 32–35 |
 | **Observability** | /proc and /sys by hand, the USE method, OpenTelemetry into Grafana/Loki/Tempo/Mimir | 36–38 |
-| **Performance and Low Latency** | benchmarking without self-deception, pinned-core fast paths, the capstone fleet | 39–41 |
+| **Performance and Low Latency** | benchmarking without self-deception, pinned-core fast paths, the final project fleet | 39–41 |
 | **Deep Dives** | embedding Lua, Rust macros for systems code, the Go runtime | 42–44 |
 | **Appendices: Tooling** | Cockpit, SystemTap, and PCP; the C++, Go, and Rust toolboxes | 45–48 |
 | **Compendium: C++ Concurrency** | concurrency vs parallelism, pthreads, std threading, Boost.Thread, C++20 coroutines, Boost.Fiber, Boost.Asio, and a measured comparison of all six | 49–56 |
@@ -62,17 +62,17 @@ artifacts that grow chapter by chapter:
 ## Where things run
 
 Examples run **locally** on your Fedora 44 machine unless they need root, kernel
-observation, or a second host — those run in the disposable KVM lab
+observation, or a second host; those run in the disposable KVM lab
 (`systems-target`, and `systems-peer` for two-host networking) that Chapter 2
 provisions. Observability chapters use a local Podman LGTM stack (Grafana,
 Loki, Tempo, Mimir) plus Performance Co-Pilot from its container image. Nothing
 experimental ever runs un-snapshotted on your workstation.
 
-> **Note** — every example section carries a verification status. A demo is
+> **Note**: every example section carries a verification status. A demo is
 > marked *verified* only when it has produced its claimed observable effect on
-> the stated environment — never merely because it compiled. That claim is
+> the stated environment, never merely because it compiled. That claim is
 > enforced by machinery, not habit: the runner, `scripts/test-all-examples.py`,
 > builds each example in all three languages and then executes the example's own
 > Lua `verify.lua` harness, which must observe the behavior to report a PASS. If
 > the VM lab or the LGTM stack an example depends on is down, the runner reports
-> a SKIP — never a false PASS.
+> a SKIP, never a false PASS.

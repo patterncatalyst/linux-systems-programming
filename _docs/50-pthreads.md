@@ -10,4 +10,4 @@ duration: "55 minutes"
 >
 > It maps to **[Threads in Modern C++](https://patterncatalyst.github.io/cpp-concurrency-and-parallelism/docs/04-threads-in-modern-cpp/)** there.
 
-The full, runnable C++ treatment of concurrency and parallelism — threads and `jthread`, mutexes and the memory model, atomics and lock-free structures, futures and coroutines, fibers, Asio, NUMA and mechanical sympathy, and the low-latency patterns — now lives in that book, each chapter with a Docker or KVM-lab demo and a Lua `verify.lua` behind it. This book keeps its Linux systems-programming material; the C++ concurrency compendium was extracted so it could grow on its own.
+The full, runnable C++ treatment of concurrency and parallelism, covering threads and `jthread`, mutexes and the memory model, atomics and lock-free structures, futures and coroutines, fibers, Asio, NUMA and mechanical sympathy, and the low-latency patterns, now lives in that book, each chapter with a Docker or KVM-lab demo and a Lua `verify.lua` behind it. This book keeps its Linux systems-programming material; the C++ concurrency compendium was extracted so it could grow on its own.

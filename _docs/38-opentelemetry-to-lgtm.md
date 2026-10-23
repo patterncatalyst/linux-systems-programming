@@ -2,7 +2,7 @@
 title: "OpenTelemetry to LGTM: instrument a service, then prove the spans and metrics actually arrived"
 order: 38
 part: "Observability"
-description: "lsp-otel is a traced request/response server that exports OpenTelemetry traces and metrics over OTLP/HTTP to the LGTM stack from Chapter 3 — a parent request span wrapping work and respond children, a requests_total counter and a request_duration histogram — and the verify step proves it by querying Tempo and Prometheus through Grafana rather than trusting the program's own word, across C++, Go, and Rust each tagged with its own service.name."
+description: "lsp-otel is a traced request/response server that exports OpenTelemetry traces and metrics over OTLP/HTTP to the LGTM stack from Chapter 3: a parent request span wrapping work and respond children, a requests_total counter and a request_duration histogram, and the verify step proves it by querying Tempo and Prometheus through Grafana rather than trusting the program's own word, across C++, Go, and Rust each tagged with its own service.name."
 duration: "50 minutes"
 ---
 
@@ -11,14 +11,14 @@ Chapter 36's `sysagent` served one JSON snapshot per HTTP request. Both make you
 *present* to read the number: someone has to be running the command, or scraping
 the endpoint, at the moment the system is in trouble. This chapter closes that
 gap. `lsp-otel` is a small traced server that emits the three OpenTelemetry
-signal shapes — a distributed **trace** per request, a monotonic **counter**, and
-a latency **histogram** — and exports them over OTLP/HTTP into the LGTM stack
+signal shapes: a distributed **trace** per request, a monotonic **counter**, and
+a latency **histogram**, and exports them over OTLP/HTTP into the LGTM stack
 (Loki, Grafana, Tempo, Mimir plus an OpenTelemetry collector) that Chapter 3
 stood up, so the next time a request is slow you can go *look* at when it
 happened instead of needing to have been watching. And because "I sent
 telemetry" is the easiest claim in observability to get quietly wrong, the whole
-point of the verification here is that it queries the stack back — Tempo for the
-traces, Prometheus for the metrics — and refuses to believe the export happened
+point of the verification here is that it queries the stack back (Tempo for the
+traces, Prometheus for the metrics) and refuses to believe the export happened
 until the data is actually there to read.
 
 The code is in `examples/38-opentelemetry-to-lgtm/`. It is a **local-mode
@@ -27,10 +27,10 @@ the exporter posts to the collector on `localhost:4318`.
 
 {% include excalidraw.html
    file="38-otlp-pipeline"
-   alt="A left-to-right pipeline. Left, a band labeled 'serve — one traced request per input line' containing: a parent span box 'request (attr request.seq)' with two child span boxes below it, 'work' (sleep 1+seq%4 ms) and 'respond' (write ok seq), plus two metric boxes, 'requests_total (+1 per request)' and 'request_duration (ms)'. An arrow labeled OTLP leaves the band into an 'OTLP/HTTP exporter' box annotated 'batch ~2s, flush on SIGINT', which POSTs, over an amber arrow labeled POST /v1/{traces,metrics}, into an 'OTel collector :4318' box. The collector fans out along two arrows — 'spans' up to a 'Tempo — traces' box and 'metrics' across to a 'Prometheus — metrics' box — and both of those feed a 'Grafana query :3000' box on the right. A caption along the bottom reads: cpp · go · rust — each tags service.name = lsp-otel-<lang>, so the three never collide in the shared stack."
-   caption="Figure 38.1 — lsp-otel's telemetry path: a per-request span tree plus two metrics, batched through the OTLP/HTTP exporter to the collector on :4318, fanned to Tempo and Prometheus, and read back through Grafana — which is exactly how the export is verified" %}
+   alt="A left-to-right pipeline. Left, a band labeled 'serve: one traced request per input line' containing: a parent span box 'request (attr request.seq)' with two child span boxes below it, 'work' (sleep 1+seq%4 ms) and 'respond' (write ok seq), plus two metric boxes, 'requests_total (+1 per request)' and 'request_duration (ms)'. An arrow labeled OTLP leaves the band into an 'OTLP/HTTP exporter' box annotated 'batch ~2s, flush on SIGINT', which POSTs, over an amber arrow labeled POST /v1/{traces,metrics}, into an 'OTel collector :4318' box. The collector fans out along two arrows: 'spans' up to a 'Tempo: traces' box and 'metrics' across to a 'Prometheus: metrics' box, and both of those feed a 'Grafana query :3000' box on the right. A caption along the bottom reads: cpp, go, rust: each tags service.name = lsp-otel-<lang>, so the three never collide in the shared stack."
+   caption="Figure 38.1: lsp-otel's telemetry path: a per-request span tree plus two metrics, batched through the OTLP/HTTP exporter to the collector on :4318, fanned to Tempo and Prometheus, and read back through Grafana, which is exactly how the export is verified" %}
 
-> **Tools used** — `podman` (host, runs the `lsp-lgtm` observability stack —
+> **Tools used**: `podman` (host, runs the `lsp-lgtm` observability stack:
 > OTLP on `:4318`, Grafana on `:3000`) and `curl` (host, the only tool the
 > verification needs: it queries Prometheus and Tempo through Grafana's
 > datasource proxy). The stack is the same `lsp-lgtm` container the
@@ -40,35 +40,35 @@ the exporter posts to the collector on `localhost:4318`.
 ## Three signals, one request
 
 Every OpenTelemetry story is told in three signal types, and `lsp-otel` emits
-all three from a single unit of work — one line of input to `serve`, treated as
+all three from a single unit of work: one line of input to `serve`, treated as
 one "request":
 
 - A **trace** describes the shape and timing of that request as a tree of
   spans. `lsp-otel` starts a parent span named `request`, and *inside* it two
   child spans: `work` (a deliberately tiny, variable `1 + seq%4` ms sleep
-  standing in for real computation) and `respond` (writing the `ok <seq>` reply).
+  standing in for actual computation) and `respond` (writing the `ok <seq>` reply).
   The parent/child nesting is what lets Tempo later show you that the request's
   time was spent in `work`, not `respond`, or vice versa.
-- A **counter** — `requests_total`, a monotonic `Int64` that goes up by one per
-  request — answers "how many?" It only ever increases, which is what makes it
+- A **counter**, `requests_total`, a monotonic `Int64` that goes up by one per
+  request, answers "how many?" It only ever increases, which is what makes it
   a counter rather than a gauge, and what lets Prometheus compute a rate from it.
-- A **histogram** — `request_duration`, in milliseconds — answers "how long?"
+- A **histogram**, `request_duration`, in milliseconds, answers "how long?"
   across the whole population, recording one observation (the parent span's
   wall-clock duration) per request, so the backend can later report a p50, a
   p99, or a bucketed distribution without the server having to keep every sample.
 
 The second subcommand, `drive --n N --addr HOST:PORT`, is a plain TCP client
-that sends `N` requests and reads `N` replies. It is deliberately **untraced**:
+that sends `N` requests and reads `N` replies. It stays **untraced** by design:
 it generates the load that makes `serve`'s telemetry interesting, but emits none
 of its own, because the service under observation is `serve`, not the thing
 poking it.
 
 ## The request pipeline, three ways
 
-The heart of the instrumentation is one function — `handleRequest` — that starts
+The heart of the instrumentation is one function, `handleRequest`, that starts
 the parent span, nests the two children inside it, writes the reply, and records
 both metrics. It reads almost identically across the three languages because the
-OpenTelemetry API is deliberately the same shape in each; the differences are
+OpenTelemetry API is the same shape in each by design; the differences are
 idiomatic, not structural:
 
 {% include codetabs.html langs="C++|Go|Rust" %}
@@ -189,41 +189,41 @@ The parent/child relationship is carried differently in each, and it is the one
 part worth reading closely. Go threads a `context.Context`: `tracer.Start`
 returns a *new* context carrying the parent span, and passing that context into
 the two child `Start` calls is what makes them children. Rust makes the same
-context explicit — `Context::current_with_span(parent_span)` builds a context
+context explicit: `Context::current_with_span(parent_span)` builds a context
 holding the parent, and each child is started `start_with_context(..., &parent_cx)`.
 C++ uses a `Scope` object: constructing `trace_api::Scope parent_scope(parent_span)`
 installs the parent as the current span for the lifetime of that RAII object, so
 the two children, started while the scope is alive, attach to it implicitly.
-Three mechanisms — an explicit context value, an explicit context value again,
-and a scope guard — for the identical span tree, which Tempo later shows as
+Three mechanisms (an explicit context value, an explicit context value again,
+and a scope guard) for the identical span tree, which Tempo later shows as
 `request` with `work` and `respond` beneath it.
 
 ## How the code works
 
 Each language's `initTelemetry`/`init_telemetry`/`telemetry::init` wires up two
-exporters against a shared **resource** — the set of attributes that identify
+exporters against a shared **resource**: the set of attributes that identify
 *this* service in the stack. The critical one is `service.name`, and it is
-deliberately different per language: `lsp-otel-cpp`, `lsp-otel-go`,
+different per language by design: `lsp-otel-cpp`, `lsp-otel-go`,
 `lsp-otel-rust`. Because all three export into the *same* shared LGTM stack, a
 distinct `service.name` is what keeps their signals from colliding and lets the
 verification query each language's telemetry by its own name.
 
 Both exporters speak **OTLP over HTTP/protobuf** to the collector, and both are
-**batched on a short (~2 second) interval** — a batch span processor for traces,
+**batched on a short (~2 second) interval**: a batch span processor for traces,
 a periodic reader for metrics. That interval is a deliberate choice: the SDK
 defaults (5-second span batches, 60-second metric batches) are fine for a
 long-running service but far too slow for a demo that starts, drives ten
 requests, and stops within a couple of seconds. A short interval plus a **flush
-on shutdown** is what guarantees the last batch — often *all* the batches, at
-this scale — actually leaves the process before it exits. That shutdown path is
+on shutdown** is what guarantees the last batch (often *all* the batches, at
+this scale) actually leaves the process before it exits. That shutdown path is
 the subject of the Concurrency lens below, because it turned out to be where the
 three languages diverge most.
 
 ## Errors, three ways
 
-`lsp-otel` has two exit codes for failure. A **usage error** — no subcommand, an
-unknown subcommand, `serve` without `--port`, or `drive` with `--n 0` or missing
-— prints the two-line usage banner to stderr and exits **2**:
+`lsp-otel` has two exit codes for failure. A **usage error** (no subcommand, an
+unknown subcommand, `serve` without `--port`, or `drive` with `--n 0` or missing)
+prints the two-line usage banner to stderr and exits **2**:
 
 ```
 usage: app serve --port PORT [--otel-endpoint URL]
@@ -233,9 +233,9 @@ usage: app serve --port PORT [--otel-endpoint URL]
 A **runtime error** is exit **1** with an `app: error: …` message: the one
 `verify.lua` exercises is `drive` against an address nothing is listening on,
 which fails to connect and prints `app: error: dial …: connection refused`. This
-is the one message that is *not* byte-identical across the three languages —
+is the one message that is *not* byte-identical across the three languages:
 each surfaces its own dial/`errno` wording, the same way Chapter 40's `connect`
-errors carry each platform's `strerror` text — so `verify.lua` asserts only the
+errors carry each platform's `strerror` text, so `verify.lua` asserts only the
 shared `app: error:` prefix and the exit code, not the full string. A clean run
 of either subcommand exits **0**: `serve` after a signal-driven shutdown, `drive`
 after `N/N` successful replies.
@@ -244,8 +244,8 @@ after `N/N` successful replies.
 
 `serve` has to wait on two fundamentally different things at once: a new
 connection arriving, and a shutdown signal arriving. All three ports solve this
-the same way in shape — a signal source and an accept loop both feed a *single*
-channel that the main loop consumes one event at a time — and all three write it
+the same way in shape: a signal source and an accept loop both feed a *single*
+channel that the main loop consumes one event at a time, and all three write it
 with the idiom their language reaches for:
 
 {% include codetabs.html langs="C++|Go|Rust" %}
@@ -301,7 +301,7 @@ with the idiom their language reaches for:
 }
 ```
 
-Go's `select` over `sigCh` and `connCh` is the native version — the language has
+Go's `select` over `sigCh` and `connCh` is the native version: the language has
 a built-in construct for exactly "wait on whichever of these channels is ready
 first." Rust rebuilds the same thing from an `mpsc::channel` carrying an `Event`
 enum (`Signal` or `Conn`), fed by a `signal-hook` thread and an accept thread.
@@ -312,7 +312,7 @@ Getting there surfaced three portability lessons worth keeping, because each is
 the kind of bug that leaves the program looking fine while silently doing
 nothing:
 
-1. **The OTLP/HTTP exporter must POST to the full per-signal URLs** —
+1. **The OTLP/HTTP exporter must POST to the full per-signal URLs**:
    `http://localhost:4318/v1/traces` and `…/v1/metrics`, not the bare base
    `http://localhost:4318`. Both the Rust and C++ ports first tried the base URL;
    the collector answered `404`, the export silently failed, and the *only*
@@ -324,15 +324,15 @@ nothing:
    `NoopLogHandler` at `LogLevel::None`; the Rust build had to *not* register a
    `tracing-subscriber` at all. Silence is part of the port.
 3. **C++ only: a background job inherits `SIGINT` set to `SIG_IGN`.** A
-   non-interactive shell running `serve &` — exactly how `verify.lua` starts it —
+   non-interactive shell running `serve &` (exactly how `verify.lua` starts it)
    sets `SIGINT`/`SIGQUIT` to *ignore* in the child before `exec`, and that
    disposition is inherited. `pthread_sigmask` + `sigwait()` alone cannot consume
    a signal whose disposition is "ignore"; the port has to install a real (no-op)
-   `sigaction` first to move the disposition off `SIG_IGN` — precisely what Go's
+   `sigaction` first to move the disposition off `SIG_IGN`, precisely what Go's
    `signal.Notify` and Rust's `signal-hook` do under the hood, which is why only
    the C++ port had to do it by hand. (Two smaller C++-only wrinkles rounded it
    out: `Histogram::Record` needs the `(value, Context{})` overload under this
-   build's ABI v1, and the OTLP static archives have a genuine link cycle that
+   build's ABI v1, and the OTLP static archives have a real link cycle that
    needs `-Wl,--start-group`.)
 
 ## Build, run, observe
@@ -341,7 +341,7 @@ nothing:
 [host]$ cd examples/38-opentelemetry-to-lgtm && ./demo.sh build
 ```
 
-Run the server, drive ten requests through it, and stop it — the SIGINT flush is
+Run the server, drive ten requests through it, and stop it; the SIGINT flush is
 what pushes the final batch out:
 
 ```console
@@ -353,7 +353,7 @@ app: drive sent 10/10 ok
 app: shutting down (interrupt)
 ```
 
-Now read the telemetry back out of the stack — not out of the program. Metrics
+Now read the telemetry back out of the stack, not out of the program. Metrics
 land in Prometheus; querying `requests_total` through Grafana's datasource proxy
 shows the counter for whichever language just ran:
 
@@ -364,7 +364,7 @@ shows the counter for whichever language just ran:
 ```
 
 The runner drives all three languages against the live stack and asserts the
-full contract — including the stack queries — for each:
+full contract (including the stack queries) for each:
 
 ```console
 [host]$ python3 scripts/test-all-examples.py --only 38-opentelemetry-to-lgtm --mode local
@@ -394,35 +394,35 @@ exactly **10** in Prometheus, for all three languages:
 And the *traces* for the same runs are in Tempo: a search by
 `service.name=lsp-otel-<lang>` returns traces whose `rootServiceName` is that
 name and whose `rootTraceName` is `request`, and fetching one back shows its
-spans are exactly `work`, `respond`, and the `request` parent — the tree
+spans are exactly `work`, `respond`, and the `request` parent: the tree
 `handle_request` built. Metrics saying "ten requests happened" and traces saying
 "here is the shape of each of those requests" are two different subsystems
 agreeing about the same work, which is a far stronger signal that the
-instrumentation is correct than either backend alone — and neither number came
+instrumentation is correct than either backend alone, and neither number came
 from the program telling us about itself.
 
 ## What you learned
 
-- **A service emits observability as three signal types** — traces (a tree of
+- **A service emits observability as three signal types**: traces (a tree of
   parent/child spans describing one request's shape and timing), a monotonic
   counter (`requests_total`, "how many"), and a histogram (`request_duration`,
-  "how long", one observation per request) — and `lsp-otel` produces all three
+  "how long", one observation per request), and `lsp-otel` produces all three
   from a single `handle_request`.
-- **Parent/child span nesting is carried by context** — Go and Rust thread an
+- **Parent/child span nesting is carried by context**: Go and Rust thread an
   explicit context value into each child `Start`, C++ installs the parent with a
-  `Scope` guard — and it is what turns three separate spans into the
+  `Scope` guard, and it is what turns three separate spans into the
   `request → {work, respond}` tree Tempo shows.
 - **Export is batched, and a flush on shutdown is what makes the last data
-  arrive** — a short (~2s) interval plus a signal-driven flush, not the slow SDK
+  arrive**: a short (~2s) interval plus a signal-driven flush, not the slow SDK
   defaults, is why a start-drive-stop demo's telemetry shows up at all.
 - **Prove the export landed by querying the backend, never the program.** The
   verify step reads `requests_total` and `request_duration_milliseconds_count`
-  out of Prometheus and the trace tree out of Tempo, through Grafana's proxy — an
+  out of Prometheus and the trace tree out of Tempo, through Grafana's proxy: an
   export that 404'd silently (the wrong-endpoint bug both non-Go ports hit) fails
   this check even though the program looked healthy.
 - **The same OTLP contract needs per-language care**: the full `/v1/traces` and
   `/v1/metrics` URLs, silencing each SDK's default logging to keep the output
-  contract, and — in C++ — installing a real signal handler to override the
+  contract, and, in C++, installing a real signal handler to override the
   `SIG_IGN` a background shell hands a child before `sigwait` can ever see the
   signal.
 
@@ -432,7 +432,7 @@ make most microbenchmarks quietly measure the wrong thing.
 
 ---
 
-<p><span class="status status--verified">verified</span> — on the Fedora 44
+<p><span class="status status--verified">verified</span>: on the Fedora 44
 reference host (kernel 7.1) this session, with the <code>lsp-lgtm</code>
 LGTM stack running (OTLP on <code>:4318</code>, Grafana on <code>:3000</code>):
 <code>python3 scripts/test-all-examples.py --only 38-opentelemetry-to-lgtm
@@ -450,5 +450,5 @@ each language, querying through Grafana's datasource proxy returned
 <code>drive</code> printed <code>drive sent 10/10 ok</code> and exited 0; a drive
 to a dead address exited 1 with an <code>app: error:</code> prefix. Not
 exercised: any run with the LGTM stack down (<code>verify.lua</code> SKIPs that
-case rather than failing) and any lab-VM run — this is a host-only, local-mode
+case rather than failing) and any lab-VM run: this is a host-only, local-mode
 example.</p>

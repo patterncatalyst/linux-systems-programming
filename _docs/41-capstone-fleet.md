@@ -1,8 +1,8 @@
 ---
-title: "The capstone fleet: pmon supervises chatterd, sysagent, and fwatch across two capability-dropped, Landlock-sandboxed, OTLP-observed hosts"
+title: "The final project fleet: pmon supervises chatterd, sysagent, and fwatch across two capability-dropped, Landlock-sandboxed, OTLP-observed hosts"
 order: 41
 part: "Performance and Low Latency"
-description: "41-capstone-fleet is one binary with four subcommands that assembles four of the book's six recurring programs into a single supervised system: pmon drops the capability bounding set and sets no_new_privs, then self-re-execs chatterd, sysagent, and fwatch as restartable children, forwarding SIGTERM/SIGINT and printing a pmon: health line every tick; chatterd (ch21-27) is bridged across two hosts so a message sent on one node is delivered on the other tagged from=NICK@node; sysagent (ch36) exports cpu%/mem%/load1 as OTel gauges over OTLP when OTEL_EXPORTER_OTLP_ENDPOINT is set; and fwatch (ch07-09, 33) watches its sandbox directory under an optional Landlock ruleset whose enforced ABI — 7 on the lab guest's 6.19.10 kernel, 9 on the Fedora 44 host — is itself a live cross-check of the kernel-version probing discipline Chapter 33 established. Verified on the systems-target/systems-peer two-VM lab, with OTLP reaching the host's Grafana LGTM stack over the libvirt gateway."
+description: "41-capstone-fleet is one binary with four subcommands that assembles four of the book's six recurring programs into a single supervised system: pmon drops the capability bounding set and sets no_new_privs, then self-re-execs chatterd, sysagent, and fwatch as restartable children, forwarding SIGTERM/SIGINT and printing a pmon: health line every tick; chatterd (ch21-27) is bridged across two hosts so a message sent on one node is delivered on the other tagged from=NICK@node; sysagent (ch36) exports cpu%/mem%/load1 as OTel gauges over OTLP when OTEL_EXPORTER_OTLP_ENDPOINT is set; and fwatch (ch07-09, 33) watches its sandbox directory under an optional Landlock ruleset whose enforced ABI (7 on the lab guest's 6.19.10 kernel, 9 on the Fedora 44 host) is itself a live cross-check of the kernel-version probing discipline Chapter 33 established. Verified on the systems-target/systems-peer two-VM lab, with OTLP reaching the host's Grafana LGTM stack over the libvirt gateway."
 duration: "60 minutes"
 ---
 
@@ -16,33 +16,33 @@ path (21–27, 34, 38, 40); `sysagent` learned to read `/proc` and
 `fwatch` learned to watch a directory with polling, then inotify, then a
 Landlock sandbox around itself (07–10, 33). This chapter does not teach a new
 syscall. It assembles: one binary, four subcommands, where `pmon` is the
-fleet's own init — it drops the capability bounding set for itself and every
+fleet's own init: it drops the capability bounding set for itself and every
 descendant, then self-re-execs `chatterd`, `sysagent`, and `fwatch` as
 children it restarts on unexpected exit, forwards its own signals to, and
 reports on with a `pmon: health` line every tick.
 
-Two copies of that fleet run in this chapter — one on loopback, for
-`verify.lua`, and one for real, on the two-VM lab Chapter 2 built.
+Two copies of that fleet run in this chapter: one on loopback, for
+`verify.lua`, and one on the actual two-VM lab Chapter 2 built.
 `chatterd` is bridged between `systems-target` and `systems-peer` so a
 message sent on one host is delivered on the other; each guest's `sysagent`
 exports gauges over OTLP, through the libvirt gateway, to the LGTM stack
 Chapter 3 stood up on the host; and `fwatch` runs sandboxed under Landlock
 inside each fleet, its enforced ABI itself differing between the host kernel
-and the guest kernel — a real, verified number, not a claim. Nearly every
+and the guest kernel: a real, verified number, not a claim. Nearly every
 part of this book from Setting Up through Performance and Low Latency shows
 up somewhere in the run below.
 
 {% include excalidraw.html
    file="41-fleet-topology"
    alt="Two side-by-side VM boxes labeled systems-target (192.168.124.7) and systems-peer (192.168.124.95), each drawn as a large rounded rectangle representing one fleet. Inside each box, a top band labeled 'pmon: capability bounding set dropped, no_new_privs=1' encloses three child boxes side by side: chatterd, sysagent, and fwatch, each connected upward to a small pmon box with a supervise/restart arrow labeled 'fork+exec, restart on unexpected exit, forward SIGTERM'. The fwatch box additionally sits inside its own smaller nested box labeled 'Landlock ruleset: reads restricted to sandbox dir' with its enforced ABI number shown as a variable (7 on this guest's 6.19.10 kernel). A bidirectional arrow runs directly between the two chatterd boxes, labeled 'bridge: bridge@target / bridge@peer, DELIVER re-broadcast with from=NICK@node'. Below both VM boxes, a horizontal band represents the libvirt virbr0 bridge and its gateway address 192.168.124.1; two upward arrows from each guest's sysagent box pass through the gateway band labeled 'OTLP/HTTP :4318' and converge on a host-side box labeled 'LGTM stack (Grafana + Prometheus + Tempo), Chapter 3' sitting outside and above both VM boxes. A small caption near the gateway notes 'same route deploy-to-vm.sh forwards OTEL_EXPORTER_OTLP_ENDPOINT over.'"
-   caption="Figure 41.1 — the two-VM fleet: pmon supervises chatterd/sysagent/fwatch on each of systems-target and systems-peer inside a capability-bounding-set-drop boundary, fwatch additionally sandboxed under Landlock, chatterd bridged directly between the two guests, and both guests' sysagent exporting OTLP over the libvirt gateway to the host's LGTM stack" %}
+   caption="Figure 41.1: the two-VM fleet: pmon supervises chatterd/sysagent/fwatch on each of systems-target and systems-peer inside a capability-bounding-set-drop boundary, fwatch additionally sandboxed under Landlock, chatterd bridged directly between the two guests, and both guests' sysagent exporting OTLP over the libvirt gateway to the host's LGTM stack" %}
 
-> **Tools used** — `ssh`/`scp` (host, to stage the built binary onto both
-> `systems-target` and `systems-peer` and drive `pmon` on each — the same
+> **Tools used**: `ssh`/`scp` (host, to stage the built binary onto both
+> `systems-target` and `systems-peer` and drive `pmon` on each, the same
 > `scripts/lab/deploy-to-vm.sh` transport every VM example uses), `curl`
 > (host, querying Grafana's Prometheus proxy for the `sysagent_cpu_pct`
 > gauge). The libvirt bridge's gateway address (`192.168.124.1`) is the
-> route guest-side OTLP traffic takes to reach the host's LGTM stack — a
+> route guest-side OTLP traffic takes to reach the host's LGTM stack: a
 > network path, not a tool. Capability-bounding-set drop and Landlock are
 > syscalls the program makes itself (`prctl(2)`, `landlock_create_ruleset(2)`
 > and friends); seccomp was already proven alongside Landlock in Chapter 33
@@ -66,30 +66,30 @@ fwatch snapshot DIR
 fwatch watch DIR [--sandbox] [--timeout-ms T]
 ```
 
-`pmon` never execs a *different* binary for chatterd, sysagent, or fwatch —
+`pmon` never execs a *different* binary for chatterd, sysagent, or fwatch:
 it re-execs **itself**, with a different `argv[0]` command word, the same
 self-re-exec technique Chapter 34's container entrypoint used. Concretely:
 `mkdir` the sandbox directory, drop the capability bounding set once, resolve
 the running binary's own path (`os.Executable()` in Go,
 `readlink("/proc/self/exe")` in C++ and Rust), then fork+exec that same path
-three times with three different argument lists — `chatterd serve …`,
+three times with three different argument lists: `chatterd serve …`,
 `sysagent --node … --interval-ms 2000`, `fwatch watch DIR --sandbox`.
 
 {% include excalidraw.html
    file="41-supervise-lifecycle"
    alt="A state-machine diagram for one supervised child. A box labeled starting has an arrow to a box labeled up, annotated 'fork+exec succeeded, pid recorded, pmon: started service=NAME pid=PID printed'. From up, a dashed arrow labeled 'blocking wait (waitpid/cmd.Wait/nix::waitpid)' loops back into a decision diamond: 'shutting_down flag set?'. The no-branch leads to a box labeled restarting, annotated 'pmon: restart service=NAME attempt=N reason=... printed, restarts counter incremented, 300ms backoff sleep', with an arrow looping back up to starting. The yes-branch leads to a box labeled down. Off to the side, a separate small loop shows a clock icon labeled 'health tick every --health-interval-ms' with an arrow into a box printing 'pmon: health chatterd=up sysagent=up fwatch=up restarts=chatterd:0,sysagent:0,fwatch:0'. A third flow at the bottom shows SIGTERM/SIGINT arriving at a box labeled 'signal thread (sigwait / signal.Notify channel / SigSet::wait)', with an arrow to 'shutting_down.store(true)', then a fan-out arrow to 'kill(child_pid, SIGTERM) for every recorded pid', ending in a box labeled 'pmon: shutdown, exit 0' once every per-child supervisor has returned."
-   caption="Figure 41.2 — pmon's per-child supervise/restart lifecycle (starting → up → wait → restarting → up again on an unexpected exit), the health tick alongside it, and the SIGTERM → forward-to-children → shutdown path" %}
+   caption="Figure 41.2: pmon's per-child supervise/restart lifecycle (starting → up → wait → restarting → up again on an unexpected exit), the health tick alongside it, and the SIGTERM → forward-to-children → shutdown path" %}
 
 Before any of that forking happens, `pmon` drops every capability it might
 hold from its own bounding set and sets `no_new_privs`. `PR_CAPBSET_DROP`
-removes a capability from the *bounding set*, not the current effective set —
+removes a capability from the *bounding set*, not the current effective set:
 the guarantee it gives is that no future `execve` of a setuid-root binary,
 by this process or any descendant, can ever regain that capability, because
 the bounding set only shrinks across `fork`/`exec`. That guarantee holds
 even when the calling process is already unprivileged, which is exactly
 `pmon`'s situation on an unprivileged lab-guest account: a loopback run
 prints `pmon: capabilities bounding_set_dropped=0 no_new_privs=1`, and `0` is
-the *correct* number here — there was nothing in the bounding set to drop,
+the *correct* number here: there was nothing in the bounding set to drop,
 and the line still proves the `prctl` calls ran and `no_new_privs` is set.
 
 {% include codetabs.html langs="C++|Go|Rust" %}
@@ -152,14 +152,14 @@ pub fn drop_bounding_set() {
 
 All three loop `prctl(PR_CAPBSET_DROP, c, …)` from `0` through
 `CAP_CHECKPOINT_RESTORE` (40, current as of a 6.x kernel) and ignore `EINVAL`
-from probing past whatever the running kernel's actual last capability is —
+from probing past whatever the running kernel's actual last capability is,
 the loop is future-proof by construction rather than by a version check.
 Once the bounding set is shrunk, every child `pmon` forks inherits the
 narrower set automatically; nothing in `chatterd`, `sysagent`, or `fwatch`
 has to know this happened.
 
 With the bounding set dropped, `pmon` spawns and supervises the three
-children — one goroutine per service in Go, one `std::thread` per service in
+children: one goroutine per service in Go, one `std::thread` per service in
 C++, one `std::thread` per service in Rust, each running the same
 restart-on-unexpected-exit loop Figure 41.2 diagrams:
 
@@ -315,21 +315,21 @@ fn run_child_supervisor(
 ```
 
 Go delegates the fork+exec mechanics to `os/exec.Command`, which is why its
-version is shorter — `cmd.Start()`/`cmd.Wait()` hide the raw syscalls C++ and
+version is shorter: `cmd.Start()`/`cmd.Wait()` hide the raw syscalls C++ and
 Rust make directly (`fork()`, then `execv()` in the child, then `waitpid()`
 in the parent). But the *shape* is identical across all three: start, record
 the pid, print `pmon: started`, block until the child exits, check whether
 this exit was requested (`shutting_down`) or not, and if not, count a
 restart, print `pmon: restart … reason=…`, back off 300 ms, and loop. A
 child that fails to even start (`cmd.Start()` erroring, `fork()` returning
-`< 0`) is not fatal to `pmon` — it logs, waits 500 ms, and retries, because a
+`< 0`) is not fatal to `pmon`; it logs, waits 500 ms, and retries, because a
 supervisor's job is to keep trying, not to give up on the first bad attempt.
 
 ## chatterd, bridged across two hosts
 
-`chatterd` (Chapters 21–27) speaks the same wire frame it always has —
+`chatterd` (Chapters 21–27) speaks the same wire frame it always has:
 magic `"CH"`, version 1, a type byte, a big-endian `u16` length, then payload
-(`proto.go`/`.hpp`/`.rs`, unchanged) — and this chapter adds exactly one new
+(`proto.go`/`.hpp`/`.rs`, unchanged), and this chapter adds exactly one new
 idea on top: with `--peer HOST:PORT` set on both sides, a message sent on
 one node is delivered to a listener on the other. The mechanism needs no
 protocol change at all. A **bridge worker** is just an ordinary client of
@@ -340,14 +340,14 @@ target dials peer, joins as "bridge@target"   (lives in peer's client registry)
 peer   dials target, joins as "bridge@peer"   (lives in target's client registry)
 ```
 
-A local `MSG` is broadcast as `DELIVER` to every registered connection —
-including a bridge connection dialed in from the other side — exactly like
+A local `MSG` is broadcast as `DELIVER` to every registered connection
+(including a bridge connection dialed in from the other side) exactly like
 any other client. When a bridge *worker* itself receives a `DELIVER` over the
 connection it dialed out, it re-broadcasts locally with
 `includeBridges=false`, so the message never goes back out over any bridge:
 no ping-pong between two nodes forwarding the same line back and forth
 forever. The one piece of new logic lives in the bridge worker's receive
-loop — tag the nick with the *sending* node's name, if it isn't tagged
+loop: tag the nick with the *sending* node's name, if it isn't tagged
 already, before re-broadcasting locally:
 
 {% include codetabs.html langs="C++|Go|Rust" %}
@@ -500,14 +500,14 @@ fn bridge_worker(
 }
 ```
 
-`peer_node` here is the *name of the node this worker dialed into* — so when
+`peer_node` here is the *name of the node this worker dialed into*: so when
 `dave` sends a message locally on `target`, `target`'s hub broadcasts
 `DELIVER` to every local client including the `bridge@peer` connection that
 `peer`'s own bridge worker dialed in with; that worker reads the `DELIVER`
 back over the connection it opened, sees `dave` has no `@` in it yet, tags it
 `dave@target`, and re-broadcasts locally on `peer` with
 `includeBridges=false`. A listener on `peer` sees
-`chatterd: received from=dave@target text=…` — the `@target` suffix is the
+`chatterd: received from=dave@target text=…`: the `@target` suffix is the
 proof the message actually crossed the wire, not that it was echoed
 somewhere local. The reconnect loop (dial, backoff, retry) means either side
 can start first, or the other side can restart under `pmon`, without the
@@ -526,41 +526,41 @@ registered as OTel **observable gauges** (`sysagent.cpu.pct`,
 sample under a mutex and reports it tagged with a `node` attribute, exported
 over OTLP/HTTP on a periodic reader. When the endpoint is unset, `sysagent`
 prints `sysagent: otel disabled (OTEL_EXPORTER_OTLP_ENDPOINT not set)` and
-runs exactly the same otherwise — telemetry here is additive, never a
+runs exactly the same otherwise; telemetry here is additive, never a
 precondition for the service coming up. `sysagent saturate --resource
 cpu|mem --seconds N` is the chaos half: it spins worker threads doing
 nothing but arithmetic, or holds a touched, resident memory allocation, so a
-concurrently-running `sysagent`'s own `cpu_pct`/`mem_pct` visibly moves — the
+concurrently-running `sysagent`'s own `cpu_pct`/`mem_pct` visibly moves: the
 USE-method callback this fleet can point at itself.
 
-`fwatch` is Chapter 07–10's file watcher — `inotify_init1`, one
-non-recursive watch on a directory, `create`/`modify`/`delete` lines — with
+`fwatch` is Chapter 07–10's file watcher (`inotify_init1`, one
+non-recursive watch on a directory, `create`/`modify`/`delete` lines) with
 Chapter 33's Landlock ruleset available as `--sandbox`. The ruleset
 restricts filesystem *reads* to the watched directory: `pmon` passes fwatch
 `watch SANDBOX_DIR --sandbox`, and before the inotify loop starts, `fwatch`
 probes the running kernel's Landlock ABI with
 `landlock_create_ruleset(NULL, 0, LANDLOCK_CREATE_RULESET_VERSION)`, builds a
 ruleset scoped to that one directory, and calls `landlock_restrict_self`
-after setting `no_new_privs` — the identical sequence Chapter 33 proved,
+after setting `no_new_privs`, the identical sequence Chapter 33 proved,
 reused rather than re-derived. `fwatch: landlock ABI=N enforced dir=…` is
-printed only once the kernel has actually accepted the restriction, and — as
-the cross-check below shows — `N` is not a constant baked into the program;
+printed only once the kernel has actually accepted the restriction, and, as
+the cross-check below shows, `N` is not a constant baked into the program;
 it is whatever the kernel underneath happens to support. Capability-bounding-
 set drop (applied once, by `pmon`, before any child exists) and Landlock
-(applied per-process, by `fwatch` itself) are this capstone's two sandbox
+(applied per-process, by `fwatch` itself) are this final project's two sandbox
 layers; seccomp, Chapter 33's third layer, was proven there and is not
 reapplied here.
 
 ## How the code works
 
-`main` in all three languages dispatches on `argv[1]` — `pmon`, `chatterd`,
-`sysagent`, or `fwatch` — through the same hand-rolled `argFlag`/`hasFlag`/
-`firstPositional` scan the rest of the book's argument parsing uses, funnel-
-ing every malformed invocation through one `usage()` call. `chatterd serve`
+`main` in all three languages dispatches on `argv[1]` (`pmon`, `chatterd`,
+`sysagent`, or `fwatch`) through the same hand-rolled `argFlag`/`hasFlag`/
+`firstPositional` scan this book's argument parsing has used throughout,
+funneling every malformed invocation through one `usage()` call. `chatterd serve`
 and `sysagent` (without `saturate`) each call `initTelemetry`, which is
 additive by design: it reads `OTEL_EXPORTER_OTLP_ENDPOINT`, and if it's
 unset, returns a no-op `telemetry` struct backed by `otel.Tracer`/
-`otel.Meter` no-op implementations rather than failing the subcommand — a
+`otel.Meter` no-op implementations rather than failing the subcommand: a
 service the fleet depends on for chatting and sampling `/proc` should never
 refuse to start because an observability backend is unreachable or
 unconfigured. When the endpoint *is* set, `chatterd` wraps every delivered
@@ -568,28 +568,28 @@ message in a `chatterd.deliver` span tagged with the sender's nick, text
 length, node, and whether it arrived over a bridge, and prints
 `chatterd: trace_id=… node=… from=…` for each one; `sysagent` registers its
 three gauges and lets a periodic OTLP/HTTP exporter push them on its own
-schedule. Self-re-exec is the one place the three languages genuinely
+schedule. Self-re-exec is the one place the three languages truly
 diverge in mechanism: Go's `os.Executable()` plus `filepath.Abs` resolves
 the running binary through `/proc/self/exe` internally, while C++ and Rust
-call `readlink("/proc/self/exe", …)` directly — same symlink, three ways to
+call `readlink("/proc/self/exe", …)` directly: same symlink, three ways to
 read it, all landing on the same absolute path that every forked child then
 `execv`s.
 
 ## Errors, three ways
 
 `app` has two usage-error surfaces and one runtime-error surface. The **top-
-level usage error** — no command, an unrecognized subcommand, `chatterd`/
-`fwatch` with no sub-subcommand, `chatterd send` missing `--nick`/`--text` —
+level usage error** (no command, an unrecognized subcommand, `chatterd`/
+`fwatch` with no sub-subcommand, `chatterd send` missing `--nick`/`--text`)
 prints the shared `usage: app <command>` banner and exits **2**.
 `sysagent saturate` has its **own**, narrower usage error: a missing
 `--resource` prints `usage: sysagent saturate --resource cpu|mem --seconds N
-[--workers K|--mb M]` — a second banner, not the top-level one, because
+[--workers K|--mb M]`: a second banner, not the top-level one, because
 `saturate` is itself a small program with its own contract. **Runtime
 errors** are exit **1** with a `service: error message` line: `chatterd:
 listen H:P: …` on a bind failure, `fwatch: Landlock not supported by this
 kernel` when the probe returns ABI 0, `pmon: mkdir DIR: …` if the sandbox
 directory can't be created. What `pmon` does *not* treat as a runtime error
-is a single failed fork or exec attempt for one of its children — that's
+is a single failed fork or exec attempt for one of its children; that's
 logged (`pmon: start service=…: …`) and retried after a backoff, never
 surfaced as a fatal error, because a process supervisor exists precisely to
 absorb transient start failures rather than propagate them. A clean `pmon`
@@ -598,8 +598,8 @@ runs to its `--timeout-ms` deadline or a delivered signal all exit **0**.
 
 ## Concurrency lens
 
-Every piece of this book's other running thread — which concurrency model
-each language reaches for — shows up in `pmon`'s two jobs: consuming exactly
+Every piece of this book's other running thread (which concurrency model
+each language reaches for) shows up in `pmon`'s two jobs: consuming exactly
 one `SIGTERM`/`SIGINT` no matter how many children are running, and
 supervising each child without one child's restart blocking another's.
 
@@ -616,19 +616,19 @@ has actually stopped.
 C++ and Rust reach for the same alternative to a signal *handler*: a
 dedicated **`sigwait`-consuming thread**. Both block `SIGTERM` and `SIGINT`
 in the main thread with `pthread_sigmask`/`SigSet::thread_block()` *before*
-spawning any other thread — a blocked mask is inherited by every thread
+spawning any other thread: a blocked mask is inherited by every thread
 created afterward, so only the one thread that later calls
 `sigwait`/`SigSet::wait()` (nix's wrapper over the same syscall) ever
 consumes the signal; no async-signal-unsafe work happens in a handler at
 all, because there is no handler. Each of the three services then gets its
-own `std::thread`, and — unlike Go's `exec.Command`-based children — that
+own `std::thread`, and, unlike Go's `exec.Command`-based children, that
 thread performs the `fork()`/`execv()` **itself**, directly: `pmon`'s C++
 and Rust ports are "fork+threads" in the sense the task names them, one OS
 thread owning one child's entire fork/wait/restart lifecycle. Every forked
 child clears its own inherited copy of the blocked signal mask
 (`pthread_sigmask(SIG_SETMASK, &empty, …)` in C++, `SigSet::empty().
-thread_set_mask()` in Rust) immediately after `fork()` and before `execv()`
-— without this, the child would inherit a *blocked* `SIGTERM`/`SIGINT` and
+thread_set_mask()` in Rust) immediately after `fork()` and before `execv()`:
+without this, the child would inherit a *blocked* `SIGTERM`/`SIGINT` and
 its own shutdown-signal handling (the same `install_signal_flag`
 mechanism `chatterd`/`sysagent`/`fwatch` use standalone) could never fire,
 the exact bug Chapter 34's container entrypoint first ran into and
@@ -636,7 +636,7 @@ documented. Where C++ and Rust part ways is the health-tick wait: C++'s main
 thread holds a `std::condition_variable` and calls `wait_for(lock, interval,
 predicate)`, waking early the moment every worker thread's `active` counter
 reaches zero and otherwise printing health once per timeout; Rust's main
-thread has no condvar at all — it just `thread::sleep`s the health interval
+thread has no condvar at all; it just `thread::sleep`s the health interval
 and polls `JoinHandle::is_finished()` on every worker, a coarser but simpler
 wake pattern that trades a small amount of shutdown latency (up to one
 health interval) for not needing a shared mutex/condvar pair at all.
@@ -648,9 +648,9 @@ health interval) for not needing a shared mutex/condvar pair at all.
 ```
 
 `verify.lua` follows the convention Chapter 23 established for `vm-peer`
-examples: the assertion itself runs entirely on loopback — the fleet, the
+examples: the assertion itself runs entirely on loopback (the fleet, the
 cross-node bridge across two `127.0.0.1` ports, and telemetry to a local
-LGTM stack — while the real two-host run is the chapter's demo. A loopback
+LGTM stack) while the real two-host run is the chapter's demo. A loopback
 fleet, driven by hand the same way, shows every piece in one place:
 
 ```console
@@ -667,7 +667,7 @@ pmon: health chatterd=up sysagent=up fwatch=up restarts=chatterd:0,sysagent:0,fw
 pmon: shutdown
 ```
 
-(`ABI=9` here is the reference host's own Landlock version — see the
+(`ABI=9` here is the reference host's own Landlock version; see the
 cross-check below for the guest's different number.) A local listener
 receiving a message sent by another client on the same node, and the
 cross-node bridge with two nodes on loopback, are exactly the shapes
@@ -728,14 +728,14 @@ Two independent proofs back this chapter's two biggest claims, and neither
 comes from a line the program prints about its own intentions.
 
 The first is Landlock's enforced ABI. `fwatch --sandbox` never hardcodes a
-version — it asks the running kernel with
+version: it asks the running kernel with
 `landlock_create_ruleset(NULL, 0, LANDLOCK_CREATE_RULESET_VERSION)`, the
 exact probe Chapter 33 established, and prints whatever comes back. On the
 Fedora 44 reference host (kernel `7.1`), where this chapter's
 loopback `verify.lua` runs, that probe returns **ABI 9**. On the
 `systems-target` lab guest (kernel `6.19.10-300.fc44`) this session, the
 identical code, the identical syscall, returned **ABI 7**. That is not a
-bug and not a discrepancy to reconcile — it is the accurate, verified
+bug and not a discrepancy to reconcile; it is the accurate, verified
 consequence of two different kernel versions supporting two different sets
 of Landlock features, and it is the same lesson Chapter 33 taught about
 attach targets and struct offsets, reached through a sandbox ABI instead: a
@@ -745,8 +745,8 @@ own probe is what keeps it right on both.
 The second is the OTLP path itself. `sysagent: otel enabled endpoint=…`
 proves the exporter was configured; it does not prove a single byte reached
 anywhere. The real proof is on the other end of the gateway: after the
-two-host bridge run above, `sysagent_cpu_pct{node="peer"}` — queried through
-Grafana's Prometheus proxy — was present with value **1.75**, a gauge that
+two-host bridge run above, `sysagent_cpu_pct{node="peer"}` (queried through
+Grafana's Prometheus proxy) was present with value **1.75**, a gauge that
 started life inside an unprivileged process on `systems-peer`, was
 exported over OTLP/HTTP to `http://192.168.124.1:4318`, crossed the libvirt
 bridge's gateway, and landed in the host's own Prometheus, labeled by the
@@ -762,7 +762,7 @@ LGTM stack exists to receive, closed end to end.
   recorded child pid on shutdown.
 - **`PR_CAPBSET_DROP` is meaningful even on an already-unprivileged
   process.** `bounding_set_dropped=0` on the lab guest's unprivileged
-  account is the *correct* number — the guarantee (no future `execve` of a
+  account is the *correct* number: the guarantee (no future `execve` of a
   setuid binary can regain a dropped capability) holds regardless of what
   was there to begin with.
 - **A bridge is just a client with a special nick.** `chatterd`'s cross-host
@@ -772,33 +772,33 @@ LGTM stack exists to receive, closed end to end.
   a delivered nick is the observable proof a message actually crossed.
 - **A sandbox's enforced feature set is a kernel fact, not a program's
   assumption.** The identical Landlock probe returned ABI 9 on the Fedora
-  44 host and ABI 7 on the lab guest's 6.19.10 kernel this session — the
+  44 host and ABI 7 on the lab guest's 6.19.10 kernel this session, the
   same class of version drift Chapter 33 taught, reached through a
   capability-negotiation syscall instead of an attach point.
 - **Telemetry is additive, and the guest→host OTLP path is real, not
   assumed.** Every service ran identically with `OTEL_EXPORTER_OTLP_ENDPOINT`
-  unset; with it set, `sysagent_cpu_pct{node="peer"}` — 1.75 on this
-  session's run — reached the host's Prometheus over the libvirt gateway,
+  unset; with it set, `sysagent_cpu_pct{node="peer"}` (1.75 on this
+  session's run) reached the host's Prometheus over the libvirt gateway,
   the same route `deploy-to-vm.sh` forwards for every OTLP-emitting VM demo.
 - **Identical supervision, three concurrency shapes.** Go leans on
   `os/exec.Command`, goroutines, a `sync.WaitGroup`, and a `signal.Notify`
   channel; C++ and Rust both fork and `execv` directly inside a dedicated
   `std::thread` per child and consume signals on a separate `sigwait`/
-  `SigSet::wait` thread rather than a handler — and even between those two,
+  `SigSet::wait` thread rather than a handler, and even between those two,
   C++'s health tick wakes early off a condition variable while Rust's just
-  polls `is_finished()` on a sleep — the same restart/health/shutdown
-  contract, four genuinely different mechanisms underneath.
+  polls `is_finished()` on a sleep: the same restart/health/shutdown
+  contract, four distinctly different mechanisms underneath.
 
-This closes the six-program arc that began in Chapter 7: four of the six —
-`pmon`, `chatterd`, `sysagent`, `fwatch` — now run together, supervised,
+This closes the six-program arc that began in Chapter 7: four of the six
+(`pmon`, `chatterd`, `sysagent`, `fwatch`) now run together, supervised,
 sandboxed, and observed, across two real hosts. The book continues into
-three deep dives — embedding Lua, Rust macros for systems code, the Go
-runtime — but every syscall, sandbox layer, and signal-handling discipline
-those chapters lean on was proven here, running for real.
+three deep dives (embedding Lua, Rust macros for systems code, the Go
+runtime), but every syscall, sandbox layer, and signal-handling discipline
+those chapters lean on was proven here, on real hardware.
 
 ---
 
-<p><span class="status status--verified">verified</span> — on the Fedora 44
+<p><span class="status status--verified">verified</span>: on the Fedora 44
 reference host (kernel <code>7.1</code>) and the two lab guests
 <code>systems-target</code> (192.168.124.7) / <code>systems-peer</code>
 (192.168.124.95, kernel <code>6.19.10-300.fc44</code>) this session:
@@ -814,13 +814,13 @@ was delivered to a listener on <code>peer</code> as <code>chatterd: received
 from=dave@target text=hello across hosts</code>, proving the cross-host
 bridge; <code>fwatch --sandbox</code> on the guest printed <code>fwatch:
 landlock ABI=7 enforced</code>, against <code>ABI=9</code> on the host's
-loopback run — the same probe, two different kernels, a real and verified
+loopback run: the same probe, two different kernels, a real and verified
 difference; and with <code>OTEL_EXPORTER_OTLP_ENDPOINT=http://192.168.124.1:
 4318</code> set on both guests, <code>sysagent_cpu_pct{node="peer"}</code>
 reached the host's Prometheus (queried through Grafana's proxy) with value
 <code>1.75</code>, confirming the guest→host OTLP path over the libvirt
 gateway. Not exercised: seccomp filtering of any fleet child (Chapter 33
-proved seccomp alongside Landlock; this capstone reuses only the
+proved seccomp alongside Landlock; this final project reuses only the
 capability-bounding-set-drop and Landlock layers, not seccomp) and a run
 where the LGTM stack was unreachable (that path reports SKIP for the
 telemetry assertions, not a failing example, per the manifest's
