@@ -365,6 +365,19 @@ def write_junit(path: str, selected: list[dict], results: dict) -> None:
     ET.ElementTree(suite).write(path, encoding="utf-8", xml_declaration=True)
 
 
+def scrub_logs() -> None:
+    """Strip machine identifiers (kernel build, paths, account) from the run logs.
+
+    Chapter transcripts are pasted from these logs, so scrub them before anyone
+    copies a line (see CLAUDE.md, "Publishing rule").
+    """
+    tool = REPO_ROOT / "scripts" / "host_ids.py"
+    if tool.is_file() and LOG_DIR.is_dir():
+        subprocess.run([sys.executable, str(tool), "scrub", "--repo",
+                        str(REPO_ROOT), str(LOG_DIR)],
+                       stdout=subprocess.DEVNULL, check=False)
+
+
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     try:
@@ -438,6 +451,8 @@ def main(argv: list[str]) -> int:
     skipped = sum(1 for r in all_r if r.status == "SKIP")
     print(f"\n{passed} passed, {failed} failed, {skipped} skipped"
           f" (logs in {LOG_DIR.relative_to(REPO_ROOT)}/)")
+
+    scrub_logs()
 
     if args.junit:
         write_junit(args.junit, selected, results)
