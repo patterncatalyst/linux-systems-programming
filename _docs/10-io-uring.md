@@ -110,7 +110,7 @@ languages, three answers to the same question: *who owns the event loop?*
 
 > **Research note — io_uring on this kernel, from primary sources.** Claims
 > about io_uring age fast, so this chapter cites only what this host shows.
-> Kernel `7.1.3-200.fc44` reported 18 `IORING_FEAT_*` flags in the
+> Kernel `7.1` reported 18 `IORING_FEAT_*` flags in the
 > `io_uring_setup` params during our traced run — from `SINGLE_MMAP` and
 > `NODROP` through `RECVSEND_BUNDLE`, `MIN_TIMEOUT`, `RW_ATTR`, and
 > `NO_IOWAIT` — and the shipped `io_uring(7)`, `io_uring_setup(2)`, and
@@ -520,4 +520,4 @@ us to the capstone.
 
 ---
 
-<p><span class="status status--verified">verified</span> — all numbers above are from this session's runs on the Fedora 44 host (kernel 7.1.3-200.fc44): the runner table passed 3/3 (cpp, go, rust); the 403-file/19,507,360-byte tree synced with <code>engine=rw</code> in 11–12 ms (C++) and 12–13 ms (Rust) versus 129–137 ms and 105–107 ms with <code>engine=uring</code>; <code>strace -c</code> counted 850 read + 444 write (rw) against 407 io_uring_enter + 1 io_uring_setup (uring, loader-only read/write 4/1); the fixture uring sync used 5 enters and printed <code>synced 5 files 1348634 bytes engine=uring ms=3</code>; the io_uring_setup/mmap trace, the <code>diff -r</code>/<code>cmp</code> byte-equality, the Go refusal (<code>engine=uring: unsupported in Go (see chapter 10)</code>, exit 64), and the empty <code>grep -c io_uring</code> against podman's seccomp profile were all reproduced as quoted. Unverified: the bpftrace probe in the lab-VM callout, as marked.</p>
+<p><span class="status status--verified">verified</span> — all numbers above are from this session's runs on the Fedora 44 host (kernel 7.1): the runner table passed 3/3 (cpp, go, rust); the 403-file/19,507,360-byte tree synced with <code>engine=rw</code> in 11–12 ms (C++) and 12–13 ms (Rust) versus 129–137 ms and 105–107 ms with <code>engine=uring</code>; <code>strace -c</code> counted 850 read + 444 write (rw) against 407 io_uring_enter + 1 io_uring_setup (uring, loader-only read/write 4/1); the fixture uring sync used 5 enters and printed <code>synced 5 files 1348634 bytes engine=uring ms=3</code>; the io_uring_setup/mmap trace, the <code>diff -r</code>/<code>cmp</code> byte-equality, the Go refusal (<code>engine=uring: unsupported in Go (see chapter 10)</code>, exit 64), and the empty <code>grep -c io_uring</code> against podman's seccomp profile were all reproduced as quoted. Unverified: the bpftrace probe in the lab-VM callout, as marked.</p>

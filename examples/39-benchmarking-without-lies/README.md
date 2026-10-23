@@ -176,6 +176,6 @@ time and asserts, per language:
 4. no flags, an unknown `--op`, and `--warmup >= --iters` each exit 2 with a
    usage line.
 
-Verified on the Fedora 44 reference host (kernel 7.1.3-200.fc44, GCC 16.1.1,
+Verified on the Fedora 44 reference host (kernel 7.1, GCC 16.1.1,
 go1.26.5, rustc 1.97.1): all three languages PASS all 42 checks, repeatably
 across multiple runs.

@@ -35,7 +35,7 @@ The book targets **Fedora 44** deliberately. Systems programming is the one
 domain where "any recent Linux" is not good enough: chapters later in the book
 read kernel tracepoints, load eBPF programs, and poke at cgroup files whose
 layout shifts between kernel versions. Fedora ships close to upstream — the
-reference host here runs kernel `7.1.3-200.fc44` — so what you observe matches
+reference host here runs kernel `7.1` — so what you observe matches
 what current kernel documentation describes. It also ships **GCC 16.1.1** as
 the system compiler, which matters immediately: the C++ examples use C++23's
 `std::println` and `std::expected`, and those need GCC 14 or newer. On Fedora
@@ -318,7 +318,7 @@ run, `cargo` installs the pinned 1.97.1 toolchain if needed — and each binary
 prints one line of the same shape:
 
 ```
-pid 2520094 on Linux 7.1.3-200.fc44.x86_64 (x86_64)
+pid 2520094 on Linux 7.1 (x86_64)
 ```
 
 Three lines, three different PIDs, identical formatting: that is the whole
@@ -335,8 +335,8 @@ C++ binary, trimmed to the `uname` call:
 
 ```bash
 [host]$ strace -f -e trace=uname ./cpp/build/release/app
-uname({sysname="Linux", nodename="Lemuria", ...}) = 0
-pid 2520274 on Linux 7.1.3-200.fc44.x86_64 (x86_64)
+uname({sysname="Linux", nodename="host", ...}) = 0
+pid 2520274 on Linux 7.1 (x86_64)
 +++ exited with 0 +++
 ```
 
@@ -348,8 +348,8 @@ strace: Process 2520268 attached
 strace: Process 2520269 attached
 strace: Process 2520270 attached
 strace: Process 2520271 attached
-[pid 2520267] uname({sysname="Linux", nodename="Lemuria", ...}) = 0
-pid 2520267 on Linux 7.1.3-200.fc44.x86_64 (x86_64)
+[pid 2520267] uname({sysname="Linux", nodename="host", ...}) = 0
+pid 2520267 on Linux 7.1 (x86_64)
 +++ exited with 0 +++
 ```
 
@@ -392,4 +392,4 @@ snapshotted kernel instead of yours.
 
 ---
 
-<p><span class="status status--verified">verified</span> — runner table PASS for cpp, go, and rust on the Fedora 44 host (kernel 7.1.3-200.fc44, GCC 16.1.1, go1.26.5, rustc 1.97.1): each binary printed <code>pid &lt;PID&gt; on Linux 7.1.3-200.fc44.x86_64 (x86_64)</code>, and the strace excerpts above are real trimmed output from those binaries. The CLion section remains unverified as noted.</p>
+<p><span class="status status--verified">verified</span> — runner table PASS for cpp, go, and rust on the Fedora 44 host (kernel 7.1, GCC 16.1.1, go1.26.5, rustc 1.97.1): each binary printed <code>pid &lt;PID&gt; on Linux 7.1 (x86_64)</code>, and the strace excerpts above are real trimmed output from those binaries. The CLion section remains unverified as noted.</p>

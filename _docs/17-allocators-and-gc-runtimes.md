@@ -462,7 +462,7 @@ userspace at all.
 ---
 
 <p><span class="status status--verified">verified</span> — every number above
-was produced on the Fedora 44 reference host (kernel 7.1.3-200.fc44) this
+was produced on the Fedora 44 reference host (kernel 7.1) this
 session: the runner printed <code>17-allocators-and-gc-runtimes PASS PASS
 PASS</code> (3 passed, 0 failed, 0 skipped); the six variant lines, the four
 GOGC/GOMEMLIMIT runs (gc_cycles 9/32/47/0), the mallinfo2 probe output, the

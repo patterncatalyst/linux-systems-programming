@@ -480,10 +480,10 @@ list is inspectable. With a watcher running (PID via `$!`):
 
 ```bash
 [host]$ ls -l /proc/$PID/fd | tail -4
-lr-x------ 1 rsedor rsedor 64 Jul 18 23:06 3 -> anon_inode:inotify
-lrwx------ 1 rsedor rsedor 64 Jul 18 23:06 4 -> anon_inode:[timerfd]
-lrwx------ 1 rsedor rsedor 64 Jul 18 23:06 5 -> anon_inode:[signalfd]
-lrwx------ 1 rsedor rsedor 64 Jul 18 23:06 6 -> anon_inode:[eventpoll]
+lr-x------ 1 user user 64 Jul 18 23:06 3 -> anon_inode:inotify
+lrwx------ 1 user user 64 Jul 18 23:06 4 -> anon_inode:[timerfd]
+lrwx------ 1 user user 64 Jul 18 23:06 5 -> anon_inode:[signalfd]
+lrwx------ 1 user user 64 Jul 18 23:06 6 -> anon_inode:[eventpoll]
 [host]$ cat /proc/$PID/fdinfo/6
 tfd:        3 events:       19 data:                0  pos:0 ino:426 sdev:11
 tfd:        4 events:       19 data:                1  pos:0 ino:426 sdev:11
@@ -564,7 +564,7 @@ tells you it is *done*.
 
 <p><span class="status status--verified">verified</span> — all evidence in
 this chapter was produced on the Fedora 44 reference host (kernel
-7.1.3-200.fc44, strace 7.1) this session: the runner reported
+7.1, strace 7.1) this session: the runner reported
 <code>PASS</code> for cpp, go, and rust (3 passed, 0 failed, 0 skipped); the
 create/append/delete session printed exactly <code>event: created
 a.txt</code>, <code>event: deleted a.txt</code>, <code>fwatch: exiting

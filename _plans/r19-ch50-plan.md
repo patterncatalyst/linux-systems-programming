@@ -27,7 +27,7 @@ starts being a task with a tid, a name, a stack, an affinity mask, and a policy.
   grounded in measured facts, with `native_handle()` as the sanctioned bridge.
 - **D4 — Autonomous through PR; the user merges.**
 
-## Host audit (run 2026-08-16, Fedora 44, kernel 7.1.5-201.fc44)
+## Host audit (run 2026-08-16, Fedora 44, kernel 7.1)
 
 All measured with real probe programs, not inferred:
 

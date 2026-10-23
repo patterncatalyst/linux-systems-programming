@@ -13,9 +13,9 @@ parallelism is *execution* (a machine doing many things at once). The whole comp
 is set here; ch50–56 (pthreads → std threading → Boost.Thread → C++20 coroutines → Boost.Fiber →
 Boost.Asio → capstone comparison) all lean on it. See "ch55 scope" at the end of this file.
 
-## Host audit (run 2026-08-07, Fedora 44, kernel 7.1.5-201.fc44)
+## Host audit (run 2026-08-07, Fedora 44, kernel 7.1)
 - GCC **16.1.1**, clang **22.1.8**, CMake **4.3.0**, Ninja 1.13.0, Conan **2.30.0**.
-- CPU: 16 logical / 8 physical cores, 2 threads-per-core, **1 NUMA node** (i7-11800H).
+- CPU: 16 logical / 8 physical cores, 2 threads-per-core, **1 NUMA node**.
 - Boost **1.90** system-installed (`boost-devel`), incl. `libboost_{context,fiber,thread}.so` →
   ch52/ch54 have their libraries already; **no Conan fetch needed for Boost on this host**.
 - `libtbb.so.12` runtime present but **`tbb-devel` ABSENT** → `std::execution::par` (C++17 parallel

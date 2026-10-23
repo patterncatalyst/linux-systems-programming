@@ -86,5 +86,5 @@ a time and asserts, per language:
    `kill -INT` after 100 ms yields only well-formed partial hash lines on
    stdout, no summary line, `parhash: interrupted` on stderr, and exit 130.
 
-Verified on the Fedora 44 reference host (kernel 7.1.3-200.fc44): all three
+Verified on the Fedora 44 reference host (kernel 7.1): all three
 languages PASS all 8 checks, Go under the race detector.

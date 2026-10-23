@@ -1,0 +1,34 @@
+# Host-scrub configuration. Holds paths and categories only, never values.
+# See CLAUDE.md "Publishing rule".
+
+# The disposable lab guests (systems-target, systems-peer) are Fedora VMs whose own
+# values are book content: the guest account's home directory and the guest kernel
+# build the book pins. Neither is the development machine's.
+[allow]
+home-path = [
+    "_docs/02-lab-setup.md",
+    "_docs/14-identity-and-privilege.md",
+    "_docs/23-udp-and-peer-discovery.md",
+    "_docs/32-namespaces-and-cgroups.md",
+    "_docs/35-virtualization-and-kvm.md",
+    "examples/14-identity-and-privilege/README.md",
+    "examples/14-identity-and-privilege/verify.lua",
+    "examples/37-use-method-60s-analysis/verify.lua",
+    "examples/40-low-latency-fastpath/verify.lua",
+    "_plans/r09-batch1-golden-capture.md",
+    "_plans/r09-batch1-stub-completion.md",
+    "_plans/r26-full-matrix-gate.md",
+    "scripts/lab/deploy-to-vm.sh",
+]
+kernel-build = [
+    "_docs/02-lab-setup.md",
+    "_docs/30-ebpf-observation-toolkit.md",
+    "_docs/32-namespaces-and-cgroups.md",
+    "_docs/33-seccomp-and-landlock.md",
+    "_docs/35-virtualization-and-kvm.md",
+    "_docs/45-linux-analysis-suites.md",
+    "_plans/r09-batch1-golden-capture.md",
+]
+kernel-version = [
+    "_plans/r09-batch1-golden-capture.md",
+]

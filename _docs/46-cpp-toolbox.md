@@ -780,7 +780,7 @@ reference-depth treatment this chapter gave C++.
 ---
 
 <p><span class="status status--verified">verified</span> — on the Fedora 44
-reference host this session (kernel 7.1.4-204.fc44, GCC 16.1.1, clang
+reference host this session (kernel 7.1, GCC 16.1.1, clang
 22.1.8, CMake 4.3.0, Ninja, gdb 17.2, Conan 2.30.0):
 <code>LSP_LANG=cpp REPO_ROOT=$(cd ../.. && pwd) lua verify.lua</code> reported
 <code>PASS 20 / FAIL 0</code>, and

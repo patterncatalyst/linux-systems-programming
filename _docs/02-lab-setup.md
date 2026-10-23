@@ -43,7 +43,7 @@ A VM answers all three at once, and adds the property no container gives you:
 **its own kernel**. Namespaces share the host kernel, so a container can't show
 you kernel-version drift, can't be probed as an isolated kernel, and can't be
 snapshot-reverted with its kernel state. The lab guests run their own
-`6.19.10-300.fc44` kernel while the host runs `7.1.3-200.fc44` — a visible
+`6.19.10-300.fc44` kernel while the host runs `7.1` — a visible
 difference this chapter turns into its cross-check.
 
 That said, the VM is not the default. The book's decision rule, applied at the
@@ -298,14 +298,14 @@ than, say, quietly running the local binary. Run it both ways:
 ```bash
 [host]$ cd examples/01-hello-syscalls
 [host]$ ./demo.sh cpp
-pid <PID> on Linux 7.1.3-200.fc44.x86_64 (x86_64)
+pid <PID> on Linux 7.1 (x86_64)
 [host]$ TARGET=systems-target ./demo.sh cpp
 → copying app to fedora@192.168.124.7:/home/fedora/app
 → running on systems-target (Ctrl-C to stop):
 pid <PID> on Linux 6.19.10-300.fc44.x86_64 (x86_64)
 ```
 
-Same binary, two different kernel strings: `7.1.3-200.fc44` is your host,
+Same binary, two different kernel strings: `7.1` is your host,
 `6.19.10-300.fc44` is the guest. The example's per-language `demo.sh` wires
 this up — with `TARGET` set, its `run` step calls
 `scripts/lab/deploy-to-vm.sh "$TARGET" <binary>` instead of executing locally,
@@ -339,4 +339,4 @@ stack**, so every later demo has somewhere to send its telemetry.
 
 ---
 
-<p><span class="status status--verified">verified</span> — both guests were provisioned from Fedora-Cloud-Base-Generic-44-1.7 on this host (target 4 GB at 192.168.124.7, peer 2 GB at 192.168.124.95); <code>/var/log/lab-ready</code> read back <code>bpftrace v0.24.2</code> and kernel <code>6.19.10-300.fc44</code> on both; <code>lab-ready</code> snapshots exist on both; and <code>deploy-to-vm.sh</code> ran the host-built C++ and Go binaries on <code>systems-target</code>, printing the guest kernel string <code>6.19.10-300.fc44.x86_64</code> versus <code>7.1.3-200.fc44.x86_64</code> locally. The <strong>&ldquo;When the guest falls behind the host&rdquo;</strong> section was added later and is verified separately, on the same lab: the host&rsquo;s <code>libstdc++</code> reached <code>16.2.1-2.fc44</code> (<code>libstdc++.so.6.0.36</code>, max <code>GLIBCXX_3.4.36</code>) while both guests sat at <code>16.1.1-2.fc44</code> (<code>libstdc++.so.6.0.35</code>, max <code>GLIBCXX_3.4.35</code>) behind snapshots taken before the update, and every host-built C++ binary then failed on the guest with the quoted <code>version `GLIBCXX_3.4.36&#39; not found</code>. A full-matrix run reproduced the asymmetry the section describes — six VM examples failing in C++ while Go and Rust passed on the same guest in the same run — and the quoted diagnostic commands, the <code>dnf</code> fix, and the re-snapshot were all run here: after <code>revert-vm.sh systems-target lab-ready</code> the guest reported <code>GLIBCXX_3.4.36</code> and <code>test-all-examples.py --mode vm --lang cpp</code> reported the quoted <code>8 passed, 0 failed, 0 skipped</code>, including the two-guest <code>41-capstone-fleet</code>. <code>systems-peer</code> was confirmed to carry the same drift while showing no symptom. Not exercised: <span class="status status--unverified">unverified</span> — the <code>GLIBC_</code> form of the symbol check is stated by analogy and was not the failure encountered here, which was <code>GLIBCXX_</code> only; and building inside the guest with the in-VM toolchains is named as the standing fallback but is not exercised by any example in this book.</p>
+<p><span class="status status--verified">verified</span> — both guests were provisioned from Fedora-Cloud-Base-Generic-44-1.7 on this host (target 4 GB at 192.168.124.7, peer 2 GB at 192.168.124.95); <code>/var/log/lab-ready</code> read back <code>bpftrace v0.24.2</code> and kernel <code>6.19.10-300.fc44</code> on both; <code>lab-ready</code> snapshots exist on both; and <code>deploy-to-vm.sh</code> ran the host-built C++ and Go binaries on <code>systems-target</code>, printing the guest kernel string <code>6.19.10-300.fc44.x86_64</code> versus <code>7.1</code> locally. The <strong>&ldquo;When the guest falls behind the host&rdquo;</strong> section was added later and is verified separately, on the same lab: the host&rsquo;s <code>libstdc++</code> reached <code>16.2.1-2.fc44</code> (<code>libstdc++.so.6.0.36</code>, max <code>GLIBCXX_3.4.36</code>) while both guests sat at <code>16.1.1-2.fc44</code> (<code>libstdc++.so.6.0.35</code>, max <code>GLIBCXX_3.4.35</code>) behind snapshots taken before the update, and every host-built C++ binary then failed on the guest with the quoted <code>version `GLIBCXX_3.4.36&#39; not found</code>. A full-matrix run reproduced the asymmetry the section describes — six VM examples failing in C++ while Go and Rust passed on the same guest in the same run — and the quoted diagnostic commands, the <code>dnf</code> fix, and the re-snapshot were all run here: after <code>revert-vm.sh systems-target lab-ready</code> the guest reported <code>GLIBCXX_3.4.36</code> and <code>test-all-examples.py --mode vm --lang cpp</code> reported the quoted <code>8 passed, 0 failed, 0 skipped</code>, including the two-guest <code>41-capstone-fleet</code>. <code>systems-peer</code> was confirmed to carry the same drift while showing no symptom. Not exercised: <span class="status status--unverified">unverified</span> — the <code>GLIBC_</code> form of the symbol check is stated by analogy and was not the failure encountered here, which was <code>GLIBCXX_</code> only; and building inside the guest with the in-VM toolchains is named as the standing fallback but is not exercised by any example in this book.</p>

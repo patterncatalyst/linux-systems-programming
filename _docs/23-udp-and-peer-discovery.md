@@ -370,7 +370,7 @@ accurate about *when* it fires.
 ---
 
 <p><span class="status status--verified">verified</span> — evidence produced
-this session on the Fedora 44 reference host (kernel 7.1.3-200.fc44) and the
+this session on the Fedora 44 reference host (kernel 7.1) and the
 two lab guests <code>systems-target</code> (192.168.124.7) /
 <code>systems-peer</code> (192.168.124.95): the runner printed
 <code>23-udp-and-peer-discovery&nbsp;&nbsp;PASS&nbsp;&nbsp;PASS&nbsp;&nbsp;PASS</code>

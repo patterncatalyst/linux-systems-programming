@@ -65,7 +65,7 @@ monitoring agent) has the race with no mitigation at all.
 ## Four syscalls that make a process a file
 
 The fix arrived in a burst across Linux 5.1–5.4, and this host's manpages
-(kernel `7.1.3-200.fc44`) document each piece. `pidfd_open(2)` — HISTORY:
+(kernel `7.1`) document each piece. `pidfd_open(2)` — HISTORY:
 "Linux 5.3" — "creates a file descriptor that refers to the process whose
 PID is specified in pid"; the close-on-exec flag is set automatically, so
 the Chapter 7 discipline costs nothing here. The fd's superpower is stated
@@ -434,8 +434,8 @@ read the fd table the way Chapter 7 taught:
 
 ```bash
 [host]$ ls -l /proc/2624388/fd | tail -2
-lrwx------ 1 rsedor rsedor 64 Jul 18 23:59 3 -> anon_inode:[signalfd]
-lrwx------ 1 rsedor rsedor 64 Jul 18 23:59 4 -> anon_inode:[pidfd]
+lrwx------ 1 user user 64 Jul 18 23:59 3 -> anon_inode:[signalfd]
+lrwx------ 1 user user 64 Jul 18 23:59 4 -> anon_inode:[pidfd]
 [host]$ cat /proc/2624388/fdinfo/4
 pos:	0
 flags:	02000002
@@ -487,7 +487,7 @@ ability to do its job.
 
 <p><span class="status status--verified">verified</span> — every number and
 output excerpt above was produced on the Fedora 44 reference host
-(kernel 7.1.3-200.fc44) this session: the runner printed
+(kernel 7.1) this session: the runner printed
 <code>13-pidfd-modern-process-mgmt  PASS  PASS  PASS</code> (3 passed, 0
 failed, 0 skipped) and a direct <code>verify.lua</code> run showed
 <code>PASS 37 / FAIL 0</code>; the crash-loop and timeout transcripts are

@@ -95,7 +95,7 @@ a time. It asserts, per language:
 - bad usage (unknown `--bench` value, missing flag value, unknown flag,
   non-numeric or zero `--iters`) exits 2 and prints the usage line.
 
-Real host numbers from this machine (Fedora 44, kernel 7.1.3-200.fc44,
+Real host numbers from this machine (Fedora 44, kernel 7.1,
 `examples/` on an NVMe-backed btrfs filesystem — not `/tmp`):
 
 | lang | syscall (ns/call) | mem (GB/s) | io (ops/s) |

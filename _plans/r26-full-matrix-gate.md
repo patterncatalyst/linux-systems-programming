@@ -33,7 +33,7 @@ ran for real. JUnit at `build-logs/r26-full-matrix.xml`.
 
 | | |
 | --- | --- |
-| host kernel | 7.1.8-200.fc44 |
+| host kernel | 7.1 |
 | host glibc / libstdc++ | 2.43 / **16.2.1-2.fc44** (`libstdc++.so.6.0.36`) |
 | host toolchain | g++ 16.1.1, clang 22.1.8, CMake 4.3.0, Ninja 1.13.0 (at `~/.local/bin/ninja`), Conan 2.30.0, Lua 5.4.8 |
 | guest kernel | 6.19.10-300.fc44 |

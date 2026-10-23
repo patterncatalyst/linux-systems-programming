@@ -432,9 +432,9 @@ inodes agree, field for field:
 
 ```bash
 [host]$ ls -li tree
-68626 -rw-r--r-- 1 rsedor rsedor  5 Sep  8  2001 a.txt
-68627 -rw-r--r-- 1 rsedor rsedor  3 Sep  8  2001 gone.txt
-68624 drwxr-xr-x 3 rsedor rsedor 80 Jul 18 23:02 sub
+68626 -rw-r--r-- 1 user user  5 Sep  8  2001 a.txt
+68627 -rw-r--r-- 1 user user  3 Sep  8  2001 gone.txt
+68624 drwxr-xr-x 3 user user 80 Jul 18 23:02 sub
 [host]$ stat --format='%i %s %Y %n' tree/a.txt tree/sub/b.txt
 68626 5 1000000000 tree/a.txt
 68628 9 1000000100 tree/sub/b.txt
@@ -480,10 +480,10 @@ files, delaying each stat by 20 ms leaves minutes to inspect:
 [host]$ strace -o /dev/null -e trace=newfstatat -e inject=newfstatat:delay_enter=20000 \
         ./cpp/build/release/app snapshot big > /dev/null &
 [host]$ ls -l /proc/<pid>/fd
-lr-x------ 1 rsedor rsedor 64 Jul 18 23:03 3 -> …/fixture/big
-lr-x------ 1 rsedor rsedor 64 Jul 18 23:03 4 -> …/fixture/big/l1
-lr-x------ 1 rsedor rsedor 64 Jul 18 23:03 5 -> …/fixture/big/l1/l2
-lr-x------ 1 rsedor rsedor 64 Jul 18 23:03 6 -> …/fixture/big/l1/l2/l3
+lr-x------ 1 user user 64 Jul 18 23:03 3 -> …/fixture/big
+lr-x------ 1 user user 64 Jul 18 23:03 4 -> …/fixture/big/l1
+lr-x------ 1 user user 64 Jul 18 23:03 5 -> …/fixture/big/l1/l2
+lr-x------ 1 user user 64 Jul 18 23:03 6 -> …/fixture/big/l1/l2/l3
 [host]$ cat /proc/<pid>/fdinfo/6
 pos:	1980
 flags:	02700000

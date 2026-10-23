@@ -509,7 +509,7 @@ seeing one page — the machinery `shmkv` v0 is built from.
 
 <p><span class="status status--verified">verified</span> — every number and
 excerpt above was produced on the Fedora 44 reference host (kernel
-7.1.3-200.fc44, THP=madvise) this session: the runner printed
+7.1, THP=madvise) this session: the runner printed
 <code>15-virtual-memory  PASS  PASS  PASS</code> (3 passed, 0 failed, 0
 skipped; 58 verify.lua checks per language); the heap runs reported
 <code>minor=16385/16598/16384</code> (C++/Go/Rust) with the anonymous

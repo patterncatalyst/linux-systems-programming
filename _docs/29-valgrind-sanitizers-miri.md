@@ -410,7 +410,7 @@ no rebuild, on the lab VM this chapter's tools never needed.
 
 <p><span class="status status--verified">verified</span> — every transcript,
 number, and diagnostic above was produced on the Fedora 44 reference host
-(kernel 7.1.3-200.fc44, valgrind-3.27.1, gcc 16.1.1, go1.26.5, rustc/cargo
+(kernel 7.1, valgrind-3.27.1, gcc 16.1.1, go1.26.5, rustc/cargo
 1.97.1, miri 0.1.0 nightly-2026-07-18) this session. Confirmed live:
 valgrind memcheck reported <code>definitely lost</code> for <code>leak</code>
 and <code>uninitialised value(s)</code> for <code>uninit</code>, and also

@@ -464,7 +464,7 @@ Next, **event loops**: `epoll` and `inotify`, where the question stops being
 
 <p><span class="status status--verified">verified</span> — all numbers above
 are from runs performed on the reference host (btrfs on NVMe, Fedora 44,
-kernel 7.1.3-200.fc44) while writing this chapter: the mode reports
+kernel 7.1) while writing this chapter: the mode reports
 (<code>ms=21 / fsync_ms=17</code>, <code>ms=138</code>, <code>ms=81</code> at
 64 MiB; Go/Rust buffered parity), the <code>strace -c</code> table (16
 <code>fdatasync</code>, 65 <code>write</code>), the <code>Dirty:</code>

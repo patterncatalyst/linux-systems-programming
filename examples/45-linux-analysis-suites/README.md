@@ -116,7 +116,7 @@ builds the image and drives a real container:
 - the container and the built image are removed at the end, whether the
   checks passed or not.
 
-A real run on the reference host (Fedora 44, kernel 7.1.4-204.fc44, podman
+A real run on the reference host (Fedora 44, kernel 7.1, podman
 5.8.4 rootless) passes all 10 checks:
 
 ```

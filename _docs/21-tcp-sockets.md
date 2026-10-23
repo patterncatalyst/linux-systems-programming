@@ -462,7 +462,7 @@ thousand idle clients cost fds instead of stacks.
 
 <p><span class="status status--verified">verified</span> — every number and
 output excerpt above was produced on the Fedora 44 reference host (kernel
-7.1.3-200.fc44, strace 7.1) this session. The runner printed
+7.1, strace 7.1) this session. The runner printed
 <code>21-tcp-sockets  PASS  PASS  PASS</code> (3 passed, 0 failed, 0 skipped;
 <code>verify.lua</code> 19/19 per language). The hand-driven two-client
 session produced the exact transcripts shown — bob received

@@ -945,7 +945,7 @@ treatment this chapter and Chapter 46 gave C++ and Go.
 ---
 
 <p><span class="status status--verified">verified</span> — on the Fedora 44
-reference host this session (kernel 7.1.4-204.fc44, go1.26.5, offline, no
+reference host this session (kernel 7.1, go1.26.5, offline, no
 network access used):
 <code>LSP_LANG=go REPO_ROOT=$(cd ../.. && pwd) lua verify.lua</code> reported
 <code>PASS 16 / FAIL 0</code>, and

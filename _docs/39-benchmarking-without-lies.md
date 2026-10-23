@@ -515,7 +515,7 @@ corrected p99 small in the first place.
 ---
 
 <p><span class="status status--verified">verified</span> — on the Fedora 44
-reference host (kernel 7.1.3-200.fc44, 11th-gen Intel i7-11800H, 16 CPUs,
+reference host (kernel 7.1, 11th-gen Intel 8-core/16-thread laptop CPU, 16 CPUs,
 <code>intel_pstate</code>/<code>powersave</code> governor, turbo active) this
 session: <code>python3 scripts/test-all-examples.py --only
 39-benchmarking-without-lies</code> printed <code>PASS PASS PASS</code> (3

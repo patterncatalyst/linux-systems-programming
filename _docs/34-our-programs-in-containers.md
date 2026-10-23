@@ -98,11 +98,11 @@ per-user block of otherwise-unused host uids, declared in `/etc/subuid` and
 
 ```bash
 [host]$ grep "^$(whoami):" /etc/subuid /etc/subgid
-/etc/subuid:rsedor:524288:65536
-/etc/subgid:rsedor:524288:65536
+/etc/subuid:user:524288:65536
+/etc/subgid:user:524288:65536
 ```
 
-That line grants `rsedor` a private range of 65,536 host uids starting at
+That line grants `user` a private range of 65,536 host uids starting at
 524288 -- ids no other account owns. `podman unshare cat /proc/self/uid_map`,
 run in podman's own user namespace, shows exactly how the two ranges
 combine:
@@ -113,7 +113,7 @@ combine:
      1     524288      65536
 ```
 
-Container uid 0 (root, inside) maps to host uid 1000 (`rsedor`, outside) --
+Container uid 0 (root, inside) maps to host uid 1000 (`user`, outside) --
 one id. Container uids 1 through 65536 map to the private subuid block.
 The consequence worth sitting with: a process that is root *inside* the
 container has, outside it, only the privileges of the ordinary host user
@@ -336,7 +336,7 @@ the container's pid and mount namespaces on top:
 
 {% include excalidraw.html
    file="34-ns-debugging-map"
-   alt="A host band above a podman-user-namespace band. podman exec reaches the container PID 1 directly from inside the container runtime. podman unshare nsenter first joins podman's own user namespace, then nsenter --target --pid --mount reaches the same PID 1 from there -- both confirming Name: app and /proc/1/exe resolving to /usr/local/bin/app. A dashed, failing arrow shows plain nsenter without podman unshare returning EPERM: reassociate to namespaces failed. Below, real evidence boxes show the subuid mapping rsedor:524288:65536 and a live zombie scan of /proc/[0-9]*/stat reporting zero."
+   alt="A host band above a podman-user-namespace band. podman exec reaches the container PID 1 directly from inside the container runtime. podman unshare nsenter first joins podman's own user namespace, then nsenter --target --pid --mount reaches the same PID 1 from there -- both confirming Name: app and /proc/1/exe resolving to /usr/local/bin/app. A dashed, failing arrow shows plain nsenter without podman unshare returning EPERM: reassociate to namespaces failed. Below, real evidence boxes show the subuid mapping user:524288:65536 and a live zombie scan of /proc/[0-9]*/stat reporting zero."
    caption="Figure 34.3 -- podman exec and podman unshare nsenter reach the same container PID 1 from two different starting namespaces; plain nsenter cannot" %}
 
 A live `gdb` attach is the surprise worth reporting plainly: because
@@ -406,7 +406,7 @@ ladder -- container versus full KVM guest versus bare host.
 ```
 
 Against podman 5.8.4 rootless on this host (Fedora Linux 44, kernel
-`7.1.3-200.fc44.x86_64`, 16 cpus), a fresh build/run/teardown of all three
+`7.1`, 16 cpus), a fresh build/run/teardown of all three
 languages:
 
 ```
@@ -503,7 +503,7 @@ containers, and a real `systems-target` guest.
 
 <p><span class="status status--verified">verified</span> -- every
 transcript and number above was produced this session on this host
-(Fedora Linux 44, kernel <code>7.1.3-200.fc44.x86_64</code>, 16 cpus,
+(Fedora Linux 44, kernel <code>7.1</code>, 16 cpus,
 podman 5.8.4 rootless): <code>python3 scripts/test-all-examples.py --only
 34-our-programs-in-containers --mode local</code> printed
 <code>34-our-programs-in-containers  PASS  PASS  PASS</code> (3 passed, 0

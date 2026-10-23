@@ -440,7 +440,7 @@ a lock is a userspace atomic that only touches the kernel when it must block.
 
 <p><span class="status status--verified">verified</span> — every number and
 output excerpt above was produced on the Fedora 44 reference host (kernel
-7.1.3-200.fc44, strace 7.1) this session: the runner printed
+7.1, strace 7.1) this session: the runner printed
 <code>24-time-timers-deadlines  PASS  PASS  PASS</code> (3 passed, 0 failed, 0
 skipped), and the orchestrator was re-run to confirm the timing scenario is not
 flaky. <code>clockprobe</code> printed <code>res=1ns</code> with

@@ -407,7 +407,7 @@ of `fwatch`, where the question stops being "who runs the code" and becomes
 ---
 
 <p><span class="status status--verified">verified</span> — every number above
-comes from runs on the Fedora 44 reference host (kernel 7.1.3-200.fc44) this
+comes from runs on the Fedora 44 reference host (kernel 7.1) this
 session: the runner reported <code>06-concurrency-three-ways  PASS  PASS
 PASS</code> (3 passed, 0 failed, Go built with <code>-race</code>); the
 fixture outputs of the three binaries were <code>cmp</code>-identical,

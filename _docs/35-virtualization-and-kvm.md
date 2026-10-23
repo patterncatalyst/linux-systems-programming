@@ -324,7 +324,7 @@ or the state and the code that thinks it owns the state quietly drift apart.
 ## Build, run, observe
 
 Three environments, one binary. First, the bare host (Fedora 44, kernel
-7.1.3-200.fc44, Intel i7-11800H, `Virtualization: VT-x` from `lscpu`):
+7.1, Intel 8-core/16-thread laptop CPU, `Virtualization: VT-x` from `lscpu`):
 
 ```bash
 [host]$ cd examples/35-virtualization-and-kvm
@@ -464,7 +464,7 @@ hand, one `overheadbench` run at a time.
 
 <p><span class="status status--verified">verified</span> — every transcript
 and number above was produced this session. Host: Fedora 44, kernel
-7.1.3-200.fc44.x86_64, Intel i7-11800H, <code>lscpu</code> reporting
+7.1, Intel 8-core/16-thread laptop CPU, <code>lscpu</code> reporting
 <code>Virtualization: VT-x</code>, <code>lsmod</code> showing
 <code>kvm_intel</code>/<code>kvm</code>/<code>irqbypass</code> loaded;
 <code>python3 scripts/test-all-examples.py --only 35-virtualization-and-kvm

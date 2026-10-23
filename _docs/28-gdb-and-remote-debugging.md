@@ -528,7 +528,7 @@ above except the two spans marked <span class="status
 status--unverified">unverified</span> (the `systems-target` gdbserver/target
 remote session, the CLion remote-debug configuration, and delve's
 `goroutines`/`goroutine <n> bt`) was produced on the Fedora 44 reference host
-(kernel 7.1.3-200.fc44, gdb 17.2, gcc 16.1.1, go1.26.5, rustc 1.97.1, readelf/
+(kernel 7.1, gdb 17.2, gcc 16.1.1, go1.26.5, rustc 1.97.1, readelf/
 objdump 2.46.1) this session: <code>app crash</code> under
 <code>ulimit -c unlimited</code> exited 139 and <code>coredumpctl</code>
 recorded and extracted a real core; a scripted

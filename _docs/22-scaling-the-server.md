@@ -418,7 +418,7 @@ between two VMs on one L2 segment.
 
 <p><span class="status status--verified">verified</span> — every number and
 output excerpt above was produced on the Fedora 44 reference host (kernel
-7.1.3-200.fc44, GCC 16.1.1, strace 7.1, 16 CPUs) this session: the runner printed
+7.1, GCC 16.1.1, strace 7.1, 16 CPUs) this session: the runner printed
 <code>22-scaling-the-server  PASS  PASS  PASS</code> (3 passed, 0 failed, 0
 skipped; verify.lua 24 checks per language, 72 total); the hand-driven epoll
 session produced the exact <code>alice: hello, chatterd</code> echo to both

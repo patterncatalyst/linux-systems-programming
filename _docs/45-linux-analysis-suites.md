@@ -306,12 +306,12 @@ run() {
 ```
 
 This session's real transcript, on the Fedora 44 host (kernel
-`7.1.4-204.fc44`, podman 5.8.4 rootless):
+`7.1`, podman 5.8.4 rootless):
 
 ```console
 --- pcp: suite summary (openmetrics/podman should both be listed) ---
 Performance Co-Pilot configuration on 9fb541ff035b:
- platform: Linux 9fb541ff035b 7.1.4-204.fc44.x86_64 ...
+ platform: Linux 9fb541ff035b 7.1 ...
  pmcd: Version 7.1.5-3, 11 agents
  pmda: root pmcd proc pmproxy xfs podman linux mmv kvm jbd2 openmetrics
 --- pminfo -f: a real scraped openmetrics value (file:// source, no network) ---
@@ -479,7 +479,7 @@ without ever giving it a chapter of its own.
 above except the span marked <span class="status
 status--unverified">unverified</span> (Cockpit's Overview/Podman/Logs
 web-UI panels, described but not browser-automated) was produced this
-session. On the Fedora 44 host (kernel <code>7.1.4-204.fc44</code>, podman
+session. On the Fedora 44 host (kernel <code>7.1</code>, podman
 5.8.4 rootless): <code>./demo.sh cpp run</code> produced the exact
 transcript quoted above, including <code>pmcd: Version 7.1.5-3, 11
 agents</code>, <code>openmetrics.lsp45.lsp45_answer value 42</code>, and

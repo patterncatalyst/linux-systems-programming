@@ -195,4 +195,4 @@ containers rather than trusting exit codes:
   checks passed or not.
 
 All three languages pass all 16 checks on the reference host (Fedora 44,
-kernel 7.1.3-200.fc44, podman 5.8.4 rootless).
+kernel 7.1, podman 5.8.4 rootless).

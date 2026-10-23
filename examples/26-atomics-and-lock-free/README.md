@@ -134,5 +134,5 @@ time and asserts, per language:
 5. no arguments prints `usage: spscring --capacity K --items N [--pad on|off]`
    on stderr and exits 2.
 
-Verified on the Fedora 44 reference host (kernel 7.1.3-200.fc44): all three
+Verified on the Fedora 44 reference host (kernel 7.1): all three
 languages PASS all 11 checks, Go under the race detector.

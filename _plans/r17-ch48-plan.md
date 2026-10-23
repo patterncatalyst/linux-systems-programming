@@ -120,7 +120,7 @@ Merge-safe either way; verify.lua identical; footer states which optional tools 
 - Concurrency lens = tooling concurrency: cargo build-graph `-j` + release codegen-units, libtest's
   thread-per-test model (`--test-threads=1`, captured), and nextest's process-per-test isolation.
 
-## Gate matrix (host run, 2026-08-04 → 08-07, Fedora 44, kernel 7.1.5-201.fc44, offline)
+## Gate matrix (host run, 2026-08-04 → 08-07, Fedora 44, kernel 7.1, offline)
 | gate | result |
 | --- | --- |
 | `lua verify.lua` (LSP_LANG=rust) | **PASS 20 / FAIL 0**, 4 informational SKIP (E-H) |

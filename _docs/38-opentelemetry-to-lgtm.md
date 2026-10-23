@@ -433,7 +433,7 @@ make most microbenchmarks quietly measure the wrong thing.
 ---
 
 <p><span class="status status--verified">verified</span> — on the Fedora 44
-reference host (kernel 7.1.3-200.fc44) this session, with the <code>lsp-lgtm</code>
+reference host (kernel 7.1) this session, with the <code>lsp-lgtm</code>
 LGTM stack running (OTLP on <code>:4318</code>, Grafana on <code>:3000</code>):
 <code>python3 scripts/test-all-examples.py --only 38-opentelemetry-to-lgtm
 --mode local</code> printed <code>PASS PASS PASS</code> (3 passed, 0 failed;

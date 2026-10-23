@@ -31,7 +31,7 @@ two numbers in the compendium are strictly comparable. ch56 runs **one workload*
 **all six** and measures them with **the same two instruments**, which is the only way the
 comparison is a comparison rather than a table of quotations.
 
-## Host audit (2026-08-22, Fedora 44, kernel 7.1.8-200.fc44)
+## Host audit (2026-08-22, Fedora 44, kernel 7.1)
 
 GCC 16.1.1, clang 22.1.8, CMake 4.3.0, Ninja 1.13.0, Conan 2.30.0, Lua 5.4.8,
 Boost 1.90.0 (`boost-devel-1.90.0-7.fc44`), 16 logical / 8 physical CPUs.

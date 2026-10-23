@@ -731,7 +731,7 @@ The first is Landlock's enforced ABI. `fwatch --sandbox` never hardcodes a
 version — it asks the running kernel with
 `landlock_create_ruleset(NULL, 0, LANDLOCK_CREATE_RULESET_VERSION)`, the
 exact probe Chapter 33 established, and prints whatever comes back. On the
-Fedora 44 reference host (kernel `7.1.3-200.fc44`), where this chapter's
+Fedora 44 reference host (kernel `7.1`), where this chapter's
 loopback `verify.lua` runs, that probe returns **ABI 9**. On the
 `systems-target` lab guest (kernel `6.19.10-300.fc44`) this session, the
 identical code, the identical syscall, returned **ABI 7**. That is not a
@@ -799,7 +799,7 @@ those chapters lean on was proven here, running for real.
 ---
 
 <p><span class="status status--verified">verified</span> — on the Fedora 44
-reference host (kernel <code>7.1.3-200.fc44</code>) and the two lab guests
+reference host (kernel <code>7.1</code>) and the two lab guests
 <code>systems-target</code> (192.168.124.7) / <code>systems-peer</code>
 (192.168.124.95, kernel <code>6.19.10-300.fc44</code>) this session:
 <code>python3 scripts/test-all-examples.py --only 41-capstone-fleet --mode

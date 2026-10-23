@@ -631,7 +631,7 @@ same USE method, two structurally opposite ways of answering it.
 ---
 
 <p><span class="status status--verified">verified</span> — on the Fedora 44
-reference host (kernel 7.1.3-200.fc44, 16 CPUs, ~62 GiB RAM) this session:
+reference host (kernel 7.1, 16 CPUs, ~62 GiB RAM) this session:
 <code>python3 scripts/test-all-examples.py --only 36-proc-sys-and-the-agent
 --mode local</code> printed <code>PASS PASS PASS</code> (3 passed, 0 failed;
 <code>verify.lua</code> reported <code>PASS 32 / FAIL 0</code> for each of

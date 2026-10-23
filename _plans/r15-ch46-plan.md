@@ -93,6 +93,6 @@ asides — never gated. Should merge on standard host-gate + CI-green, no mixed 
 ## Gate (host run, 2026-08-01/02)
 - `verify.lua` PASS 20/0 · `validate.py` → validate: OK · `test-all-examples --only 46-cpp-toolbox` PASS
 - Verification CLEAN (local, no VM). Only ccache/mold shown-not-gated (absent on host); GCC-vs-clang diagnostic asides framed as illustrative live-session, not gated.
-- Reference toolchain: GCC 16.1.1, clang 22.1.8, CMake 4.3.0, gdb 17.2, Conan 2.30.0, kernel 7.1.4-204.fc44.
+- Reference toolchain: GCC 16.1.1, clang 22.1.8, CMake 4.3.0, gdb 17.2, Conan 2.30.0, kernel 7.1.
 
 ## Merge: AUTONOMOUS (user authorized for r15).

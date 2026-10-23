@@ -148,5 +148,5 @@ time and asserts, per language (25 checks each):
 The `--buggy` race is a sanitizer/`-race` chapter demo and is deliberately
 outside the passing verify.
 
-Verified on the Fedora 44 reference host (kernel 7.1.3-200.fc44, GCC 16.1.1,
+Verified on the Fedora 44 reference host (kernel 7.1, GCC 16.1.1,
 go1.26.5, rustc 1.97.1): all three languages PASS 25/25, Go under `-race`.

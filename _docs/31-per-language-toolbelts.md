@@ -521,7 +521,7 @@ tracing tools this book has deferred until now.
 
 <p><span class="status status--verified">verified</span> — every command,
 number, and transcript above was run this session on the Fedora 44 reference
-host (kernel 7.1.3-200.fc44, GCC 16.1.1, clang 22.1.8, go1.26.5, rustc
+host (kernel 7.1, GCC 16.1.1, clang 22.1.8, go1.26.5, rustc
 1.97.1, perf 7.1.3, gdb 17.2) against the binaries in
 <code>examples/31-per-language-toolbelts/</code>. The plain hand runs
 printed <code>result=216816</code> (hot) and <code>result=5000</code> (alloc)

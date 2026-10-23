@@ -420,8 +420,8 @@ supervisor pid 2622904 and `pmctl` pid 2623753:
 
 ```console
 [host]$ ls -l /proc/2622904/fd | grep pmon.log; ls -l /proc/2623753/fd | grep pmon.log
-lrwx------ 1 rsedor rsedor 64 Jul 18 23:57 3 -> /tmp/p19.t9j0/pmon.log
-lrwx------ 1 rsedor rsedor 64 Jul 18 23:58 4 -> /tmp/p19.t9j0/pmon.log
+lrwx------ 1 user user 64 Jul 18 23:57 3 -> /tmp/p19.t9j0/pmon.log
+lrwx------ 1 user user 64 Jul 18 23:58 4 -> /tmp/p19.t9j0/pmon.log
 [host]$ cat /proc/2622904/fdinfo/3 /proc/2623753/fdinfo/4
 pos:	47
 flags:	02102002

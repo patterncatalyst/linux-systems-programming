@@ -508,7 +508,7 @@ file descriptors sent across process boundaries.
 
 <p><span class="status status--verified">verified</span> — every number and
 output excerpt above was reproduced on the Fedora 44 reference host (kernel
-7.1.3-200.fc44) this session: the runner printed
+7.1) this session: the runner printed
 <code>18-pipes-fifos-splice&nbsp;&nbsp;PASS&nbsp;&nbsp;PASS&nbsp;&nbsp;PASS</code>
 (3 passed, 0 failed, 0 skipped); the F_GETPIPE_SZ probe printed capacity
 65536, PIPE_BUF 4096, and the 1→4096 rounding live; the supervise run

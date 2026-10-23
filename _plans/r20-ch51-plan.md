@@ -24,7 +24,7 @@ at all* when it does not, and both halves are measurable with a syscall counter.
   `timeout` (exit 124) with every thread showing `wchan=futex_do_wait` in procfs.
 - **D3 — Autonomous through PR; the user merges.**
 
-## Host audit (run 2026-08-17, Fedora 44, kernel 7.1.5-201.fc44, glibc 2.43)
+## Host audit (run 2026-08-17, Fedora 44, kernel 7.1, glibc 2.43)
 
 Measured with `strace -f -c -e trace=futex`, not inferred:
 

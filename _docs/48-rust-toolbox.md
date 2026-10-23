@@ -80,7 +80,7 @@ host whose global default is `stable` and which also has `nightly` and
 ```console
 $ rustup show
 Default host: x86_64-unknown-linux-gnu
-rustup home:  /home/rsedor/.rustup
+rustup home:  ~/.rustup
 
 installed toolchains
 --------------------
@@ -92,7 +92,7 @@ nightly-x86_64-unknown-linux-gnu
 active toolchain
 ----------------
 name: 1.97.1-x86_64-unknown-linux-gnu
-active because: overridden by '/home/rsedor/Dev/linux-systems-programming/examples/48-rust-toolbox/rust/rust-toolchain.toml'
+active because: overridden by '<repo>/examples/48-rust-toolbox/rust/rust-toolchain.toml'
 installed targets:
   x86_64-unknown-linux-gnu
 ```
@@ -183,7 +183,7 @@ There is no `[dependencies]`. The crate is zero-dependency on purpose, and
 
 ```console
 $ cargo tree --offline
-toolbox v0.1.0 (/home/rsedor/Dev/linux-systems-programming/examples/48-rust-toolbox/rust)
+toolbox v0.1.0 (<repo>/examples/48-rust-toolbox/rust)
 ```
 
 One node. `Cargo.lock` holds exactly one package — itself. That is not
@@ -315,7 +315,7 @@ No output, exit 0. The loud half, run on the same host in the same session:
 
 ```console
 $ rustfmt --edition 2024 --check fixtures/misformatted.rs
-Diff in /home/rsedor/Dev/linux-systems-programming/examples/48-rust-toolbox/rust/fixtures/misformatted.rs:10:
+Diff in <repo>/examples/48-rust-toolbox/rust/fixtures/misformatted.rs:10:
  // Do not "fix" the formatting below. The wrong spacing, the 4-into-2 indent,
  // the missing trailing comma, and the crammed `if` are the assertion.
 
@@ -391,7 +391,7 @@ Clean first:
 
 ```console
 $ cargo clippy --offline --all-targets -- -D warnings
-    Checking toolbox v0.1.0 (/home/rsedor/Dev/linux-systems-programming/examples/48-rust-toolbox/rust)
+    Checking toolbox v0.1.0 (<repo>/examples/48-rust-toolbox/rust)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
 ```
 
@@ -405,7 +405,7 @@ Now the same command with the feature on:
 
 ```console
 $ cargo clippy --offline --features lintbait --all-targets -- -D warnings
-    Checking toolbox v0.1.0 (/home/rsedor/Dev/linux-systems-programming/examples/48-rust-toolbox/rust)
+    Checking toolbox v0.1.0 (<repo>/examples/48-rust-toolbox/rust)
 error: unneeded `return` statement
   --> src/lintbait.rs:13:5
    |
@@ -481,7 +481,7 @@ made `pub` for testing's sake.
 
 ```console
 $ cargo test --offline
-   Compiling toolbox v0.1.0 (/home/rsedor/Dev/linux-systems-programming/examples/48-rust-toolbox/rust)
+   Compiling toolbox v0.1.0 (<repo>/examples/48-rust-toolbox/rust)
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s
      Running unittests src/main.rs (target/debug/deps/toolbox-6b13b413a4fa8296)
 
@@ -999,7 +999,7 @@ that network half: show it, name the durable identifier, never gate it.
 ---
 
 <p><span class="status status--verified">verified</span> — on the Fedora 44
-reference host this session (kernel 7.1.5-201.fc44, rustc/cargo 1.97.1 via
+reference host this session (kernel 7.1, rustc/cargo 1.97.1 via
 rustup, clippy 0.1.97, rustfmt 1.9.0-stable, offline, no network access
 used): <code>LSP_LANG=rust REPO_ROOT=$(cd ../.. && pwd) lua verify.lua</code>
 reported <code>PASS 20 / FAIL 0</code>, and

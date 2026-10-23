@@ -49,8 +49,8 @@ a time. It uses `scripts/lib/checks.lua` to run `./demo.sh $LSP_LANG run` and
 asserts the output matches `pid %d+ on Linux`. Exit 0 = pass, 1 = fail,
 77 = skip.
 
-Verified on the Fedora 44 reference host (kernel 7.1.3-200.fc44): all three
-languages PASS and print `pid <PID> on Linux 7.1.3-200.fc44.x86_64 (x86_64)`.
+Verified on the Fedora 44 reference host (kernel 7.1): all three
+languages PASS and print `pid <PID> on Linux 7.1 (x86_64)`.
 
 ## Mapping to a chapter
 

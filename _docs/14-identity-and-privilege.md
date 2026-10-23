@@ -88,9 +88,9 @@ create: the umask. A `creat`/`open(O_CREAT)` mode is filtered as
 [host]$ umask
 022
 [host]$ touch umask-demo.txt && ls -l umask-demo.txt
--rw-r--r-- 1 rsedor rsedor 0 Jul 18 23:56 umask-demo.txt
+-rw-r--r-- 1 user user 0 Jul 18 23:56 umask-demo.txt
 [host]$ (umask 077 && touch umask-demo-077.txt && ls -l umask-demo-077.txt)
--rw------- 1 rsedor rsedor 0 Jul 18 23:56 umask-demo-077.txt
+-rw------- 1 user user 0 Jul 18 23:56 umask-demo-077.txt
 ```
 
 Same `touch`, same requested 0666: umask 022 clears group/other write
