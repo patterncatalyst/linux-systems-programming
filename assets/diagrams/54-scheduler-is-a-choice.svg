@@ -12,7 +12,7 @@
 <text x="296.0" y="166.5" font-size="11.5" fill="#555555" text-anchor="middle">distinct_tids = 1</text>
 <rect x="56" y="210" width="480" height="76" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
 <text x="296.0" y="246.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">ch49&#x27;s vocabulary: 16 tasks in flight,</text>
-<text x="296.0" y="263.0" font-size="11.5" fill="#555555" text-anchor="middle">one CPU occupied — concurrent, NOT parallel</text>
+<text x="296.0" y="263.0" font-size="11.5" fill="#555555" text-anchor="middle">one CPU occupied: concurrent, NOT parallel</text>
 <rect x="56" y="304" width="480" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
 <text x="296.0" y="332.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">and that is a legitimate choice: no migration means</text>
 <text x="296.0" y="349.0" font-size="11.5" fill="#555555" text-anchor="middle">no cross-thread synchronisation to reason about</text>
@@ -21,16 +21,16 @@
 <text x="864.0" y="151.5" font-size="11.5" fill="#555555" text-anchor="middle">4 threads pull from it; a fiber can resume elsewhere</text>
 <text x="864.0" y="166.5" font-size="11.5" fill="#555555" text-anchor="middle">distinct_tids = 4</text>
 <rect x="616" y="210" width="496" height="76" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
-<text x="864.0" y="246.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">concurrent AND parallel — the bottom-right</text>
+<text x="864.0" y="246.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">concurrent AND parallel: the bottom-right</text>
 <text x="864.0" y="263.0" font-size="11.5" fill="#555555" text-anchor="middle">cell of ch49&#x27;s grid, reached by choosing it</text>
 <rect x="616" y="304" width="496" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
 <text x="864.0" y="332.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">the price: your fiber&#x27;s data is now touched by</text>
 <text x="864.0" y="349.0" font-size="11.5" fill="#555555" text-anchor="middle">several threads, and you own that problem</text>
 <rect x="236" y="414" width="690" height="54" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
 <text x="581.0" y="439.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">boost::fibers::use_scheduling_algorithm&lt;algo::shared_work&gt;();</text>
-<text x="581.0" y="456.0" font-size="11.5" fill="#555555" text-anchor="middle">one line — and it is yours to write, not a runtime&#x27;s to decide (contrast ch44&#x27;s Go)</text>
+<text x="581.0" y="456.0" font-size="11.5" fill="#555555" text-anchor="middle">one line: and it is yours to write, not a runtime&#x27;s to decide (contrast ch44&#x27;s Go)</text>
 <path d="M536,144 L616,144" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
-<text x="40" y="506" font-size="11" fill="#1d1d1d" text-anchor="start">Both columns are real runs, tids collected with gettid() — the same kernel task id ch50 established. shared_work reported 4 of 4 on five consecutive runs.</text>
+<text x="40" y="506" font-size="11" fill="#1d1d1d" text-anchor="start">Both columns are real runs, tids collected with gettid(): the same kernel task id ch50 established. shared_work reported 4 of 4 on five consecutive runs.</text>
 <text x="40" y="530" font-size="11" fill="#1d1d1d" text-anchor="start">Go&#x27;s runtime makes this decision for you and mostly will not be argued with (ch44). Boost.Fiber makes you choose, which is more work and more control.</text>
-<text x="40" y="554" font-size="11" fill="#1d1d1d" text-anchor="start">verify.lua gates round_robin at exactly 1 tid and shared_work at more than 1 — the sign, never the magnitude, since the count is scheduler-dependent.</text>
+<text x="40" y="554" font-size="11" fill="#1d1d1d" text-anchor="start">verify.lua gates round_robin at exactly 1 tid and shared_work at more than 1: the sign, never the magnitude, since the count is scheduler-dependent.</text>
 </svg>

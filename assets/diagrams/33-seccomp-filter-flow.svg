@@ -3,13 +3,13 @@
 <rect x="20" y="30" width="900" height="90" rx="12" fill="#eef4fb" stroke="#ddd"/>
 <text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">userspace: fwatch watch loop</text>
 <rect x="20" y="140" width="900" height="200" rx="12" fill="#fafafa" stroke="#ddd"/>
-<text x="32" y="160" font-size="12" font-weight="700" fill="#1d1d1d">kernel: seccomp-bpf filter — one cBPF program, RUN AGAIN on every syscall entry</text>
+<text x="32" y="160" font-size="12" font-weight="700" fill="#1d1d1d">kernel: seccomp-bpf filter: one cBPF program, RUN AGAIN on every syscall entry</text>
 <rect x="50" y="65" width="380" height="45" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="240.0" y="85.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">syscall(2) issued</text>
 <text x="240.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">e.g. epoll_wait, read, socket</text>
 <rect x="500" y="65" width="400" height="45" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
 <text x="700.0" y="85.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">this IS classic BPF (cBPF)</text>
-<text x="700.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">you write the filter — Part 8&#x27;s bpftrace observes; this decides</text>
+<text x="700.0" y="102.5" font-size="11.5" fill="#555555" text-anchor="middle">you write the filter: Part 8&#x27;s bpftrace observes; this decides</text>
 <rect x="50" y="175" width="230" height="55" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5"/>
 <text x="165.0" y="200.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">BPF_LD|BPF_W|BPF_ABS</text>
 <text x="165.0" y="217.5" font-size="11.5" fill="#555555" text-anchor="middle">load nr + arch offset</text>
@@ -23,10 +23,10 @@
 <text x="460.0" y="283.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">no match → default action</text>
 <text x="460.0" y="300.0" font-size="11.5" fill="#555555" text-anchor="middle">(seccomp_init&#x27;s action arg)</text>
 <rect x="60" y="340" width="380" height="55" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
-<text x="250.0" y="365.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">SCMP_ACT_ERRNO(EPERM) — fwatch&#x27;s choice</text>
+<text x="250.0" y="365.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">SCMP_ACT_ERRNO(EPERM): fwatch&#x27;s choice</text>
 <text x="250.0" y="382.5" font-size="11.5" fill="#555555" text-anchor="middle">socket(2) = -1 EPERM; process keeps running</text>
 <rect x="500" y="340" width="380" height="55" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
-<text x="690.0" y="365.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">SCMP_ACT_KILL_PROCESS — not used by fwatch</text>
+<text x="690.0" y="365.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">SCMP_ACT_KILL_PROCESS: not used by fwatch</text>
 <text x="690.0" y="382.5" font-size="11.5" fill="#555555" text-anchor="middle">getpid() denied → +++ killed by SIGSYS +++</text>
 <path d="M240,110 L240,175" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <text x="246.0" y="136.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">traps into kernel</text>
@@ -47,7 +47,7 @@
 <path d="M520,310 L690,340" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
 <text x="611.0" y="319.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">alternative action</text>
 <text x="611.0" y="319.0" font-size="11" fill="#555" text-anchor="middle">alternative action</text>
-<text x="470" y="20" font-size="11" fill="#1d1d1d" text-anchor="middle" font-weight="700">Figure 33.1 — a syscall&#x27;s path through fwatch&#x27;s seccomp-bpf filter</text>
+<text x="470" y="20" font-size="11" fill="#1d1d1d" text-anchor="middle" font-weight="700">Figure 33.1: a syscall&#x27;s path through fwatch&#x27;s seccomp-bpf filter</text>
 <text x="30" y="420" font-size="11" fill="#1d1d1d" text-anchor="start">Real: cpp/rust filters admit 26 syscalls, go&#x27;s 39 (goroutine scheduler needs futex/clone/sigaltstack too).</text>
 <text x="30" y="440" font-size="11" fill="#1d1d1d" text-anchor="start">Guest (systems-target, kernel 6.19.10): socket(AF_INET,...) = -1 EPERM under fwatch&#x27;s filter; a separate ACT_KILL_PROCESS probe on the same guest hit SIGSYS on getpid().</text>
 </svg>

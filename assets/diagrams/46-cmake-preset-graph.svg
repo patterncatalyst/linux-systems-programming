@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
 <rect x="20" y="20" width="960" height="460" rx="12" fill="#fafafa" stroke="#ddd"/>
-<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">CMakePresets.json — configure presets (inherits _base)</text>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">CMakePresets.json: configure presets (inherits _base)</text>
 <rect x="1000" y="20" width="180" height="260" rx="12" fill="#fafafa" stroke="#ddd"/>
 <text x="1012" y="40" font-size="12" font-weight="700" fill="#1d1d1d">Conan sub-target</text>
 <rect x="380" y="70" width="220" height="60" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
@@ -44,8 +44,8 @@
 <text x="718" y="286" font-size="11" fill="#1d1d1d" text-anchor="middle">verify: parity gate ①</text>
 <text x="870" y="286" font-size="11" fill="#1d1d1d" text-anchor="middle">clang diagnostics (shown)</text>
 <text x="40" y="440" font-size="12" fill="#1d1d1d" text-anchor="start">① release + release-clang both feed the byte-identical</text>
-<text x="40" y="456" font-size="12" fill="#1d1d1d" text-anchor="start">parity gate (Fig 46.2) — GCC presets vs clang twins are color-coded above.</text>
-<text x="1015" y="170" font-size="11" fill="#1d1d1d" text-anchor="start">isolated — no inherits</text>
+<text x="40" y="456" font-size="12" fill="#1d1d1d" text-anchor="start">parity gate (Fig 46.2): GCC presets vs clang twins are color-coded above.</text>
+<text x="1015" y="170" font-size="11" fill="#1d1d1d" text-anchor="start">isolated: no inherits</text>
 <text x="1015" y="186" font-size="11" fill="#1d1d1d" text-anchor="start">keeps CI&#x27;s Conan-less</text>
 <text x="1015" y="202" font-size="11" fill="#1d1d1d" text-anchor="start">build-smoke green</text>
 </svg>
