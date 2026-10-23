@@ -365,7 +365,20 @@ def write_junit(path: str, selected: list[dict], results: dict) -> None:
     ET.ElementTree(suite).write(path, encoding="utf-8", xml_declaration=True)
 
 
-def main(argv: list[str]) -> int:
+def scrub_logs() -> None:
+    """Strip machine identifiers (kernel build, paths, account) from the run logs.
+
+    Chapter transcripts are pasted from these logs, so scrub them before anyone
+    copies a line (see CLAUDE.md, "Publishing rule").
+    """
+    tool = REPO_ROOT / "scripts" / "host_ids.py"
+    if tool.is_file() and LOG_DIR.is_dir():
+        subprocess.run([sys.executable, str(tool), "scrub", "--repo",
+                        str(REPO_ROOT), str(LOG_DIR)],
+                       stdout=subprocess.DEVNULL, check=False)
+
+
+def run(argv: list[str]) -> int:
     args = parse_args(argv)
     try:
         examples = load_manifest()
@@ -443,6 +456,13 @@ def main(argv: list[str]) -> int:
         write_junit(args.junit, selected, results)
         print(f"junit report: {args.junit}")
     return 1 if failed else 0
+
+
+def main(argv: list[str]) -> int:
+    try:
+        return run(argv)
+    finally:
+        scrub_logs()  # also on an exception or Ctrl-C
 
 
 if __name__ == "__main__":

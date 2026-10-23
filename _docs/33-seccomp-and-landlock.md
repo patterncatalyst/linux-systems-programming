@@ -486,7 +486,7 @@ start being something a container runtime installs *for* it.
 
 <p><span class="status status--verified">verified</span> — every transcript
 and number above was produced this session, reproduced on both the plain
-host (kernel <code>7.1.x86_64</code>, libseccomp 2.6.0, GCC
+host (kernel <code>7.1</code>, libseccomp 2.6.0, GCC
 16.1.1, Go 1.26.5, Rust/Cargo 1.97.1) and the <code>systems-target</code>
 guest (kernel <code>6.19.10-300.fc44.x86_64</code>): the runner printed
 <code>33-seccomp-and-landlock  PASS  PASS  PASS</code> (3 passed, 0 failed,

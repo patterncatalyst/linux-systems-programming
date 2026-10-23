@@ -503,7 +503,7 @@ containers, and a real `systems-target` guest.
 
 <p><span class="status status--verified">verified</span> -- every
 transcript and number above was produced this session on this host
-(Fedora Linux 44, kernel <code>7.1.x86_64</code>, 16 cpus,
+(Fedora Linux 44, kernel <code>7.1</code>, 16 cpus,
 podman 5.8.4 rootless): <code>python3 scripts/test-all-examples.py --only
 34-our-programs-in-containers --mode local</code> printed
 <code>34-our-programs-in-containers  PASS  PASS  PASS</code> (3 passed, 0

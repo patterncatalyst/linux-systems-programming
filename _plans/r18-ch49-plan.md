@@ -15,7 +15,7 @@ Boost.Asio → capstone comparison) all lean on it. See "ch55 scope" at the end 
 
 ## Host audit (run 2026-08-07, Fedora 44, kernel 7.1)
 - GCC **16.1.1**, clang **22.1.8**, CMake **4.3.0**, Ninja 1.13.0, Conan **2.30.0**.
-- CPU: 16 logical / 8 physical cores, 2 threads-per-core, **1 NUMA node** (Intel 8-core/16-thread laptop CPU).
+- CPU: 16 logical / 8 physical cores, 2 threads-per-core, **1 NUMA node**.
 - Boost **1.90** system-installed (`boost-devel`), incl. `libboost_{context,fiber,thread}.so` →
   ch52/ch54 have their libraries already; **no Conan fetch needed for Boost on this host**.
 - `libtbb.so.12` runtime present but **`tbb-devel` ABSENT** → `std::execution::par` (C++17 parallel

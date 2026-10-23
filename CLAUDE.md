@@ -87,3 +87,27 @@ Ruby), examples in `examples/NN-slug/{cpp,go,rust}/`, chapters in
   rename it without fixing both links. **Internal working plans and capture
   dumps must set `published: false` in their front matter** so they stay in git
   for resumability without shipping to the site.
+
+## Publishing rule: nothing identifies the machine or its owner
+
+The repo is public, so no tracked file may name the development machine, its owner
+or anything that helps locate or attack it later:
+
+- No absolute home-directory path (under /home or /Users), no account name, no
+  hostname. Write `<repo>/...` or `~/...`. The lab guests' own `fedora` account and
+  its home directory are book content, not the host's.
+- No laptop model (DMI `product_name` is `"redacted"`), no CPU model or model number.
+  The CPU is a class ("Intel 8-core/16-thread laptop CPU"); prose names its
+  properties (SMT, cache sizes, frequency driver), never the part.
+- No host kernel build number or build date: give `major.minor` (for example
+  `7.1`) and the preempt model. The lab guests' pinned kernel (`systems-target`) is
+  book content and is allowed by value (`allow_match`) in `.host-scrub.toml`.
+- No `/etc/machine-id`, DMI serial or UUID, host MAC or IP address (the lab guests' private libvirt
+  addresses are book content), `root=UUID=` or BOOT_IMAGE.
+- Generated output is scrubbed before it is committed: `python3 scripts/host_ids.py
+  scrub <dir>` on a results directory, `scripts/host_ids.py filter` on a captured
+  transcript. `scripts/test-all-examples.py` scrubs `build-logs/` after each run.
+- `python3 scripts/host_ids.py check` runs in CI (`host-ids` job) and fails the build
+  on a hit. Allow a legitimate hit by path and category (or by public value with
+  `allow_match`) in `.host-scrub.toml`; the file holds no host values (only public
+  guest values).
