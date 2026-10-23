@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 500" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
 <rect x="20" y="20" width="430" height="150" rx="12" fill="#eef4fb" stroke="#ddd"/>
-<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">process A — shmkv set (writer)</text>
+<text x="32" y="40" font-size="12" font-weight="700" fill="#1d1d1d">process A: shmkv set (writer)</text>
 <rect x="490" y="20" width="430" height="150" rx="12" fill="#eef4fb" stroke="#ddd"/>
-<text x="502" y="40" font-size="12" font-weight="700" fill="#1d1d1d">process B — shmkv get (reader)</text>
+<text x="502" y="40" font-size="12" font-weight="700" fill="#1d1d1d">process B: shmkv get (reader)</text>
 <rect x="20" y="210" width="900" height="130" rx="12" fill="#f4f4f4" stroke="#ddd"/>
-<text x="32" y="230" font-size="12" font-weight="700" fill="#1d1d1d">kernel — one page cache, shared by every mapper</text>
+<text x="32" y="230" font-size="12" font-weight="700" fill="#1d1d1d">kernel: one page cache, shared by every mapper</text>
 <rect x="20" y="380" width="900" height="100" rx="12" fill="#fafafa" stroke="#ddd"/>
 <text x="32" y="400" font-size="12" font-weight="700" fill="#1d1d1d">disk</text>
 <rect x="50" y="55" width="230" height="90" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
@@ -41,5 +41,5 @@
 <path d="M520,320 L520,400" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
 <text x="594.0" y="354.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">writeback, eventually</text>
 <text x="594.0" y="354.0" font-size="11" fill="#555" text-anchor="middle">writeback, eventually</text>
-<text x="50" y="360" font-size="11" fill="#555555" text-anchor="start">A&#x27;s store and B&#x27;s load meet in the same physical pages — no copy, no syscall between them</text>
+<text x="50" y="360" font-size="11" fill="#555555" text-anchor="start">A&#x27;s store and B&#x27;s load meet in the same physical pages: no copy, no syscall between them</text>
 </svg>

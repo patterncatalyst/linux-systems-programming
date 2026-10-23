@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 430" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
 <rect x="20" y="40" width="900" height="120" rx="12" fill="#eef4fb" stroke="#ddd"/>
-<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">goroutines (G) — one per connection, ~2 KB growable stacks</text>
+<text x="32" y="60" font-size="12" font-weight="700" fill="#1d1d1d">goroutines (G): one per connection, ~2 KB growable stacks</text>
 <rect x="20" y="185" width="900" height="105" rx="12" fill="#fafafa" stroke="#ddd"/>
-<text x="32" y="205" font-size="12" font-weight="700" fill="#1d1d1d">scheduler — GOMAXPROCS=16 logical processors (P), each bound to an OS thread (M)</text>
+<text x="32" y="205" font-size="12" font-weight="700" fill="#1d1d1d">scheduler: GOMAXPROCS=16 logical processors (P), each bound to an OS thread (M)</text>
 <rect x="20" y="315" width="900" height="90" rx="12" fill="#f4f4f4" stroke="#ddd"/>
-<text x="32" y="335" font-size="12" font-weight="700" fill="#1d1d1d">kernel — netpoller (epoll) and OS threads</text>
+<text x="32" y="335" font-size="12" font-weight="700" fill="#1d1d1d">kernel: netpoller (epoll) and OS threads</text>
 <rect x="45" y="72" width="78" height="56" rx="9" fill="#ffffff" stroke="#111111" stroke-width="1.5"/>
 <text x="84.0" y="98.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">G</text>
 <text x="84.0" y="115.0" font-size="11.5" fill="#555555" text-anchor="middle">conn 1</text>
@@ -31,7 +31,7 @@
 <text x="435.0" y="232.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">… P15</text>
 <text x="435.0" y="249.0" font-size="11.5" fill="#555555" text-anchor="middle">(= 16 cores)</text>
 <rect x="620" y="200" width="270" height="66" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
-<text x="755.0" y="231.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">netpoller — one epoll instance</text>
+<text x="755.0" y="231.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">netpoller: one epoll instance</text>
 <text x="755.0" y="248.0" font-size="11.5" fill="#555555" text-anchor="middle">epoll_wait for the whole runtime</text>
 <rect x="45" y="337" width="330" height="48" rx="9" fill="#ffffff" stroke="#111111" stroke-width="1.5"/>
 <text x="210.0" y="359.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">async preemption: runtime sends SIGURG to an M</text>
@@ -53,5 +53,5 @@
 <path d="M700,337 L540,132" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
 <text x="660.0" y="274.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">ready → runnable</text>
 <text x="660.0" y="274.5" font-size="11" fill="#b8650a" text-anchor="middle">ready → runnable</text>
-<text x="40" y="303" font-size="10" fill="#2f6db5" text-anchor="start">no rewrite for async: a goroutine already suspends on I/O the way a coroutine does — the runtime hid it since 2012</text>
+<text x="40" y="303" font-size="10" fill="#2f6db5" text-anchor="start">no rewrite for async: a goroutine already suspends on I/O the way a coroutine does: the runtime hid it since 2012</text>
 </svg>

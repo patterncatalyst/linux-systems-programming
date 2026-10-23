@@ -1650,13 +1650,13 @@
    "updated": 1,
    "link": null,
    "locked": false,
-   "text": "Numbers are plainly bounded by this host (idle 8-core/16-thread Fedora 44 box); rankings, not absolutes, are the takeaway.",
+   "text": "Numbers are bounded by this host (idle 8-core/16-thread Fedora 44 box); rankings, not absolutes, are the takeaway.",
    "fontSize": 11.5,
    "fontFamily": 1,
    "textAlign": "left",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "Numbers are plainly bounded by this host (idle 8-core/16-thread Fedora 44 box); rankings, not absolutes, are the takeaway.",
+   "originalText": "Numbers are bounded by this host (idle 8-core/16-thread Fedora 44 box); rankings, not absolutes, are the takeaway.",
    "lineHeight": 1.25,
    "baseline": 11.5
   }
