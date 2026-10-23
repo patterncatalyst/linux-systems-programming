@@ -2,7 +2,7 @@
 title: "Namespaces and cgroups"
 order: 32
 part: "Containers and Virtualization"
-description: "The eight Linux namespaces and cgroup v2's unified hierarchy as the two primitives every container runtime assembles from — unshare vs setns vs clone3, the pid-1 reparenting consequence, memory.max enforced by a real OOM kill, and the genuine ENOMEM Go hits calling unshare(CLONE_NEWPID) directly from a threaded runtime."
+description: "The eight Linux namespaces and cgroup v2's unified hierarchy as the two primitives every container runtime assembles from: unshare vs setns vs clone3, the pid-1 reparenting consequence, memory.max enforced by an OOM kill, and the ENOMEM Go hits calling unshare(CLONE_NEWPID) directly from a threaded runtime."
 duration: "55 minutes"
 ---
 
@@ -10,8 +10,8 @@ Every `pmon` version so far has supervised, signaled, and identified a
 child, but the child has always lived in the same world as its parent: same
 process-id space, same hostname, same view of every device and byte of
 RAM on the box. Real container runtimes give a process a *different*
-world — its own pid 1, its own hostname, and a hard ceiling on memory and
-CPU — without a hypervisor anywhere in sight. The one new idea this
+world: its own pid 1, its own hostname, and a hard ceiling on memory and
+CPU, without a hypervisor anywhere in sight. The one new idea this
 chapter teaches is that "container" is not a kernel object at all: it is
 two independent primitives, **namespaces** (what a process can *see*) and
 **cgroups** (what a process is *allowed to use*), wired together by
@@ -19,46 +19,46 @@ whatever userspace tool assembles them. `pmon containerize` is that tool,
 built by hand, with nothing between the syscalls and the terminal.
 
 The code is in `examples/32-namespaces-and-cgroups/`. This is a **VM
-example** — namespace and cgroup writes need real root and a real kernel,
+example**: namespace and cgroup writes need real root and a real kernel,
 so `./demo.sh <lang> run` deploys to `systems-target` when `TARGET` is
 set; the `README.md` there covers the CLI and the paired positive/negative
 verification in full.
 
 {% include excalidraw.html
    file="32-namespace-overview"
-   alt="Two columns, host and pmon containerize's PID-1 child, with eight namespace-type rows: PID, mount, UTS, network, time, IPC, user, cgroup. The first four rows are amber boxes with an arrow marked 'differs' between real /proc/&lt;pid&gt;/ns/* inode numbers — pid 4026531836 vs 4026532530, mount 4026531832 vs 4026532528, UTS 4026531838 vs 4026532529, network 4026531833 vs 4026532531 — read on systems-target. The last four rows are grey dashed boxes marked 'shared with host' with identical inode numbers on both sides — time 4026531834, IPC 4026531839, user 4026531837, cgroup 4026531835 — because pmon containerize only requests CLONE_NEWNS|CLONE_NEWUTS|CLONE_NEWNET|CLONE_NEWPID and deliberately leaves the other four alone."
-   caption="Figure 32.1 — the eight Linux namespaces, host vs pmon's PID-1 child, every inode number read live from /proc/&lt;pid&gt;/ns/* on systems-target" %}
+   alt="Two columns, host and pmon containerize's PID-1 child, with eight namespace-type rows: PID, mount, UTS, network, time, IPC, user, cgroup. The first four rows are amber boxes with an arrow marked 'differs' between real /proc/&lt;pid&gt;/ns/* inode numbers: pid 4026531836 vs 4026532530, mount 4026531832 vs 4026532528, UTS 4026531838 vs 4026532529, network 4026531833 vs 4026532531, read on systems-target. The last four rows are grey dashed boxes marked 'shared with host' with identical inode numbers on both sides: time 4026531834, IPC 4026531839, user 4026531837, cgroup 4026531835, because pmon containerize only requests CLONE_NEWNS|CLONE_NEWUTS|CLONE_NEWNET|CLONE_NEWPID and leaves the other four alone by design."
+   caption="Figure 32.1: the eight Linux namespaces, host vs pmon's PID-1 child, every inode number read live from /proc/&lt;pid&gt;/ns/* on systems-target" %}
 
-> **Tools used** — `ssh`/`scp` and the Python runner
+> **Tools used**: `ssh`/`scp` and the Python runner
 > (`scripts/test-all-examples.py`) on the host; `readlink`, `cat`, `pgrep`,
 > `nsenter`, `dmesg`, `strace` (systems-target VM). Everything here ships
 > with Fedora or is preinstalled in the lab VM by cloud-init.
 
 ## Eight namespaces, one job each
 
-A Linux namespace does not hide anything from the kernel — the kernel
+A Linux namespace does not hide anything from the kernel: the kernel
 always has the complete, global view. It hides things from the *process*:
 each namespace type wraps one kind of global kernel state so a process
 inside it sees only its own slice.
 
-- **PID** — a private process-id tree. The first process created inside a
+- **PID**: a private process-id tree. The first process created inside a
   new PID namespace is *always* pid 1 of that namespace, no matter what
   its "real" (host-visible) pid is.
-- **Mount** — a private copy of the mount table. Mounting or unmounting
+- **Mount**: a private copy of the mount table. Mounting or unmounting
   inside the namespace does not touch the host's view, once propagation is
   detached (below).
-- **UTS** — the hostname and NIS domain name. One `sethostname(2)` call,
+- **UTS**: the hostname and NIS domain name. One `sethostname(2)` call,
   fully isolated.
-- **Network** — its own loopback, interfaces, routes, and port space; a
+- **Network**: its own loopback, interfaces, routes, and port space; a
   bare network namespace starts with only `lo`, down.
-- **IPC** — its own System V IPC objects and POSIX message queues.
-- **User** — its own uid/gid mapping, letting an unprivileged host user
-  become "root" inside the namespace over a mapped range — the one
-  namespace `pmon containerize` does *not* request, discussed below.
-- **Cgroup** — virtualizes which cgroup a process believes is its root,
+- **IPC**: its own System V IPC objects and POSIX message queues.
+- **User**: its own uid/gid mapping, letting an unprivileged host user
+  become "root" inside the namespace over a mapped range (the one
+  namespace `pmon containerize` does *not* request, discussed below).
+- **Cgroup**: virtualizes which cgroup a process believes is its root,
   so `/proc/self/cgroup` reads `/` from inside even when the real path is
   nested five levels deep on the host.
-- **Time** (Linux 5.6+) — lets a namespace offset `CLOCK_MONOTONIC` and
+- **Time** (Linux 5.6+): lets a namespace offset `CLOCK_MONOTONIC` and
   `CLOCK_BOOTTIME`, the one facility built specifically for checkpoint/
   restore rather than isolation.
 
@@ -67,15 +67,15 @@ CLONE_NEWNET | CLONE_NEWPID`. Figure 32.1 is the receipt: every inode
 number in it came from `readlink /proc/<pid>/ns/*` on `systems-target`
 during this chapter's own run, and the four requested types read a
 *different* inode on the child than on the host's pid 1, while the four
-left alone — time, IPC, user, cgroup — read the *same* inode on both
+left alone (time, IPC, user, cgroup) read the *same* inode on both
 sides. A namespace you didn't ask for is not a weaker namespace; it is no
 namespace at all, just the host's, shared.
 
-## unshare, setns, and clone3 — three ways into a namespace
+## unshare, setns, and clone3: three ways into a namespace
 
 The three syscalls answer three different questions:
 
-- **`unshare(2)`** — "take *me*, right now, out of my current namespaces
+- **`unshare(2)`**: "take *me*, right now, out of my current namespaces
   and into brand-new ones." For most types this applies to the calling
   process/thread immediately. `CLONE_NEWPID` is the deliberate exception:
   unshare(2) can never move an already-running process into a new PID
@@ -83,13 +83,13 @@ The three syscalls answer three different questions:
   arranges that the *next* child the caller creates becomes pid 1 of a
   fresh one. That single asymmetry is why every implementation in this
   chapter unshares first and forks second, not the other way around.
-- **`setns(2)`** — "join a namespace that already exists," given an open
+- **`setns(2)`**: "join a namespace that already exists," given an open
   file descriptor on one of the `/proc/<pid>/ns/*` links. This is what
   `nsenter` does under the hood: open the target's namespace fds, `setns`
   into each, then fork and exec the requested command. Like `unshare`,
   `setns(CLONE_NEWPID)` only takes effect for children the caller creates
-  *after* the call — the caller's own pid never moves.
-- **`clone3(2)`** — create the child and select its namespaces in the
+  *after* the call; the caller's own pid never moves.
+- **`clone3(2)`**: create the child and select its namespaces in the
   *same* syscall, via `struct clone_args.flags`. This is the one true
   atomic option: there is no window where the new task exists but hasn't
   yet joined its namespaces. `pmon`'s C++ build calls it directly (below);
@@ -102,24 +102,24 @@ The three syscalls answer three different questions:
 Becoming pid 1 of a new namespace is not a label, it is a job with two
 real obligations the kernel enforces. First, **reparenting**: inside a
 PID namespace, an orphaned process is reparented to namespace-local pid 1,
-not to the host's real init — so pid 1 must be prepared to `wait()` for
+not to the host's real init, so pid 1 must be prepared to `wait()` for
 processes it never directly spawned, exactly the way real init is.
-Second, **reaping**: default signal dispositions are altered for pid 1 —
+Second, **reaping**: default signal dispositions are altered for pid 1;
 an unhandled `SIGTERM`/`SIGKILL` that would kill any other process is
 ignored by pid 1 unless it installs its own handler. `pmon containerize`
 sidesteps both obligations by design: its pid-1 child immediately
-`execve`s CMD, so CMD — not pmon's own code — inherits the pid-1 role for
-whatever it does next. That is a real, stated simplification, not an
+`execve`s CMD, so CMD, not pmon's own code, inherits the pid-1 role for
+whatever it does next. That is a simplification, not an
 oversight: a supervisor that expects to run *multiple* processes inside
 one PID namespace (the way `podman run` with more than one process, or a
-process manager container, would) needs an init that actually reaps —
+process manager container, would) needs an init that actually reaps,
 which is exactly what chapters 11 and 12 already built, just not wired to
 this namespace yet.
 
 ## Cgroup v2: the unified hierarchy
 
 Cgroup v1 let different controllers (cpu, memory, …) organize processes
-into *different* tree shapes — a process could be in one cpu group and an
+into *different* tree shapes: a process could be in one cpu group and an
 unrelated memory group. Cgroup v2 unifies this: **one tree**, and every
 controller you enable sees the same groups. `systems-target` mounts it at
 the conventional single point:
@@ -134,21 +134,21 @@ cpu memory pids
 ```
 
 Three files matter for `containerize`. **`memory.max`** is a hard byte
-ceiling — cross it and the kernel's OOM killer runs *inside this cgroup
+ceiling: cross it and the kernel's OOM killer runs *inside this cgroup
 only*, picking a victim from the cgroup's own processes regardless of
 system-wide memory pressure. **`cpu.max`** is written as `"$QUOTA
-$PERIOD"` microseconds — `"max 100000"` (pmon's default) means unthrottled
+$PERIOD"` microseconds: `"max 100000"` (pmon's default) means unthrottled
 inside a 100 ms accounting period; a real ceiling would read e.g.
 `"50000 100000"` for half a core. A sibling knob `containerize` doesn't
 set, worth knowing: **`cpu.weight`** (default 100, range 1–10000) doesn't
-cap anything — it only decides who wins when several cgroups *compete*
+cap anything; it only decides who wins when several cgroups *compete*
 for the same CPU, the cgroup analogue of `nice`. `memory.max` and
 `cpu.max` answer "how much," `cpu.weight` answers "whose turn," and a real
 container runtime writes all three.
 
 The fourth file is the pressure signal: **PSI** (Pressure Stall
 Information), `memory.pressure`, is not a counter of *how much* memory a
-cgroup used — it is how much time tasks in this cgroup spent *stalled*
+cgroup used: it is how much time tasks in this cgroup spent *stalled*
 waiting for memory, per-cgroup, independent of pressure anywhere else on
 the box:
 
@@ -159,13 +159,13 @@ full avg10=0.00 avg60=0.00 avg300=0.00 total=0
 ```
 
 `pmon containerize` reads the `some avg10=` field after CMD exits and
-prints it as `pmon: cgroup mem.pressure some=<x>` — a real number, not a
-placeholder, confirming the kernel is actually accounting this cgroup, not
-just enforcing a limit blindly.
+prints it as `pmon: cgroup mem.pressure some=<x>`, a real number rather
+than a placeholder, confirming the kernel is actually accounting this
+cgroup, not just enforcing a limit blindly.
 
 One subtlety governs the whole design: a *non-root* cgroup cannot both
 hold processes directly and delegate a controller to its children (the
-"no internal process" constraint) — but the **root** cgroup is explicitly
+"no internal process" constraint), but the **root** cgroup is explicitly
 exempt. That is why `setup_cgroup()` can write `+memory +cpu` into
 `/sys/fs/cgroup/cgroup.subtree_control` without first relocating `pmon`
 itself into a leaf: the root is the one place in the tree allowed to hold
@@ -175,36 +175,36 @@ processes and delegate at the same time.
 
 Strip away the marketing and a container is five primitives, wired
 together by one userspace program: **namespaces** (this chapter, minus
-user — `containerize` never requests `CLONE_NEWUSER`, so its "root" inside
-the container is genuinely uid 0 on the host, which is why the demo needs
+user: `containerize` never requests `CLONE_NEWUSER`, so its "root" inside
+the container is uid 0 on the host, which is why the demo needs
 real root rather than rootless mapped uids), **cgroups** (this chapter),
-a **rootfs** (a different filesystem view via `pivot_root`/bind mounts —
+a **rootfs** (a different filesystem view via `pivot_root`/bind mounts;
 chapter 34 builds this), **capabilities** (chapter 14's five sets,
 dropped to a minimal set before `exec`), and a **seccomp/Landlock**
 filter (chapter 33, next). `pmon containerize` deliberately stops after
-the first two, on the same host filesystem CMD would otherwise see — the
+the first two, on the same host filesystem CMD would otherwise see; the
 point is to make namespaces and cgroups *visible* as syscalls you could
 write yourself, before chapter 34 shows what podman assembles from all
-five at once inside a real multi-stage Containerfile.
+five at once inside a multi-stage Containerfile.
 
 {% include excalidraw.html
    file="32-cgroup-hierarchy"
    alt="The cgroup v2 unified hierarchy from root down to a leaf. The root band shows cgroup.controllers listing cpuset, cpu, io, memory, hugetlb, pids, rdma, misc, dmem, and cgroup.subtree_control enabling plus memory plus cpu, delegated to children. An arrow labeled enables leads down into the pmon-oomdemo leaf band, showing memory.max as 67108864 (64 MiB), memory.swap.max as 0 (no swap headroom), cpu.max as max 100000 (unthrottled), cgroup.procs holding pmon's own pid written before fork, and memory.pressure PSI reading some avg10=0.00. A dark box below states the hog process (sh, real anon-rss 64384kB) writes past the 64 MiB ceiling. An arrow labeled 'OOM killer fires' leads into a kernel band showing the real dmesg lines from this session: oom-kill constraint=CONSTRAINT_MEMCG oom_memcg=/pmon-oomdemo task=sh pid=27013, and 'Memory cgroup out of memory: Killed process 27013 (sh) anon-rss:64384kB', with pmon's own report alongside it: signal=9 (KILL), exit 137."
-   caption="Figure 32.2 — the cgroup v2 unified hierarchy, root to leaf, ending in the real dmesg OOM-kill line this session produced" %}
+   caption="Figure 32.2: the cgroup v2 unified hierarchy, root to leaf, ending in the real dmesg OOM-kill line this session produced" %}
 
 ## How the code works
 
 All three languages share one shape: build the cgroup, unshare/clone into
 fresh namespaces, become pid 1, exec CMD, then the parent waits and
 reports the cgroup-side evidence. `setup_cgroup`/`setupCgroup` (identical
-logic across C++, Go, and Rust — read `cgroup.subtree_control`, add
+logic across C++, Go, and Rust: read `cgroup.subtree_control`, add
 `+memory`/`+cpu` as whole tokens only if missing so `"cpu"` never
 false-matches inside `"cpuset"`, `mkdir` the leaf, write `memory.max` then
 `cpu.max` then a best-effort `memory.swap.max=0`, then write pmon's own
 pid into `cgroup.procs`) runs **before** any namespace call in every
-language, on purpose: cgroup membership is inherited across `fork`/
-`clone`/`exec`, so writing pmon's pid first means every later child — the
-pid-1 task, and CMD after it execs — is under the limits from its very
+language, by design: cgroup membership is inherited across `fork`/
+`clone`/`exec`, so writing pmon's pid first means every later child (the
+pid-1 task, and CMD after it execs) is under the limits from its very
 first instruction, never after.
 
 {% include codetabs.html langs="C++|Go|Rust" %}
@@ -446,11 +446,11 @@ first instruction, never after.
     }
 ```
 
-C++ and Rust get there through the same shape — `unshare` first, taking
+C++ and Rust get there through the same shape: `unshare` first, taking
 mount/UTS/network effect immediately on the caller; the mount-private
 remount so nothing propagates back to the host; `sethostname`; then a
 fork-shaped child creation (`clone3(flags=0)` in C++, `nix::fork` in
-Rust — both give "no code runs between clone and exec except what we
+Rust, both giving "no code runs between clone and exec except what we
 wrote," fork(2)'s classic contract) whose child becomes pid 1 of the
 deferred PID namespace and immediately prints its two proof lines before
 `execvp`. The parent side is identical in shape across both: `waitpid`,
@@ -462,15 +462,15 @@ reused verbatim from every earlier `pmon` chapter) and the `128+n`
 convention. Go's excerpt is the odd one out and is the subject of the
 Concurrency lens below.
 
-**Fragile bits, stated plainly**: `containerize` never remounts a fresh
+**Fragile bits**: `containerize` never remounts a fresh
 `/proc` inside the new mount namespace, so tools that read `/proc` from
-inside — including `ps` run via `nsenter` — still see the host's process
-table (the cross-check below demonstrates this directly); a real rootfs
+inside, including `ps` run via `nsenter`, still see the host's process
+table (the cross-check below demonstrates this directly); a rootfs
 container fixes this with `mount -t proc proc /proc` after `pivot_root`,
 which is chapter 34's job, not this one's. `memory.swap.max` is written
 best-effort because not every kernel exposes swap accounting identically.
 And `deploy-to-vm.sh` rebuilds the remote command line with a bare `$*`,
-which flattens quoting — every `CMD` in this chapter's runs is therefore
+which flattens quoting, so every `CMD` in this chapter's runs is
 space-free tokens (`/usr/bin/echo hi`, `sh /tmp/hog.sh`), with anything
 needing real shell logic staged as a script file on the guest first.
 
@@ -478,7 +478,7 @@ needing real shell logic staged as a script file on the guest first.
 
 The exit-code contract is identical across all three binaries, and it
 splits by *when* the kernel or pmon rejects something. A **usage** error
-(exit 2) is caught before any privileged call — a missing `-- CMD`:
+(exit 2) is caught before any privileged call: a missing `-- CMD`:
 
 ```bash
 [host]$ ./app containerize --hostname x
@@ -486,7 +486,7 @@ containerize: missing -- CMD
 ```
 
 A **setup** error (exit 1) is a syscall that failed before CMD ever ran.
-The ordinary case is the privilege check — `containerize: must run as
+The ordinary case is the privilege check: `containerize: must run as
 root` when invoked as a normal user, real output from this session,
 unprivileged, on the reference host. The instructive case is the one Go's
 first implementation actually produced on `systems-target`, verbatim:
@@ -495,12 +495,12 @@ first implementation actually produced on `systems-target`, verbatim:
 containerize: exec /usr/bin/echo: fork/exec /home/fedora/app: cannot allocate memory
 ```
 
-That is `ENOMEM` from a real `clone(2)` call, captured live — the
+That is `ENOMEM` from a real `clone(2)` call, captured live; the
 Concurrency lens below explains exactly why. Finally, a **child-side**
 error is CMD's own fate, reported through the same wait-status
 translation in every language: the OOM negative control's `pmon: child
 killed signal=9 (KILL)` becomes exit `137` (`128 + 9`), and `pmon`
-propagates it unchanged rather than collapsing it to a generic failure —
+propagates it unchanged rather than collapsing it to a generic failure:
 the caller can tell "CMD chose to fail" from "CMD was killed" from the
 exit code alone, no log-scraping required.
 
@@ -508,24 +508,24 @@ exit code alone, no log-scraping required.
 
 {% include excalidraw.html
    file="32-clone3-flow"
-   alt="Three lanes. The left lane, C++/Rust, shows unshare taking effect on the caller, then clone3 with flags=0 (fork semantics) creating a child that prints its pid/hostname proof lines and execs CMD — labeled PASS, real run this session. The middle lane, Go's first attempt, shows runtime.LockOSThread pinning the goroutine then a raw unshare call, followed by os/exec.Start issuing an internal vfork/pidfd probe fork, then the real fork for CMD failing with clone returning -1 ENOMEM and the message fork/exec: cannot allocate memory — real, this session. The bottom lane, Go's shipped fix, shows setup_cgroup writing its own pid first same as the other two languages, then exec.Command with SysProcAttr.Cloneflags carrying CLONE_NEWNS|CLONE_NEWUTS|CLONE_NEWNET|CLONE_NEWPID, one clone(2) call creating the child already inside all four namespaces with no prior unshare and no LockOSThread needed, the child re-execing itself as __ns_init__ to mount / MS_PRIVATE, sethostname, print the proof lines, and exec CMD as PID 1 — labeled PASS 13/13 across cpp, go, rust on systems-target, this session. A note explains the ENOMEM is a real, kernel-documented restriction: unshare(CLONE_NEWPID) allows the caller to create exactly one child in the fresh namespace before further forks there return ENOMEM, and os/exec's own vfork/pidfd fast path performs an internal probe fork that silently spends that one shot."
-   caption="Figure 32.3 — C++/Rust's unshare-then-clone3 shape beside Go's two attempts: a real ENOMEM, then the SysProcAttr.Cloneflags fix that passes" %}
+   alt="Three lanes. The left lane, C++/Rust, shows unshare taking effect on the caller, then clone3 with flags=0 (fork semantics) creating a child that prints its pid/hostname proof lines and execs CMD, labeled PASS, a real run this session. The middle lane, Go's first attempt, shows runtime.LockOSThread pinning the goroutine then a raw unshare call, followed by os/exec.Start issuing an internal vfork/pidfd probe fork, then the real fork for CMD failing with clone returning -1 ENOMEM and the message fork/exec: cannot allocate memory, real output from this session. The bottom lane, Go's shipped fix, shows setup_cgroup writing its own pid first same as the other two languages, then exec.Command with SysProcAttr.Cloneflags carrying CLONE_NEWNS|CLONE_NEWUTS|CLONE_NEWNET|CLONE_NEWPID, one clone(2) call creating the child already inside all four namespaces with no prior unshare and no LockOSThread needed, the child re-execing itself as __ns_init__ to mount / MS_PRIVATE, sethostname, print the proof lines, and exec CMD as PID 1, labeled PASS 13/13 across cpp, go, rust on systems-target, this session. A note explains the ENOMEM is a real, kernel-documented restriction: unshare(CLONE_NEWPID) allows the caller to create exactly one child in the fresh namespace before further forks there return ENOMEM, and os/exec's own vfork/pidfd fast path performs an internal probe fork that silently spends that one shot."
+   caption="Figure 32.3: C++/Rust's unshare-then-clone3 shape beside Go's two attempts: a real ENOMEM, then the SysProcAttr.Cloneflags fix that passes" %}
 
 Namespace changes made by `unshare(2)`/`setns(2)` are per-**thread**
-kernel state, not per-process — the same fact chapter 14 hit with
+kernel state, not per-process: the same fact chapter 14 hit with
 capabilities. A Go program is multithreaded before `main` even runs, and
 the goroutine scheduler is free to migrate any goroutine onto any OS
 thread between two lines of Go code. The textbook answer is
 `runtime.LockOSThread()`: pin the calling goroutine to its current OS
 thread so a subsequent raw `unshare()` and the fork/exec that must land on
 the *same*, now-unshared thread can't be split across two different ones.
-That is exactly what this chapter's Go build tried first — `LockOSThread`,
+That is exactly what this chapter's Go build tried first: `LockOSThread`,
 then `unix.Unshare(CLONE_NEWNS|CLONE_NEWUTS|CLONE_NEWNET|CLONE_NEWPID)`,
 then re-exec itself via `os/exec` so the fork would land on the pinned
 thread. It built. Its pid/hostname proof lines were real. And it failed
 the memory-hog negative control on real hardware, every time, with exit 1
-and `fork/exec /home/fedora/app: cannot allocate memory` — not a typo, not
-a flaky VM, a `strace` on `systems-target` shows the actual syscall:
+and `fork/exec /home/fedora/app: cannot allocate memory`, not a typo and
+not a flaky VM; a `strace` on `systems-target` shows the actual syscall:
 
 ```
 [vm]$ sudo strace -f -e trace=clone,unshare,execve -o /tmp/go-trace.log \
@@ -539,13 +539,13 @@ containerize: exec /usr/bin/echo: fork/exec /home/fedora/app: cannot allocate me
 24652 clone(child_stack=NULL, flags=CLONE_VM|CLONE_PIDFD|CLONE_VFORK|SIGCHLD, parent_tid=...) = -1 ENOMEM (Cannot allocate memory)
 ```
 
-`unshare` genuinely succeeds. The first `clone` after it — a vfork/pidfd
+`unshare` succeeds. The first `clone` after it (a vfork/pidfd
 probe `os/exec` performs internally on first use, unrelated to our
-request — also succeeds and exits immediately, and in doing so becomes
+request) also succeeds and exits immediately, and in doing so becomes
 the fresh PID namespace's pid 1. That is the real, kernel-documented
 restriction: `unshare(CLONE_NEWPID)` lets the caller create exactly *one*
 child in the new namespace; every fork after that one returns `ENOMEM`.
-LockOSThread solved the problem it was built for — thread affinity — and
+LockOSThread solved the problem it was built for (thread affinity) and
 was powerless against this one, because this failure has nothing to do
 with which thread is running: it is about how many times the *same*
 thread group is allowed to fork into a namespace it merely unshared
@@ -555,7 +555,7 @@ The fix is the same move chapter 14 made for capabilities: stop calling
 the namespace syscall directly from live, threaded Go code, and describe
 it declaratively instead. `exec.Cmd.SysProcAttr.Cloneflags` asks the
 runtime's own fork/exec trampoline to create the namespaces **and** the
-real child in one `clone(2)` call — there is no separate `unshare()`
+real child in one `clone(2)` call: there is no separate `unshare()`
 anywhere, so there is no "used up my one child" state to exhaust, and
 `LockOSThread` becomes unnecessary because there is no longer a
 namespace-mutating syscall for a goroutine to be scheduled away from. The
@@ -563,7 +563,7 @@ general rule, twice proven now across two different kernel primitives:
 whenever Go needs to change something that is per-thread and
 irreversible, push the whole operation into the runtime's fork/exec
 trampoline via `SysProcAttr` rather than performing it by hand on a
-pinned goroutine — the trampoline is the one place in a Go binary
+pinned goroutine; the trampoline is the one place in a Go binary
 guaranteed to run alone, between one `clone(2)` and the `execve` right
 after it.
 
@@ -586,7 +586,7 @@ example                    cpp   go    rust
 ```
 
 Each language's verify run passed all 13 assertions
-(`PASS 13 / FAIL 0`). By hand, the positive run — a trivial CMD proves
+(`PASS 13 / FAIL 0`). By hand, the positive run, a trivial CMD, proves
 both the PID and UTS namespaces at once:
 
 ```bash
@@ -600,10 +600,10 @@ pmon: cgroup mem.pressure some=0.00
 pmon: child exited status=0
 ```
 
-And the negative control — a real memory hog (`head -c 200000000
+And the negative control, a memory hog (`head -c 200000000
 /dev/zero | tr '\0' x`, held in a shell variable so it can't be swapped or
 paged away, staged as a guest script since `deploy-to-vm.sh` would mangle
-its embedded pipe) under `--mem-max 67108864` (64 MiB, far below the
+its embedded pipe), under `--mem-max 67108864` (64 MiB, far below the
 ~190 MiB it tries to hold):
 
 ```bash
@@ -617,14 +617,14 @@ pmon: child killed signal=9 (KILL)
 ```
 
 The hog never reaches its own trailing `echo should-not-print` in any of
-the three languages — proof the cgroup terminated it mid-allocation,
-not merely slowed it down. Go, Rust, and C++ all produce byte-identical
+the three languages, proof the cgroup terminated it mid-allocation
+rather than merely slowing it down. Go, Rust, and C++ all produce byte-identical
 output and the same exit 137; that identity is exactly what
 `verify.lua`'s 13 assertions per language check.
 
 ## Cross-check on systems-target
 
-Three independent tools confirm the same two facts Figure 32.1 claims —
+Three independent tools confirm the same two facts Figure 32.1 claims:
 that the namespaces are real, and that the missing `/proc` remount has a
 real, visible consequence. First, the namespace identities themselves,
 read directly while a long-lived `containerize` child is alive:
@@ -646,12 +646,12 @@ net:[4026532531]
 
 Every one of the four requested namespaces reads a different inode than
 the host's pid 1. The three namespaces `containerize` never requests read
-*identical* inodes on both sides — `time:[4026531834]`,
+*identical* inodes on both sides: `time:[4026531834]`,
 `ipc:[4026531839]`, `user:[4026531837]`, `cgroup:[4026531835]`, on host
-and child alike — confirming those are genuinely shared, not silently
+and child alike, confirming those are shared, not silently
 isolated by some other mechanism.
 
-Second, `nsenter` — the `setns(2)`-based tool — demonstrates the missing
+Second, `nsenter` (the `setns(2)`-based tool) demonstrates the missing
 `/proc` remount directly instead of asserting it:
 
 ```bash
@@ -661,13 +661,13 @@ root           1       0  0 14:42 ?        00:00:06 /usr/lib/systemd/systemd --s
 root           2       0  0 14:42 ?        00:00:00 [kthreadd]
 ```
 
-`nsenter` genuinely `setns`'d into the child's pid/mount/uts/net
-namespaces before forking `ps` — but `ps` reads `/proc`, and the mount
+`nsenter` `setns`'d into the child's pid/mount/uts/net
+namespaces before forking `ps`, but `ps` reads `/proc`, and the mount
 namespace it entered never got a *fresh* procfs mounted after `unshare`;
 it still resolves to the host's original procfs instance, so `ps` prints
 the host's entire process table instead of a scoped one. This is not a
 bug in `containerize`; it is precisely why chapter 34's Containerfile
-build includes a `pivot_root` and a fresh `/proc` mount — a namespace
+build includes a `pivot_root` and a fresh `/proc` mount; a namespace
 without a matching filesystem view is only half a container.
 
 Third, the kernel's own OOM log, read independently of anything `pmon`
@@ -681,7 +681,7 @@ Memory cgroup out of memory: Killed process 27013 (sh) total-vm:71332kB, anon-rs
 
 `CONSTRAINT_MEMCG` and `oom_memcg=/pmon-oomdemo` are the kernel's own
 words for "this cgroup's `memory.max`, not global memory pressure, is why
-this process died" — the same verdict `pmon`'s `signal=9 (KILL)` line
+this process died," the same verdict `pmon`'s `signal=9 (KILL)` line
 reported, confirmed at the source that actually made the decision.
 
 ## What you learned
@@ -691,21 +691,21 @@ reported, confirmed at the source that actually made the decision.
   `CLONE_NEWPID`, which only ever affects the *next* child), `setns(2)`
   joins one that already exists via an open `/proc/<pid>/ns/*` fd, and
   `clone3(2)` creates the child and its namespaces atomically in one
-  syscall — the only option with no in-between state.
+  syscall, the only option with no in-between state.
 - A cgroup v2 leaf's `memory.max`/`cpu.max` only prove anything paired
   with a negative control: a real hog under a 64 MiB ceiling must be
-  OOM-killed (exit 137, `dmesg`'s `oom_memcg=` naming the cgroup) — a
-  cgroup that let it finish would be decorative, not enforcing — and PSI
+  OOM-killed (exit 137, `dmesg`'s `oom_memcg=` naming the cgroup); a
+  cgroup that let it finish would be decorative, not enforcing. PSI
   (`memory.pressure`) is the per-cgroup stall signal, not a system-wide one.
 - Namespace changes are per-thread state, and a Go program is threaded
   before `main` runs: `unshare(CLONE_NEWPID)` also caps the caller to
   exactly one child in the fresh namespace, a restriction `os/exec`'s own
   internal probe fork silently spends, producing a real `ENOMEM` this
-  chapter reproduced live — the fix is `SysProcAttr.Cloneflags`, pushing
+  chapter reproduced live; the fix is `SysProcAttr.Cloneflags`, pushing
   the whole operation into the runtime's own fork/exec trampoline, the
   same move chapter 14 made for capabilities.
 - A container is namespaces + cgroups + rootfs + capabilities + seccomp,
-  assembled by userspace, not one kernel object — and a namespace without
+  assembled by userspace, not one kernel object, and a namespace without
   its matching filesystem view is observably incomplete: `nsenter`'s `ps
   -ef` proved it by showing the host's whole process table through a
   correctly-`setns`'d pid namespace that never got a fresh `/proc`.
@@ -716,7 +716,7 @@ primitives chapter 32 left out of "what a container runtime assembles."
 
 ---
 
-<p><span class="status status--verified">verified</span> — every
+<p><span class="status status--verified">verified</span>: every
 transcript and number above was produced this session against the
 <code>systems-target</code> guest (Fedora 44, kernel
 6.19.10-300.fc44.x86_64): the runner printed
@@ -737,6 +737,6 @@ the Concurrency lens is this session's own <code>strace</code> output
 against the pre-fix build, kept as evidence of a real, reproduced defect
 before the <code>Cloneflags</code> fix that now ships and passes. A
 one-line <code>verify.lua</code> bug this chapter also surfaced and fixed
-— an unescaped <code>-</code> in a Lua pattern silently failing the
-hostname assertion — is recorded in the example's own history, not
+(an unescaped <code>-</code> in a Lua pattern silently failing the
+hostname assertion) is recorded in the example's own history, not
 restated here as a finding about the chapter's subject matter.</p>

@@ -2,16 +2,16 @@
 title: "Identity and privilege"
 order: 14
 part: "Processes, Signals, Privilege"
-description: "Real, effective, and saved uids as one state machine that setresuid finally makes explicit; umask and the file bits; then capabilities done properly — file sets vs process sets, why ambient exists, and the KEEPCAPS ordering trap — proven live as pmon v3 binds :80 at uid 65534 carrying exactly one capability."
+description: "Real, effective, and saved uids as one state machine that setresuid finally makes explicit; umask and the file bits; then capabilities done properly: file sets vs process sets, why ambient exists, and the KEEPCAPS ordering trap, proven live as pmon v3 binds :80 at uid 65534 carrying exactly one capability."
 duration: "50 minutes"
 ---
 
 `pmon` can spawn a child, shepherd it through signals, and supervise it
 race-free through a pidfd. Version 3 faces the question every real supervisor
-meets next: it starts as root — it has to, to become another user — and
+meets next: it starts as root (it has to, to become another user) and
 everything it launches must *not* be root. The one new idea is that identity
-on Linux is not one number but a handful of small state machines — three uids
-and five capability sets — and the transitions between them are
+on Linux is not one number but a handful of small state machines (three uids
+and five capability sets), and the transitions between them are
 order-sensitive. The same five syscalls in the wrong order either leave the
 child privileged (you proved nothing) or strip the one capability it needed
 (the child cannot do its job). `pmon drop` performs the transition correctly,
@@ -20,17 +20,17 @@ carrying exactly `CAP_NET_BIND_SERVICE` across a full identity change and an
 possible if the drop worked: an unprivileged uid bound to port 80.
 
 The code is in `examples/14-identity-and-privilege/`. This is a **VM
-example** — the drop path needs real root, so `./demo.sh <lang> run` deploys
+example**: the drop path needs real root, so `./demo.sh <lang> run` deploys
 to the `systems-target` guest when `TARGET` is set; the `README.md` there
 specifies the CLI, the exit-code contract, and the paired
 positive/negative verification.
 
 {% include excalidraw.html
    file="14-credential-sets-caps"
-   alt="Two bands. The top band shows the three uids — real, effective, saved — each moving 0 to 65534, with a note that setresuid moves all three at once and the saved uid is the way back that the drop deliberately destroys. The bottom band shows pmon's kept-cap path as six boxes: pmon as root with full permitted and effective sets, prctl PR_SET_KEEPCAPS, setresuid to 65534 with permitted kept, capset pinning 0x400 into permitted inheritable and effective, prctl AMBIENT_RAISE putting 0x400 into ambient, and execve into bindprobe bound to port 80 at uid 65534. A dashed negative-control row underneath skips the prctl and capset steps: setresuid scrubs permitted to zero and execve reaches bindprobe with every set zero and bind denied, exit 3. Notes carry the real /proc status values: the kept-cap child reads 0000000000000400 in CapInh CapPrm CapEff CapAmb with CapBnd 000001ffffffffff."
-   caption="Figure 14.1 — the three-uid state machine and the five capability sets across pmon's drop; every hex value comes from /proc/&lt;pid&gt;/status on systems-target, read during the cross-check below" %}
+   alt="Two bands. The top band shows the three uids: real, effective, saved, each moving 0 to 65534, with a note that setresuid moves all three at once and the saved uid is the way back that the drop destroys for good. The bottom band shows pmon's kept-cap path as six boxes: pmon as root with full permitted and effective sets, prctl PR_SET_KEEPCAPS, setresuid to 65534 with permitted kept, capset pinning 0x400 into permitted inheritable and effective, prctl AMBIENT_RAISE putting 0x400 into ambient, and execve into bindprobe bound to port 80 at uid 65534. A dashed negative-control row underneath skips the prctl and capset steps: setresuid scrubs permitted to zero and execve reaches bindprobe with every set zero and bind denied, exit 3. Notes carry the real /proc status values: the kept-cap child reads 0000000000000400 in CapInh CapPrm CapEff CapAmb with CapBnd 000001ffffffffff."
+   caption="Figure 14.1: the three-uid state machine and the five capability sets across pmon's drop; every hex value comes from /proc/&lt;pid&gt;/status on systems-target, read during the cross-check below" %}
 
-> **Tools used** — `ssh`/`scp` and the Python runner
+> **Tools used**: `ssh`/`scp` and the Python runner
 > (`scripts/test-all-examples.py`) on the host; `umask`, `touch`, `ls`
 > (host); `getpcaps`, `capsh`, `getcap`, `sysctl`, `pgrep`, `bpftrace`
 > (systems-target VM). Everything here is checked by
@@ -39,7 +39,7 @@ positive/negative verification.
 
 ## Three uids, one state machine
 
-Every process carries three user ids, and `/proc` shows them side by side —
+Every process carries three user ids, and `/proc` shows them side by side:
 this is the dropped child from the cross-check later in the chapter:
 
 ```bash
@@ -52,28 +52,28 @@ Linux relic that shadows the effective uid; NFS servers use it, nothing in
 this book will). The *real* uid is who you are for accounting and for who
 may signal you. The *effective* uid is the one that matters: every
 permission check the kernel makes reads it. The *saved* uid is the escape
-hatch — it exists so a set-uid program can drop its effective uid to do
+hatch: it exists so a set-uid program can drop its effective uid to do
 unprivileged work and later climb back to the saved copy.
 
 That escape hatch is also the source of thirty years of confusion, because
 the classic calls mutate the machine implicitly. `setuid(2)` sets all three
-ids if you are privileged but only the effective uid if you are not — the
+ids if you are privileged but only the effective uid if you are not; the
 same call is either a permanent drop or a temporary one depending on who
 runs it. `seteuid(2)` moves only the middle value. `setreuid(2)` updates
 the saved uid as a *side effect*, under rules baroque enough that the
 manual page documents them as conditions. Daemons of the 1990s performed a
 "setuid dance" across these calls and regularly got it wrong in one
-direction — the direction where root comes back.
+direction: the direction where root comes back.
 
 `setresuid(2)` ends the dance by making the state machine explicit: you
 name all three values in one call (`-1` means leave that one alone), the
 kernel applies them atomically, and the call either fully succeeds or
-changes nothing. `pmon` calls `setresuid(uid, uid, uid)` — all three to
-65534 — which is deliberately irreversible: with no root left in *any* of
+changes nothing. `pmon` calls `setresuid(uid, uid, uid)` (all three to
+65534), which is irreversible by design: with no root left in *any* of
 the three slots, there is no privileged state left to return to, and a
 later `setresuid(0,0,0)` fails. One ordering rule already applies here:
 groups first. `setgroups(2)` and `setresgid(2)` are themselves privileged
-operations, so they must run while the effective uid is still 0 — drop the
+operations, so they must run while the effective uid is still 0; drop the
 uid first and you are locked out of fixing the gids, leaving the child in
 root's groups.
 
@@ -97,45 +97,45 @@ Same `touch`, same requested 0666: umask 022 clears group/other write
 (0644), umask 077 clears everything but owner (0600). The umask is
 inherited across `fork` and `execve` like the uids are, which is why the
 verify script `chmod 755`s the binary it stages on the guest instead of
-trusting whatever mode survived `scp` — permissions you did not state
+trusting whatever mode survived `scp`; permissions you did not state
 explicitly are permissions someone else chose. And mode bits are exactly
 why this chapter stages that copy in `/tmp` at all: `/home/fedora` is mode
-`700`, so once `pmon` becomes `nobody`, a binary under it is unreachable —
+`700`, so once `pmon` becomes `nobody`, a binary under it is unreachable:
 the drop is real enough to lock the child out of its own image.
 
 ## Capabilities: five process sets, three file sets
 
 Root's power is not one bit; since Linux 2.2 it is ~41 distinct
-**capabilities** — `CAP_NET_BIND_SERVICE` is the one that lets a process
+**capabilities**: `CAP_NET_BIND_SERVICE` is the one that lets a process
 bind ports below `net.ipv4.ip_unprivileged_port_start` (1024 on the guest,
 confirmed below). Each *process* carries five sets, visible as the `Cap*`
 lines of `/proc/<pid>/status`:
 
-- **Permitted** — the ceiling: capabilities the process may use or raise.
-- **Effective** — the subset the kernel actually consults in checks.
-- **Inheritable** — offered across `execve`, but only into binaries whose
+- **Permitted**, the ceiling: capabilities the process may use or raise.
+- **Effective**, the subset the kernel actually consults in checks.
+- **Inheritable**, offered across `execve`, but only into binaries whose
   *file* inheritable set accepts them.
-- **Bounding** — a mask over what `execve` can ever grant. On the guest it
+- **Bounding**, a mask over what `execve` can ever grant. On the guest it
   reads `000001ffffffffff` for every process, root or not: it masks, it
   never grants.
-- **Ambient** — the modern one, added in Linux 4.3: capabilities that
+- **Ambient**, the modern one, added in Linux 4.3: capabilities that
   survive an `execve` by a non-root process into a plain, uncapped binary.
 
 Each *file* can carry three pieces in its `security.capability` xattr
-(permitted, inheritable, and a one-bit effective flag — set with
+(permitted, inheritable, and a one-bit effective flag, set with
 `setcap(8)`, read with `getcap(8)`), and `execve` combines the two sides:
 the new permitted set is the file's permitted masked by bounding, plus the
 intersection of the process and file inheritable sets, plus ambient.
 
 Why does ambient exist? Because the inheritable set is a trap. Before 4.3,
 a supervisor that wanted to pass one capability to an unprivileged child
-had to intersect its inheritable set with the *file's* inheritable set —
+had to intersect its inheritable set with the *file's* inheritable set,
 and ordinary binaries have no file capabilities at all, so the
 intersection was empty and the capability died at `execve`. Your options
 were `setcap` on every binary you might run (a fleet-management problem
 and useless for scripts) or keeping root. Ambient is the bridge: a
-capability raised into the ambient set — legal only while it is in both
-permitted and inheritable — flows through a non-root `execve` of an
+capability raised into the ambient set (legal only while it is in both
+permitted and inheritable) flows through a non-root `execve` of an
 uncapped binary intact. The cross-check proves the child's capability came
 this way and not from the file: `getcap` on the staged binary prints
 nothing.
@@ -152,25 +152,25 @@ The whole lesson of `pmon drop` is that five correct syscalls in the wrong
 order fail silently. The correct sequence, as the C++ header comment
 states it:
 
-1. `prctl(PR_SET_KEEPCAPS, 1)` — **before** the uid change. When a
+1. `prctl(PR_SET_KEEPCAPS, 1)`: **before** the uid change. When a
    process's uids go from 0 to all-nonzero, the kernel scrubs the
    permitted and effective sets; `KEEPCAPS` preserves permitted (effective
    is cleared regardless).
-2. `setgroups` / `setresgid` / `setresuid` — become the target user,
+2. `setgroups` / `setresgid` / `setresuid`: become the target user,
    groups and gid while still privileged.
-3. `capset(2)` — pin `CAP_NET_BIND_SERVICE` into permitted **and**
+3. `capset(2)`: pin `CAP_NET_BIND_SERVICE` into permitted **and**
    inheritable, re-raise it into effective (cleared by step 2), and drop
    every other capability KEEPCAPS retained.
-4. `prctl(PR_CAP_AMBIENT_RAISE, CAP_NET_BIND_SERVICE)` — legal only
+4. `prctl(PR_CAP_AMBIENT_RAISE, CAP_NET_BIND_SERVICE)`: legal only
    because step 3 put the cap in both permitted and inheritable.
-5. `execvp(3)` — the ambient set is the only one that survives this for a
+5. `execvp(3)`: the ambient set is the only one that survives this for a
    non-root process running an uncapped binary.
 
 Each step is a fence the others depend on. Skip step 1 and step 2 scrubs
-permitted — steps 3 and 4 then have nothing to work with. Run step 3
+permitted; steps 3 and 4 then have nothing to work with. Run step 3
 before step 2 and you have dropped `CAP_SETUID`/`CAP_SETGID`, so the uid
 change itself fails. Try step 4 without step 3 and `prctl` returns `EPERM`
-because root's inheritable set is empty — the raise requires permitted ∩
+because root's inheritable set is empty; the raise requires permitted ∩
 inheritable. Skip step 4 and everything is technically held right up to
 `execve`, where permitted and effective are recomputed from file caps the
 binary does not have, and the capability evaporates. The negative control
@@ -180,7 +180,7 @@ steps 1, 3, and 4 never happen and the child arrives with every set zero.
 ## How the code works
 
 The error plumbing comes first because every step uses it. C++ and Rust
-declare the same two-field failure record — `SysErr { what, errno }` — and
+declare the same two-field failure record (`SysErr { what, errno }`) and
 a `checked(rc, what)` adapter that turns a negative syscall return into
 `std::expected` / `Result` carrying the captured errno. All five steps
 thread through it with `?`-style propagation, and exactly one printer at
@@ -377,27 +377,27 @@ fn arrange_and_exec(
 }
 ```
 
-C++ and Rust do the dance **in-process** with raw syscalls — no libcap on
-purpose, so every step is visible. The `capset` ABI deserves a close look
+C++ and Rust do the dance **in-process** with raw syscalls, skipping libcap
+entirely, so every step is visible. The `capset` ABI deserves a close look
 because glibc does not even wrap it (the "public" API is libcap's; we call
 `syscall(SYS_capset, …)` directly). The header names ABI version 3
 (`0x20080522`) and pid 0, meaning "me"; version 3 represents the 64-bit
 capability space as **two 32-bit words**, which is why `data` is a
 two-element array. `CAP_NET_BIND_SERVICE` is capability number 10, so its
-bit lives in word 0 and word 1 is deliberately all zero — writing zeros
+bit lives in word 0 and word 1 stays all zero: writing zeros
 there is what drops the *other* nine retained-by-KEEPCAPS capabilities
 above 31. Setting `effective = bit` in the same call does double duty: the
 uid change cleared the effective set, and this is what re-raises it. Rust
 mirrors the C++ byte for byte, down to `#[repr(C)]` on the two structs so
 their layout matches the kernel's, and defines the two constants the
 `libc` crate omits (`LINUX_CAPABILITY_VERSION_3`, `CAP_NET_BIND_SERVICE`)
-locally — both are stable kernel ABI.
+locally; both are stable kernel ABI.
 
 Go is the deliberate inversion, and the reason is a rule worth memorizing:
 **credentials are per-thread at the kernel level**, and a Go program is
 multithreaded before `main` runs. Instead of attempting the dance
-in-process, the Go build describes the drop declaratively —
-`SysProcAttr.Credential` for step 2, `AmbientCaps` for steps 1, 3, and 4 —
+in-process, the Go build describes the drop declaratively:
+`SysProcAttr.Credential` for step 2, `AmbientCaps` for steps 1, 3, and 4,
 and the runtime's fork/exec child, where exactly one thread exists,
 replays the same kernel-correct order between `fork` and `exec`. Same
 observable behavior; the ordering lives in the standard library instead of
@@ -406,17 +406,17 @@ propagate CMD's own exit status, which is how the negative control's
 exit 3 travels back through `pmon` to the verify script intact.
 
 `bindprobe` is short by design: socket, `SO_REUSEADDR` (so rapid repeat
-runs do not trip over `TIME_WAIT`), bind on `INADDR_ANY`, then one line —
-`bindprobe: uid=<u> bound :<port>` — and exit 0, or the bind failure with
+runs do not trip over `TIME_WAIT`), bind on `INADDR_ANY`, then one line
+(`bindprobe: uid=<u> bound :<port>`) and exit 0, or the bind failure with
 `strerror` text on stderr and exit 3. It prints `getuid()` precisely so
 one line carries both facts the verification needs: *who* the process was
 and *what* it was allowed to do.
 
-Fragile bits, stated plainly: `--keep-cap` accepts only
-`net_bind_service` — the cap number and its word-0 position are hardcoded,
+A few fragile points: `--keep-cap` accepts only
+`net_bind_service`; the cap number and its word-0 position are hardcoded,
 and generalizing to caps ≥ 32 means touching word 1; the staged binary
 must live somewhere the dropped user can read (`/tmp`, not `/home/fedora`);
-and `pmon` does not call `setsid` or close inherited fds — real daemons
+and `pmon` does not call `setsid` or close inherited fds; real daemons
 layer those on, and chapter 7's `O_CLOEXEC` discipline is half of why they
 can skip the fd audit.
 
@@ -425,15 +425,15 @@ can skip the fd audit.
 The output contract is byte-identical diagnostics across languages, and
 capabilities add a twist: the interesting failure happens in the *child*,
 after `execve`, where `pmon`'s error plumbing no longer exists. So the
-contract splits in two. Setup failures — not root, unknown user, a failed
-step — flow through `SysErr`: C++ formats `std::expected` errors with
+contract splits in two. Setup failures (not root, unknown user, a failed
+step) flow through `SysErr`: C++ formats `std::expected` errors with
 `std::strerror`, Rust calls `libc::strerror` through a safe wrapper, and
 both exit 1 from a single printer. The child's bind failure is reported by
 `bindprobe` itself with exit 3, and Go's `drop` forwards that code via
 `errors.As(err, &ee)` → `ee.ExitCode()`. The subtle one is Go's
 `errnoText`: Go spells errno strings lower-case (`permission denied`)
 while `strerror(3)` capitalizes (`Permission denied`), so the Go build
-re-capitalizes the first letter — without it, `verify.lua`'s
+re-capitalizes the first letter; without it, `verify.lua`'s
 byte-for-byte match on `bindprobe: bind :80: Permission denied` would fail
 in one language out of three. Usage errors exit 2 everywhere, before any
 privileged call is attempted.
@@ -446,14 +446,14 @@ notice; glibc papers over it for threaded ones with its setxid machinery,
 signaling every thread to run the same `setresuid` so the process moves in
 lockstep. But `pmon`'s C++ and Rust builds bypass glibc for `capset`
 (raw `syscall`), so their safety argument is structural instead: both are
-**deliberately single-threaded** — no thread pool, no async runtime —
+**kept single-threaded** (no thread pool, no async runtime)
 because a privilege drop must cover every task, and `execve` replaces the
 whole process anyway. Go cannot make that promise: the runtime spawns
 threads before `main`, and a raw in-process dance would leave sibling
-threads still root — a real vulnerability class, not a theoretical one.
+threads still root, a real vulnerability class, not a theoretical one.
 That is exactly why the Go build pushes the entire sequence into the
 fork/exec child. The general rule: change identity either before threads
-exist or in a fresh child — never "around" a running thread pool.
+exist or in a fresh child, never "around" a running thread pool.
 
 ## Build, run, observe
 
@@ -489,7 +489,7 @@ bindprobe: uid=65534 bound :80
 ```
 
 That single line is the positive proof: uid 65534 (`nobody`) is not root,
-yet the bind on :80 succeeded. And the negative control — the same drop
+yet the bind on :80 succeeded. And the negative control: the same drop
 with `--keep-cap` removed:
 
 ```bash
@@ -503,7 +503,7 @@ bindprobe: bind :80: Permission denied
 
 (An ssh pseudo-terminal warning line is trimmed from both transcripts.)
 The Go and Rust binaries produce these exact same two lines and exit
-codes — that is what `verify.lua` asserts per language. The pair matters
+codes; that is what `verify.lua` asserts per language. The pair matters
 more than either half: without the negative control, a lowered
 `ip_unprivileged_port_start` or a stray root uid would make the positive
 run pass while proving nothing about capabilities.
@@ -512,7 +512,7 @@ run pass while proving nothing about capabilities.
 
 `bindprobe` exits as soon as it has bound, so to inspect the dropped
 child's credential state directly, run the same drop around a `sleep` and
-read the child while it lives — three independent tools against the same
+read the child while it lives: three independent tools against the same
 process:
 
 ```bash
@@ -533,7 +533,7 @@ CapAmb:	0000000000000400
 
 Read the layers against Figure 14.1: `getpcaps` names the one capability
 with `=eip` (effective, inheritable, permitted); the raw `/proc` view
-shows the same bit — `0x400` is `1 << 10` — in all four transferable sets
+shows the same bit (`0x400` is `1 << 10`) in all four transferable sets
 including ambient, which is the set that carried it through `execve`; and
 `capsh --decode` closes the loop by translating the hex back to the name.
 `CapBnd` is still the full mask because `pmon` never touched the bounding
@@ -553,16 +553,16 @@ CapAmb:	0000000000000000
 ```
 
 Two more readings pin down where the capability did *not* come from.
-`getcap /tmp/pmon-verify` prints nothing — no file capabilities, so the
+`getcap /tmp/pmon-verify` prints nothing: no file capabilities, so the
 ambient path is the only route the bit had. And
 `sysctl net.ipv4.ip_unprivileged_port_start` reports `1024`, ruling out
 the sysctl shortcut that would have made :80 free for everyone. For
 contrast, a root shell on the same guest reads
-`CapPrm`/`CapEff` `000001ffffffffff` with `CapInh` and `CapAmb` zero —
-full power, nothing inheritable, nothing ambient: the default state the
+`CapPrm`/`CapEff` `000001ffffffffff` with `CapInh` and `CapAmb` zero:
+full power, nothing inheritable, nothing ambient, the default state the
 drop starts from.
 
-> **On the lab VM** — you can also watch the kernel make the decision
+> **On the lab VM**: you can also watch the kernel make the decision
 > itself. `bpftrace` on the `cap_capable` hook, filtered to the probe
 > process, during both runs:
 >
@@ -573,37 +573,37 @@ drop starts from.
 > ```
 >
 > Capability 10 is `CAP_NET_BIND_SERVICE`: the kept-cap run's check
-> returns 0 (granted) and the negative control's returns -1 (`EPERM`) —
+> returns 0 (granted) and the negative control's returns -1 (`EPERM`):
 > the same verdict the bind lines reported, observed at the kernel hook
-> that issued it. (Both runs also emit a burst of `cap=21` — 
-> `CAP_SYS_ADMIN` — denials from unrelated kernel probing; only the
+> that issued it. (Both runs also emit a burst of `cap=21`
+> (`CAP_SYS_ADMIN`) denials from unrelated kernel probing; only the
 > `cap=10` verdicts differ. bcc-tools' `capable` would show the same
 > stream with symbolic names, but it failed to compile against kernel
 > 6.19 on this guest; Part 8 works through that toolchain properly.)
 
 One deliberate non-observation: you cannot follow the drop with `strace`
 from outside, because ptrace attachment is severed at a privilege
-transition. The port bind *is* the observation surface here — and there is
+transition. The port bind *is* the observation surface here, and there is
 no dashboard panel by design; this example emits no telemetry.
 
 ## What you learned
 
 - The three uids are a state machine, and `setresuid(u, u, u)` is the one
   transition that says what it does: all three slots move atomically, the
-  saved-uid escape hatch is destroyed, and the drop is irreversible —
+  saved-uid escape hatch is destroyed, and the drop is irreversible;
   groups and gid must move first, while you are still privileged.
 - Capabilities live in five process sets and three file sets; `execve`
   recombines them, and the ambient set exists so a non-root process can
-  carry a capability into an ordinary uncapped binary — the case the
+  carry a capability into an ordinary uncapped binary, the case the
   inheritable set was never able to serve.
 - Ordering is the whole game: `PR_SET_KEEPCAPS` before `setresuid`,
   `capset` into permitted *and* inheritable after it, `PR_CAP_AMBIENT_RAISE`
-  last — and in Go the same sequence must run in the fork/exec child,
+  last, and in Go the same sequence must run in the fork/exec child,
   because credentials are per-thread and the runtime is threaded before
   `main`.
 - A privilege claim needs a negative control: `uid=65534 bound :80`
   proves nothing until the same drop without the cap yields
-  `Permission denied` — paired evidence, checked by `getpcaps`,
+  `Permission denied`: paired evidence, checked by `getpcaps`,
   `/proc/<pid>/status` + `capsh --decode`, and the kernel's own
   `cap_capable` verdict.
 
@@ -613,7 +613,7 @@ fault costs.
 
 ---
 
-<p><span class="status status--verified">verified</span> — every transcript
+<p><span class="status status--verified">verified</span>: every transcript
 and number above was produced this session against the
 <code>systems-target</code> guest (Fedora 44, kernel 6.19.10-300.fc44):
 the runner printed <code>14-identity-and-privilege  PASS  PASS  PASS</code>

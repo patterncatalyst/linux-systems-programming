@@ -2,16 +2,16 @@
 title: "The KVM lab"
 order: 2
 part: "Setting Up"
-description: "Provision two disposable Fedora KVM guests with cloud-init — an observation-first toolset, snapshot/revert discipline, and a deploy script whose output proves your code ran on the guest kernel, not yours."
+description: "Provision two disposable Fedora KVM guests with cloud-init: an observation-first toolset, snapshot/revert discipline, and a deploy script whose output proves your code ran on the guest kernel, not yours."
 duration: 45 minutes
 ---
 
 Chapter 1 proved that three toolchains build and run the same program on your
 workstation. This chapter builds the other half of the book's infrastructure:
-two disposable Fedora VMs — `systems-target` and `systems-peer` — that absorb
+two disposable Fedora VMs (`systems-target` and `systems-peer`) that absorb
 everything you should never do to the machine you work on. A systems-programming
 book keeps asking you to run code as root, watch the kernel from the inside,
-fill filesystems, kill process trees, and misconfigure networks on purpose.
+fill filesystems, kill process trees, and misconfigure networks.
 The lab is where all of that happens, and one snapshot command makes any
 mistake reversible in seconds.
 
@@ -22,36 +22,36 @@ destroys the guests by name.
 {% include excalidraw.html
    file="02-lab-topology"
    alt="Lab topology: a host band with libvirtd/KVM, the ~/.cache/systems-lab image cache holding the pristine Fedora Cloud Base image plus one qcow2 overlay per guest, and the scripts/lab directory; below it, the libvirt NAT network 192.168.124.0/24 containing systems-target (4 GB, .7) and systems-peer (2 GB, .95), both on kernel 6.19.10. An amber deploy arrow runs from the scripts to systems-target; a dashed line links the two guests for later two-host chapters; a note marks the lab-ready snapshot taken on both."
-   caption="Figure 2.1 — the systems-* lab: cached base image + per-VM overlays on the host, two guests on libvirt NAT, one amber deploy path" %}
+   caption="Figure 2.1: the systems-* lab, cached base image + per-VM overlays on the host, two guests on libvirt NAT, one amber deploy path" %}
 
-> **Tools used** — `virt-install`, `qemu-img`, `cloud-localds`, `virsh`, `ssh`
+> **Tools used**: `virt-install`, `qemu-img`, `cloud-localds`, `virsh`, `ssh`
 > (host). Everything here is checked by `scripts/check-host.sh`; the guest
 > toolset itself is installed by cloud-init.
 
 ## Why a disposable lab
 
-Three kinds of chapters force the issue. **Privileged demos** — capabilities,
-namespaces, cgroup writes, mount tricks — need root, and root that fat-fingers
-a path on your workstation is a bad afternoon. **Kernel observation** — bpftrace
-one-liners, perf profiles, the BCC tools — attaches instrumentation to a live
+Three kinds of chapters force the issue. **Privileged demos** (capabilities,
+namespaces, cgroup writes, mount tricks) need root, and root that fat-fingers
+a path on your workstation is a bad afternoon. **Kernel observation** (bpftrace
+one-liners, perf profiles, the BCC tools) attaches instrumentation to a live
 kernel, and you want that kernel to be one you can reboot without losing your
-editor. **Destructive demos** — OOM kills, disk-full behavior, deliberately
-broken network configs — only teach if you actually break something, which
+editor. **Destructive demos** (OOM kills, disk-full behavior, broken network
+configs) only teach if you actually break something, which
 means you need something safe to break.
 
 A VM answers all three at once, and adds the property no container gives you:
 **its own kernel**. Namespaces share the host kernel, so a container can't show
 you kernel-version drift, can't be probed as an isolated kernel, and can't be
 snapshot-reverted with its kernel state. The lab guests run their own
-`6.19.10-300.fc44` kernel while the host runs `7.1` — a visible
+`6.19.10-300.fc44` kernel while the host runs `7.1`, a visible
 difference this chapter turns into its cross-check.
 
 That said, the VM is not the default. The book's decision rule, applied at the
 top of every example:
 
 > **Run locally unless the demo needs root, needs to observe the kernel, or
-> needs two hosts.** Everything else — ordinary syscalls, file I/O, unprivileged
-> process work — runs faster and debugs easier on your workstation.
+> needs two hosts.** Everything else (ordinary syscalls, file I/O, unprivileged
+> process work) runs faster and debugs easier on your workstation.
 
 ## Host prerequisites
 
@@ -67,7 +67,7 @@ before doing anything:
 
 `virt-install` defines and boots the domain, `qemu-img` builds overlay disks,
 `cloud-localds` (from `cloud-utils`) packs the cloud-init seed, and membership
-in the `libvirt` group lets you talk to the system libvirt instance — every
+in the `libvirt` group lets you talk to the system libvirt instance: every
 script exports `LIBVIRT_DEFAULT_URI=qemu:///system` so the guests live in the
 system instance, not a per-user session that vanishes with your login.
 
@@ -75,12 +75,12 @@ system instance, not a per-user session that vanishes with your login.
 
 `scripts/lab/provision-vm.sh` is a straight pipeline: cached base image →
 per-VM overlay → cloud-init seed → `virt-install`. Each stage exists for a
-reason worth spelling out.
+specific reason, detailed below.
 
 **The cached base image.** The script downloads
 `Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2` once into
 `~/.cache/systems-lab/` and never modifies it. The version is pinned in the
-script ("Pin the exact image you tested; bump deliberately") — an unpinned
+script ("Pin the exact image you tested; bump deliberately"): an unpinned
 "latest" would silently change the guest kernel under the whole book.
 
 **The overlay disk.** Instead of copying the 400 MB base per guest, the script
@@ -91,12 +91,12 @@ qemu-img create -f qcow2 -F qcow2 -b "$CACHE_DIR/$BASE_IMG" "$OVERLAY" "${DISK_G
 ```
 
 The overlay records only the blocks the guest changes; the base stays pristine
-and shared. This is what makes the guests *disposable* — destroying and
+and shared. This is what makes the guests *disposable*: destroying and
 re-provisioning a guest deletes one thin overlay and rebuilds it in seconds,
 with no re-download.
 
 **The cloud-init seed.** Fedora Cloud Base has no users, no packages, no SSH
-access — cloud-init is how it becomes yours on first boot. The script fills
+access; cloud-init is how it becomes yours on first boot. The script fills
 two placeholders (`__HOSTNAME__`, `__SSH_PUBKEY__`) in
 `scripts/lab/cloud-init/user-data.tmpl` with `sed`, then `cloud-localds` packs
 the result into a tiny seed image that is attached as a CD-ROM. On first boot
@@ -109,43 +109,43 @@ with `--cpu host-passthrough` so the guest sees your real CPU features,
 virtio disk and network for near-native I/O, and `--graphics none
 --noautoconsole` because everything from here on is SSH. The script also
 refuses to clobber: an existing domain of the same name is an error, and the
-fix is an explicit `./destroy-vm.sh <name>` — rebuilds are deliberate, never
+fix is an explicit `./destroy-vm.sh <name>`: rebuilds are deliberate, never
 accidental.
 
-## What goes in the guest — and what deliberately doesn't
+## What goes in the guest, and what doesn't
 
 The package list in `scripts/lab/cloud-init/user-data.tmpl` *is* the book's
 tooling philosophy, so read it as an argument, not a manifest. The first block
 is **observation tooling**: `bcc-tools`, `bpftrace`, `bpftool`, `libbpf-tools`
-(precompiled CO-RE tools — `opensnoop`, `execsnoop`, `biolatency`), `perf`,
+(precompiled CO-RE tools: `opensnoop`, `execsnoop`, `biolatency`), `perf`,
 `strace`, `ltrace`, `gdb` plus `gdb-gdbserver`, `valgrind`, `sysstat`. That
 block is the point of the lab: this book uses eBPF **as tooling, not as a
 build target**, which is why there is *no* clang/llvm/libbpf-devel eBPF build
-chain in the guest — the template says so in a comment right above the list.
+chain in the guest; the template says so in a comment right above the list.
 You will trace with bpftrace constantly; you will not compile BPF programs.
 
 The second block is **per-language toolchains** (`gcc-c++`, `clang`, `cmake`,
-`ninja-build`, `golang`, `rust`/`cargo`) so demos that must compile in-VM —
-privileged code, namespace experiments, glibc-parity fallbacks — can. The rest
+`ninja-build`, `golang`, `rust`/`cargo`) so demos that must compile in-VM
+(privileged code, namespace experiments, glibc-parity fallbacks) can. The rest
 is `podman`/`crun` for the container chapters, networking tools (`tcpdump`,
 `socat`, `nmap-ncat`) for the two-host chapters, and `cockpit`, whose socket
 cloud-init enables so the web console is reachable at
-`https://<guest-ip>:9090` — a useful visual second opinion on guest load.
+`https://<guest-ip>:9090`, a useful visual second opinion on guest load.
 
 The `runcmd` section ends with the **readiness stamp**: it writes
 `bpftrace --version` and `uname -r` into `/var/log/lab-ready`. That file is
-the lab's contract — if it exists and names a bpftrace, cloud-init finished
+the lab's contract: if it exists and names a bpftrace, cloud-init finished
 and the observation tooling works. Every later chapter can check one file
 instead of guessing whether provisioning completed.
 
 Packages a single demo needs (fio, rt-tests, numactl) stay *out* of the base
-on purpose: install them on demand, then re-snapshot to bake them in. A lean
+by default: install them on demand, then re-snapshot to bake them in. A lean
 base keeps provisioning fast and the snapshot meaningful.
 
 ## Snapshots: the discipline that makes "destructive" safe
 
-`scripts/lab/snapshot-vm.sh <vm>` captures a snapshot named `lab-ready` —
-RAM *and* disk, because the guest is running, so a revert restores it
+`scripts/lab/snapshot-vm.sh <vm>` captures a snapshot named `lab-ready`: RAM
+*and* disk, because the guest is running, so a revert restores it
 *running*, tools warm, in seconds. The discipline has two halves:
 
 - **Snapshot immediately after provisioning** (and after any deliberate
@@ -155,7 +155,7 @@ RAM *and* disk, because the guest is running, so a revert restores it
   "did that experiment leave state behind?" doubt.
 
 Re-running `snapshot-vm.sh` replaces the same-named snapshot, so refreshing
-the baseline is idempotent. `destroy-vm.sh` is the nuclear option — it
+the baseline is idempotent. `destroy-vm.sh` is the nuclear option: it
 undefines the domain and deletes its overlay and seed, leaving only the cached
 base image, from which a fresh guest is minutes away.
 
@@ -165,13 +165,13 @@ Day to day you touch two scripts. `scripts/lab/lab-up.sh` starts whichever of
 `systems-target`/`systems-peer` are defined but stopped, waits for DHCP
 leases, and prints IPs; `eval "$(./lab-up.sh --export)"` drops `TARGET_IP` and
 `PEER_IP` straight into your shell for scripted tests. `scripts/lab/lab-down.sh`
-sends ACPI shutdowns, waits up to 60 seconds, and — deliberately — deletes
+sends ACPI shutdowns, waits up to 60 seconds, and by design deletes
 nothing; disks and snapshots survive, and `FORCE=1` hard-stops a guest that
 ignores ACPI. `vm-ip.sh` answers "what address did libvirt lease this guest?"
 by reading the DHCP lease (guest-agent fallback). One host-specific note: on
 this machine the libvirt `default` network is `192.168.124.0/24` with gateway
-`192.168.124.1` — not the stock `192.168.122.0/24` you'll see in most libvirt
-docs — so never hardcode an address; always ask `vm-ip.sh`.
+`192.168.124.1` (not the stock `192.168.122.0/24` you'll see in most libvirt
+docs), so never hardcode an address; always ask `vm-ip.sh`.
 
 ## Deploying host builds
 
@@ -179,10 +179,10 @@ docs — so never hardcode an address; always ask `vm-ip.sh`.
 reaches the guest: it resolves the IP, `scp`s the binary to
 `/home/fedora/`, marks it executable, and `exec`s it over `ssh -t` so Ctrl-C
 reaches the remote process. Two toggles matter. `SUDO=1` runs the binary under
-sudo for the demos that genuinely need root — the default is unprivileged,
+sudo for demos that need root; the default is unprivileged,
 matching the decision rule. And if `OTEL_ENDPOINT` is set, the script forwards
 it as `OTEL_EXPORTER_OTLP_ENDPOINT` through `env` explicitly, because `sudo`
-strips the environment — without that, a privileged guest binary would fall
+strips the environment; without that, a privileged guest binary would fall
 back to its own localhost and its telemetry would never reach the host's
 observability stack. This works because host builds and the guest are both
 Fedora 44. That parity holds when the guests are provisioned and lapses as the
@@ -259,7 +259,7 @@ links against the guest's own runtime.
 
 ## Build, run, observe
 
-Provision both guests — target at the 4 GB default, peer smaller:
+Provision both guests, target at the 4 GB default, peer smaller:
 
 ```bash
 [host]$ cd scripts/lab
@@ -291,7 +291,7 @@ lab: built once, reverted forever.
 
 ## Cross-check: prove the code runs *there*
 
-Chapter 1's example prints the kernel it runs on — which makes it a perfect
+Chapter 1's example prints the kernel it runs on, which makes it a perfect
 independent check that `deploy-to-vm.sh` really executes on the guest rather
 than, say, quietly running the local binary. Run it both ways:
 
@@ -307,24 +307,24 @@ pid <PID> on Linux 6.19.10-300.fc44.x86_64 (x86_64)
 
 Same binary, two different kernel strings: `7.1` is your host,
 `6.19.10-300.fc44` is the guest. The example's per-language `demo.sh` wires
-this up — with `TARGET` set, its `run` step calls
+this up: with `TARGET` set, its `run` step calls
 `scripts/lab/deploy-to-vm.sh "$TARGET" <binary>` instead of executing locally,
-so every example in the book gets remote execution for free. The Go build
-behaves identically (`TARGET=systems-target ./demo.sh go`); both were run on
-this lab and printed the guest kernel string. The kernel version in the output
-is the observable proof — a claim like "it deployed" is worthless next to the
-guest's own `uname` in your terminal.
+so every example in the book gets remote execution with no extra wiring. The
+Go build behaves identically (`TARGET=systems-target ./demo.sh go`); both
+were run on this lab and printed the guest kernel string. The kernel version
+in the output is the observable proof; a claim like "it deployed" is
+worthless next to the guest's own `uname` in your terminal.
 
 ## What you learned
 
-- The lab exists for exactly three reasons — root, kernel observation, and
-  two-host demos — and the decision rule says everything else runs locally.
+- The lab exists for exactly three reasons: root, kernel observation, and
+  two-host demos; the decision rule says everything else runs locally.
 - Provisioning is a cheap pipeline: pinned cached base image → qcow2 overlay
   per guest → cloud-init seed → `virt-install`; guests are disposable because
   only the overlay is theirs.
 - The guest toolset is observation-first (bcc/bpftrace/perf/gdbserver), with
-  in-VM toolchains as a fallback and deliberately no eBPF build chain.
-- Snapshot `lab-ready` after provisioning, revert after destructive demos —
+  in-VM toolchains as a fallback and no eBPF build chain.
+- Snapshot `lab-ready` after provisioning, revert after destructive demos,
   and trust `/var/log/lab-ready` plus a guest kernel string in your output,
   not assumptions.
 - **Host/guest parity holds at provisioning and drifts afterwards.** A snapshot
@@ -339,4 +339,4 @@ stack**, so every later demo has somewhere to send its telemetry.
 
 ---
 
-<p><span class="status status--verified">verified</span> — both guests were provisioned from Fedora-Cloud-Base-Generic-44-1.7 on this host (target 4 GB at 192.168.124.7, peer 2 GB at 192.168.124.95); <code>/var/log/lab-ready</code> read back <code>bpftrace v0.24.2</code> and kernel <code>6.19.10-300.fc44</code> on both; <code>lab-ready</code> snapshots exist on both; and <code>deploy-to-vm.sh</code> ran the host-built C++ and Go binaries on <code>systems-target</code>, printing the guest kernel string <code>6.19.10-300.fc44.x86_64</code> versus <code>7.1</code> locally. The <strong>&ldquo;When the guest falls behind the host&rdquo;</strong> section was added later and is verified separately, on the same lab: the host&rsquo;s <code>libstdc++</code> reached <code>16.2.1-2.fc44</code> (<code>libstdc++.so.6.0.36</code>, max <code>GLIBCXX_3.4.36</code>) while both guests sat at <code>16.1.1-2.fc44</code> (<code>libstdc++.so.6.0.35</code>, max <code>GLIBCXX_3.4.35</code>) behind snapshots taken before the update, and every host-built C++ binary then failed on the guest with the quoted <code>version `GLIBCXX_3.4.36&#39; not found</code>. A full-matrix run reproduced the asymmetry the section describes — six VM examples failing in C++ while Go and Rust passed on the same guest in the same run — and the quoted diagnostic commands, the <code>dnf</code> fix, and the re-snapshot were all run here: after <code>revert-vm.sh systems-target lab-ready</code> the guest reported <code>GLIBCXX_3.4.36</code> and <code>test-all-examples.py --mode vm --lang cpp</code> reported the quoted <code>8 passed, 0 failed, 0 skipped</code>, including the two-guest <code>41-capstone-fleet</code>. <code>systems-peer</code> was confirmed to carry the same drift while showing no symptom. Not exercised: <span class="status status--unverified">unverified</span> — the <code>GLIBC_</code> form of the symbol check is stated by analogy and was not the failure encountered here, which was <code>GLIBCXX_</code> only; and building inside the guest with the in-VM toolchains is named as the standing fallback but is not exercised by any example in this book.</p>
+<p><span class="status status--verified">verified</span>: both guests were provisioned from Fedora-Cloud-Base-Generic-44-1.7 on this host (target 4 GB at 192.168.124.7, peer 2 GB at 192.168.124.95); <code>/var/log/lab-ready</code> read back <code>bpftrace v0.24.2</code> and kernel <code>6.19.10-300.fc44</code> on both; <code>lab-ready</code> snapshots exist on both; and <code>deploy-to-vm.sh</code> ran the host-built C++ and Go binaries on <code>systems-target</code>, printing the guest kernel string <code>6.19.10-300.fc44.x86_64</code> versus <code>7.1</code> locally. The <strong>&ldquo;When the guest falls behind the host&rdquo;</strong> section was added later and is verified separately, on the same lab: the host&rsquo;s <code>libstdc++</code> reached <code>16.2.1-2.fc44</code> (<code>libstdc++.so.6.0.36</code>, max <code>GLIBCXX_3.4.36</code>) while both guests sat at <code>16.1.1-2.fc44</code> (<code>libstdc++.so.6.0.35</code>, max <code>GLIBCXX_3.4.35</code>) behind snapshots taken before the update, and every host-built C++ binary then failed on the guest with the quoted <code>version `GLIBCXX_3.4.36&#39; not found</code>. A full-matrix run reproduced the asymmetry the section describes: six VM examples failing in C++ while Go and Rust passed on the same guest in the same run, and the quoted diagnostic commands, the <code>dnf</code> fix, and the re-snapshot were all run here: after <code>revert-vm.sh systems-target lab-ready</code> the guest reported <code>GLIBCXX_3.4.36</code> and <code>test-all-examples.py --mode vm --lang cpp</code> reported the quoted <code>8 passed, 0 failed, 0 skipped</code>, including the two-guest <code>41-capstone-fleet</code>. <code>systems-peer</code> was confirmed to carry the same drift while showing no symptom. Not exercised: <span class="status status--unverified">unverified</span>: the <code>GLIBC_</code> form of the symbol check is stated by analogy and was not the failure encountered here, which was <code>GLIBCXX_</code> only; and building inside the guest with the in-VM toolchains is named as the standing fallback but is not exercised by any example in this book.</p>

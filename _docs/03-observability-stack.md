@@ -8,24 +8,24 @@ duration: "30 minutes"
 
 Chapter 1 gave you three toolchains; Chapter 2 gave you two disposable VMs.
 This chapter adds the last piece of the workbench: somewhere for telemetry to
-*go*. Many chapters in this book emit metrics, traces, or logs — a syscall
-counter here, a request span there — and printing them to a terminal only gets
+*go*. Many chapters in this book emit metrics, traces, or logs (a syscall
+counter here, a request span there), and printing them to a terminal only gets
 you so far. What you want is a real backend you can query, graph, and
 cross-check against, without turning your workstation into a monitoring
 deployment. The answer is one container: the Grafana **LGTM** all-in-one
 image, run rootless under Podman, listening on exactly two ports you will
-memorize — **4318** for sending and **3000** for looking.
+memorize: **4318** for sending and **3000** for looking.
 
-The infrastructure is in `examples/_infra/` — one compose file and a README.
+The infrastructure is in `examples/_infra/`: one compose file and a README.
 There is no per-chapter example here; every telemetry-emitting example from
 Chapter 38 onward depends on what you stand up now.
 
 {% include excalidraw.html
    file="03-telemetry-pipeline"
    alt="Telemetry pipeline: a host demo and a VM demo send OTLP HTTP to port 4318 on the lsp-lgtm container, where the OpenTelemetry Collector fans out to Loki for logs, Tempo for traces, and Mimir for metrics; Grafana on port 3000 queries all three and serves the developer's browser. The VM demo reaches the host at the libvirt gateway address 192.168.124.1."
-   caption="Figure 3.1 — one container, whole pipeline: OTLP in on :4318, Grafana out on :3000" %}
+   caption="Figure 3.1: one container, whole pipeline: OTLP in on :4318, Grafana out on :3000" %}
 
-> **Tools used** — `podman`, `systemctl`, `curl`, `openssl`, `python3` (host);
+> **Tools used**: `podman`, `systemctl`, `curl`, `openssl`, `python3` (host);
 > `ip` (systems-target VM). Everything here is checked by
 > `scripts/check-host.sh`, ships with Fedora, or is preinstalled in the lab VMs.
 
@@ -35,14 +35,14 @@ LGTM is Grafana Labs' acronym for its open-source backend quartet: **L**oki
 (logs), **G**rafana (the UI), **T**empo (traces), **M**imir (metrics,
 Prometheus-compatible). In production these are four separately scaled,
 separately configured services. For local development that topology is pure
-overhead — what you need is the *interfaces*, not the scale. So Grafana ships
+overhead; what you need is the *interfaces*, not the scale. So Grafana ships
 `grafana/otel-lgtm`, a single image containing all four **plus an embedded
 OpenTelemetry Collector** wired to receive OTLP and fan each signal out to the
 right store, with Grafana's datasources pre-provisioned to read them back.
 One `podman compose up` and the entire pipeline in Figure 3.1 exists.
 
-The collector is the part worth pausing on. Your programs will never speak
-"Loki" or "Mimir" directly — they speak **OTLP** (the OpenTelemetry protocol)
+The collector does the real work here. Your programs will never speak
+"Loki" or "Mimir" directly; they speak **OTLP** (the OpenTelemetry protocol)
 to the collector, and the collector routes logs, traces, and metrics to their
 stores. That indirection is the whole point of OpenTelemetry: instrument once,
 point `OTEL_EXPORTER_OTLP_ENDPOINT` somewhere, and the backend becomes
@@ -59,7 +59,7 @@ concern; debuggability wins on a workbench.
 
 ## The compose file, line by line
 
-Read `examples/_infra/compose-lgtm.yaml` — it is short enough to understand
+Read `examples/_infra/compose-lgtm.yaml`; it is short enough to understand
 completely:
 
 ```yaml
@@ -90,17 +90,17 @@ networks:
     name: lsp-observability
 ```
 
-Each choice has a why. The image is **pinned to `0.8.1`** — an unpinned
+Each choice has a why. The image is **pinned to `0.8.1`**: an unpinned
 `latest` would let the stack silently change under a book whose chapters
 promise reproducible output. `container_name: lsp-lgtm` gives scripts (and
 you) a stable handle instead of a generated name. Only three ports are
 published; Loki, Tempo, and Mimir listen on internal ports *inside* the
-container, deliberately unpublished — everything goes in through the collector
+container, left unpublished; everything goes in through the collector
 and comes out through Grafana, which is exactly the discipline production
 imposes. `mem_limit: 2g` exists because this one container runs five services;
 the cap keeps a runaway ingest from competing with your builds for RAM. The
 three `GF_AUTH_*` variables make Grafana skip its login entirely and treat
-every visitor as an admin — indefensible anywhere reachable, perfect for a
+every visitor as an admin: indefensible anywhere reachable, perfect for a
 loopback-only lab, and the comment in the file says so. The `healthcheck`
 polls Grafana's `/api/health` from inside the container with a generous
 `start_period`, because first boot unpacks and starts all five services and
@@ -119,8 +119,8 @@ everyone forgets:
 ```
 
 Why: `podman compose` is not a compose implementation. It is a thin
-dispatcher that delegates to an external provider — on Fedora, the
-`docker-compose` plugin — which speaks the Docker Engine API to a daemon
+dispatcher that delegates to an external provider: on Fedora, the
+`docker-compose` plugin, which speaks the Docker Engine API to a daemon
 socket. Podman famously has no daemon, but it emulates one: the systemd user
 unit `podman.socket` listens on
 `$XDG_RUNTIME_DIR/podman/podman.sock` and socket-activates a Podman service
@@ -138,7 +138,7 @@ requires: [lgtm]
 ```
 
 The verification harness (`scripts/test-all-examples.py`) probes
-`http://localhost:4318` before running such an example — and counts *any*
+`http://localhost:4318` before running such an example, and counts *any*
 HTTP response as alive, including a 4xx, because a bare GET to an OTLP ingest
 path legitimately returns an error status while proving something is
 listening. If nothing answers, the example is marked **SKIP (lgtm down)**
@@ -148,11 +148,11 @@ working example red.
 
 ## Reaching the stack from inside a VM
 
-A guest cannot use `localhost:4318` — its loopback is its own. But on a
+A guest cannot use `localhost:4318`: its loopback is its own. But on a
 libvirt NAT network, the **network gateway is the host**, so the host's
 published ports are reachable at the gateway IP. On this lab that is
 `192.168.124.1` (libvirt's stock default network is `192.168.122.0/24`, so
-most references say `.122.1` — always check yours):
+most references say `.122.1`; always check yours):
 
 ```bash
 [vm]$ ip route show default
@@ -167,7 +167,7 @@ You pass the endpoint through `deploy-to-vm.sh` via `OTEL_ENDPOINT`:
 
 The script forwards it explicitly because of a subtlety worth knowing: `sudo`
 strips the environment, so `scripts/lab/deploy-to-vm.sh` re-injects it with
-`env` on the remote side —
+`env` on the remote side:
 
 ```bash
 RENV=""
@@ -176,7 +176,7 @@ RENV=""
 exec ssh -t $SSH_OPTS "fedora@$IP" "sudo env $RENV '$REMOTE' $*"
 ```
 
-— otherwise the guest binary would fall back to *its* localhost and telemetry
+Otherwise the guest binary would fall back to *its* localhost and telemetry
 would vanish silently. One host-side requirement: ports 4317/4318 must be open
 toward the libvirt bridge (on Fedora, the `libvirt` firewalld zone).
 
@@ -198,7 +198,7 @@ healthy
 ```
 {% endraw %}
 
-Open `http://localhost:3000` — no login form, straight to Grafana as an
+Open `http://localhost:3000`: no login form, straight to Grafana as an
 anonymous admin. Take the two-minute tour: **Explore** in the left navigation
 is where you will live; its datasource picker already lists **Loki**,
 **Tempo**, and **Mimir** (as a Prometheus datasource), provisioned by the
@@ -219,7 +219,7 @@ gate used: hand-post one trace with `curl`, then query it back.
 That `200` is the collector accepting a minimal but complete OTLP/JSON trace:
 one resource (carrying `service.name`, the identity every backend groups by),
 one scope, one 50 ms span. Now query it back **through Grafana's datasource
-proxy** — Tempo's own HTTP port is intentionally unpublished, so the proxy
+proxy**: Tempo's own HTTP port is unpublished, so the proxy
 route both reaches Tempo *and* proves the Grafana→Tempo wiring in a single
 request:
 
@@ -244,12 +244,12 @@ request:
 ```
 
 (Response trimmed.) The span went curl → collector → Tempo → Grafana proxy →
-back to your terminal — every arrow in Figure 3.1's trace path, exercised
+back to your terminal: every arrow in Figure 3.1's trace path, exercised
 once. In the UI, Explore → Tempo → TraceQL query
 `{ resource.service.name = "lsp-smoke" }` finds the same span with a waterfall
 view of one bar.
 
-Stop the stack the same way you started it (state is not preserved — fine for
+Stop the stack the same way you started it (state is not preserved, fine for
 a lab):
 
 ```bash
@@ -270,22 +270,22 @@ lsp-lgtm  docker.io/grafana/otel-lgtm:0.8.1  Up ... (healthy)
 ```
 {% endraw %}
 
-`podman ps` is independent of the compose provider — it asks the container
+`podman ps` is independent of the compose provider: it asks the container
 runtime directly, so agreement here means the docker-compose plugin, the user
 socket, and the runtime all see the same world. The `(healthy)` suffix is the
 compose file's `curl` healthcheck reporting from *inside* the container (the
-image ships curl, not wget — a detail that cost this chapter one debugging
+image ships curl, not wget, a detail that cost this chapter one debugging
 round), while your `curl` hits the *published* port from outside: same
 endpoint, two network paths, both answering.
 
 ## What you learned
 
 - The LGTM all-in-one image packs Loki, Grafana, Tempo, Mimir, and an OTel
-  Collector into one pinned container — production interfaces, workbench
+  Collector into one pinned container: production interfaces, workbench
   footprint; senders only ever speak OTLP, and this book standardizes on the
   curl-able HTTP transport at `:4318`.
 - `podman compose` delegates to the docker-compose plugin over the Docker
-  API socket that `systemctl --user enable --now podman.socket` provides —
+  API socket that `systemctl --user enable --now podman.socket` provides,
   the one-time prerequisite behind every `up -d`.
 - Examples declare `requires: [lgtm]`; the harness probes `:4318` and skips,
   never fails, when the stack is down.
@@ -296,9 +296,9 @@ endpoint, two network paths, both answering.
 The stack sits idle until Chapter 38 instruments real programs in all three
 languages against it, and Chapter 45 adds the PCP, Cockpit, and SystemTap
 suites alongside. With the toolchains, the lab, and the telemetry pipeline in
-place, the workbench is complete — next, Foundations begins where everything
+place, the workbench is complete; next, Foundations begins where everything
 in this book bottoms out: the syscall boundary and the ABI beneath it.
 
 ---
 
-<p><span class="status status--verified">verified</span> — on the Fedora 44 host: <code>podman.socket</code> enabled, <code>podman compose -f examples/_infra/compose-lgtm.yaml up -d</code> brought <code>lsp-lgtm</code> (otel-lgtm:0.8.1) to healthy, <code>/api/health</code> returned ok, the OTLP HTTP POST to <code>:4318/v1/traces</code> returned 200, and the Tempo query by trace ID through Grafana's datasource proxy returned the span <code>r02-gate-smoke</code> (service <code>lsp-smoke</code>). Not yet exercised: exporting telemetry from inside a lab VM via the <code>192.168.124.1</code> gateway — the endpoint-forwarding path is verified only as far as <code>deploy-to-vm.sh</code> running host-built binaries on the guest; a VM-side OTLP export lands with Chapter 38.</p>
+<p><span class="status status--verified">verified</span>: on the Fedora 44 host: <code>podman.socket</code> enabled, <code>podman compose -f examples/_infra/compose-lgtm.yaml up -d</code> brought <code>lsp-lgtm</code> (otel-lgtm:0.8.1) to healthy, <code>/api/health</code> returned ok, the OTLP HTTP POST to <code>:4318/v1/traces</code> returned 200, and the Tempo query by trace ID through Grafana's datasource proxy returned the span <code>r02-gate-smoke</code> (service <code>lsp-smoke</code>). Not yet exercised: exporting telemetry from inside a lab VM via the <code>192.168.124.1</code> gateway; the endpoint-forwarding path is verified only as far as <code>deploy-to-vm.sh</code> running host-built binaries on the guest; a VM-side OTLP export lands with Chapter 38.</p>

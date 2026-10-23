@@ -151,11 +151,11 @@ implementation strategies across the three languages, because Go's and
 Rust's runtimes are not safe to `fork()` once other threads or goroutines
 exist. C++ uses a raw `fork(2)` for both the worker and each short-lived
 job -- no `exec`, just a different function running in the child -- because
-`app`'s C++ build is deliberately single-threaded up to that point, so the
+`app`'s C++ build is single-threaded by design up to that point, so the
 forking thread and the whole process are the same thing. Go and Rust
 instead **self-reexec**: `serve` resolves its own binary path
 (`os.Executable()` / `std::env::current_exe()`) and starts `worker`/`job`
-as genuinely separate processes running the same binary with a different
+as separate processes running the same binary with a different
 argument, then reaps each one with `Cmd.Wait()` / `Child::wait()` --
 ordinary `wait4(2)` under the hood, one goroutine or thread parked per
 child *is* the reap loop, no `SIGCHLD` involved anywhere in those two
@@ -254,7 +254,7 @@ is cooperatively stopped (`stop_token`, an atomic flag, a channel close)
 before `serve` waits on the worker, so no job-spawn races the shutdown
 sequence.
 
-The one hardcoded assumption worth naming: `cpu_max_display()` only
+One hardcoded assumption deserves a direct look: `cpu_max_display()` only
 handles cgroup v2's single-line `cpu.max` format (`"max"` or
 `"<quota> <period>"`); a host still running cgroup v1 would need the older
 `cpu.cfs_quota_us`/`cpu.cfs_period_us` pair instead, and none of these
@@ -288,7 +288,7 @@ inherited the *blocked* mask -- so when `serve` later forwarded `SIGTERM`
 to it with `kill(worker_pid, SIGTERM)`, the signal did not run its default
 (terminate) action. It just sat **pending**, forever: the worker was
 unkillable by anything short of `SIGKILL`, exactly the failure mode
-`naive` demonstrates deliberately at the container's pid-1 layer, now
+`naive` demonstrates at the container's pid-1 layer, now
 reproduced accidentally one process down. The fix is one line in the
 child, immediately after `fork()`:
 
@@ -300,7 +300,7 @@ child, immediately after `fork()`:
 
 which mirrors `pmon`'s reset-before-`execvp` from chapter 12 almost
 exactly -- the difference is that there is no `exec` here to reset the
-mask for free, so the reset has to be written explicitly. Go and Rust
+mask automatically, so the reset has to be written explicitly. Go and Rust
 never meet this bug at all, and not by luck: both languages avoid
 `fork()`-without-`exec()` entirely, because forking a multithreaded
 runtime (goroutine scheduler threads, Rust's allocator and async
@@ -339,7 +339,7 @@ the container's pid and mount namespaces on top:
    alt="A host band above a podman-user-namespace band. podman exec reaches the container PID 1 directly from inside the container runtime. podman unshare nsenter first joins podman's own user namespace, then nsenter --target --pid --mount reaches the same PID 1 from there -- both confirming Name: app and /proc/1/exe resolving to /usr/local/bin/app. A dashed, failing arrow shows plain nsenter without podman unshare returning EPERM: reassociate to namespaces failed. Below, real evidence boxes show the subuid mapping user:524288:65536 and a live zombie scan of /proc/[0-9]*/stat reporting zero."
    caption="Figure 34.3 -- podman exec and podman unshare nsenter reach the same container PID 1 from two different starting namespaces; plain nsenter cannot" %}
 
-A live `gdb` attach is the surprise worth reporting plainly: because
+A live `gdb` attach is the real surprise: because
 rootless podman's user namespace is *owned by the same host uid* that is
 running `gdb`, ordinary ptrace permission checks succeed even with no
 `podman unshare` step at all --

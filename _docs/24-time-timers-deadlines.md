@@ -2,19 +2,19 @@
 title: "Time, timers, and deadlines"
 order: 24
 part: "Networking"
-description: "chatterd v3 learns to survive a peer that vanishes: the POSIX clock taxonomy, clock_gettime's vDSO fast path (no syscall — proven by its absence under strace), timerfd as a pollable heartbeat, the per-language deadline idiom, why liveness must be measured on a monotonic clock, and jittered exponential backoff."
+description: "chatterd v3 learns to survive a peer that vanishes: the POSIX clock taxonomy, clock_gettime's vDSO fast path (no syscall, proven by its absence under strace), timerfd as a pollable heartbeat, the per-language deadline idiom, why liveness must be measured on a monotonic clock, and jittered exponential backoff."
 duration: "45 minutes"
 ---
 
 Chapters 21–23 built `chatterd` into a peer-to-peer chat daemon that links two
 hosts over TCP and passes framed messages. It has one fatal naïveté: it assumes
 the peer stays. Pull the cable, kill the process, or let a switch drop the
-flow, and a `chatterd` peer sits forever in a `read` that will never return —
+flow, and a `chatterd` peer sits forever in a `read` that will never return:
 TCP alone will not tell you the far end is gone in any useful window. Version 3
 fixes this with *time*: a periodic **heartbeat** proves the link is alive, a
 **deadline** measured on silence declares it dead, and a **jittered
 exponential backoff** brings it back without hammering. The one new idea under
-all three is that not all clocks are the same clock — and picking the wrong one
+all three is that not all clocks are the same clock, and picking the wrong one
 turns a heartbeat into a liability the first time NTP corrects your wall clock.
 
 The code is in `examples/24-time-timers-deadlines/`. `./demo.sh` there builds
@@ -24,53 +24,53 @@ chapter adds), and the exit codes all three languages share.
 
 {% include excalidraw.html
    file="24-clock-taxonomy"
-   alt="Top band: the four clocks clock_gettime can read as boxes — CLOCK_REALTIME (dashed, wall time, settable, can step backward), CLOCK_MONOTONIC (amber, since a boot epoch, never steps, steady_clock/Instant), CLOCK_BOOTTIME (monotonic plus suspend time), and PROCESS_CPUTIME_ID (this process's on-CPU time). Bottom band: while a peer is silent and ntpd corrects the wall clock, a dashed REALTIME box shows a wall-clock deadline rewinding so a dead peer looks alive, beside an amber MONOTONIC box where elapsed is always non-negative and the timeout fires on real silence; an amber arrow from CLOCK_MONOTONIC points to it labeled chatterd reads this."
-   caption="Figure 24.1 — the clock taxonomy and the monotonic-vs-wall bug: a wall-clock deadline slips when the clock is stepped; a CLOCK_MONOTONIC deadline does not" %}
+   alt="Top band: the four clocks clock_gettime can read as boxes: CLOCK_REALTIME (dashed, wall time, settable, can step backward), CLOCK_MONOTONIC (amber, since a boot epoch, never steps, steady_clock/Instant), CLOCK_BOOTTIME (monotonic plus suspend time), and PROCESS_CPUTIME_ID (this process's on-CPU time). Bottom band: while a peer is silent and ntpd corrects the wall clock, a dashed REALTIME box shows a wall-clock deadline rewinding so a dead peer looks alive, beside an amber MONOTONIC box where elapsed is always non-negative and the timeout fires on real silence; an amber arrow from CLOCK_MONOTONIC points to it labeled chatterd reads this."
+   caption="Figure 24.1: the clock taxonomy and the monotonic-vs-wall bug: a wall-clock deadline slips when the clock is stepped; a CLOCK_MONOTONIC deadline does not" %}
 
-> **Tools used** — `strace`, `python3` (host); `cyclictest` (systems-target
+> **Tools used**: `strace`, `python3` (host); `cyclictest` (systems-target
 > VM, exercised in Part 8). Everything host-side is checked by
 > `scripts/check-host.sh` or ships with Fedora.
 
 ## The clock taxonomy
 
 `clock_gettime(2)` takes a *clock id*, and the choice is the whole chapter.
-Four ids matter here. **`CLOCK_REALTIME`** is the wall clock — seconds since the
+Four ids matter here. **`CLOCK_REALTIME`** is the wall clock: seconds since the
 Unix epoch, the thing `date` prints. It is *settable* (`settimeofday`,
-`adjtimex`) and *disciplined by NTP*, which means it can jump forward, and — the
-part that bites — jump *backward*. **`CLOCK_MONOTONIC`** counts from an
+`adjtimex`) and *disciplined by NTP*, which means it can jump forward, and (the
+part that bites) jump *backward*. **`CLOCK_MONOTONIC`** counts from an
 unspecified epoch (near boot) and has one guarantee the wall clock cannot give:
 it never steps and never goes backward. NTP may gently *slew* its rate, but two
 successive reads always satisfy `t1 >= t0`. **`CLOCK_BOOTTIME`** is monotonic
-*and* keeps counting across system suspend, which `CLOCK_MONOTONIC` does not —
+*and* keeps counting across system suspend, which `CLOCK_MONOTONIC` does not:
 the right clock for "has 30 s of wall time passed even if the laptop slept."
 **`CLOCK_PROCESS_CPUTIME_ID`** measures only the CPU time *this process* burned,
 useful for profiling, useless for wall deadlines.
 
 The rule that follows is absolute: **any duration or deadline must be measured
-on a monotonic clock.** A heartbeat timeout is a duration — "no traffic for
-3 seconds" — so it reads `CLOCK_MONOTONIC`, never `CLOCK_REALTIME`. Figure 24.1
+on a monotonic clock.** A heartbeat timeout is a duration ("no traffic for
+3 seconds"), so it reads `CLOCK_MONOTONIC`, never `CLOCK_REALTIME`. Figure 24.1
 is the bug you avoid by obeying this. Suppose you computed a deadline as
 `wall_now() + 3s` and stored it. Halfway through, `ntpd` decides the clock is
 0.5 s fast and steps it *back*. Now `wall_now()` reads earlier than when you
 started; your deadline recedes into the future; a peer that died stays "alive"
-for an extra half second — or, on a backward step large enough, your `select`
+for an extra half second; or, on a backward step large enough, your `select`
 timeout goes negative and a healthy peer is declared dead instantly. Every
 language in this chapter routes liveness through a monotonic reading:
 `std::chrono::steady_clock` in C++, `std::time::Instant` in Rust, and Go's
 `time.Now`, whose returned value carries a hidden monotonic component precisely
 so `time.Since` cannot be fooled by a wall-clock step.
 
-## clock_gettime and the vDSO — no syscall at all
+## clock_gettime and the vDSO: no syscall at all
 
-Reading the clock happens constantly — on every loop iteration `chatterd`
-recomputes how long until the deadline — so it had better be cheap. It is, and
+Reading the clock happens constantly (on every loop iteration `chatterd`
+recomputes how long until the deadline), so it had better be cheap. It is, and
 the reason is chapter 4's vDSO. `CLOCK_MONOTONIC` and `CLOCK_REALTIME` reads do
 not trap into the kernel: the kernel maps a shared page (the vDSO) into every
 process, updates a timekeeping structure there on each tick, and the libc
 `clock_gettime` wrapper reads it in userspace with no `syscall` instruction.
 The proof is negative and we run it later: `strace` a program that reads the
 monotonic clock four times and you will not see a single `clock_gettime` line,
-because there was no syscall to trace. Sleeping is the opposite — you cannot
+because there was no syscall to trace. Sleeping is the opposite: you cannot
 sleep in userspace, so `nanosleep`/`clock_nanosleep` and `timerfd_settime` do
 trap, and those *do* show up.
 
@@ -78,8 +78,8 @@ trap, and those *do* show up.
 
 `clockprobe` is a standalone subcommand that makes the abstractions concrete by
 measuring them. It reads the monotonic clock's resolution with `clock_getres`,
-times a 1 ms `nanosleep`, and times a 1 ms one-shot `timerfd` — each timed on a
-steady clock — then prints one line. Here it is in all three languages,
+times a 1 ms `nanosleep`, and times a 1 ms one-shot `timerfd` (each timed on a
+steady clock), then prints one line. Here it is in all three languages,
 verbatim from `examples/24-time-timers-deadlines/`:
 
 {% include codetabs.html langs="C++|Go|Rust" %}
@@ -185,12 +185,12 @@ fn run_clockprobe() -> i32 {
 ```
 
 The three are the same program in three dialects. `clock_getres` on this host
-returns `1ns` — nanosecond nominal resolution — but resolution is not accuracy:
+returns `1ns` (nanosecond nominal resolution), but resolution is not accuracy:
 the two 1 ms sleeps *overshoot*, and that gap is the lesson. A `timerfd` is a
 timer wrapped in a file descriptor: `timerfd_create(CLOCK_MONOTONIC, …)` makes
 one, `timerfd_settime` arms it (an `it_value` with no `it_interval` is a
 one-shot; both set makes it periodic), and it becomes *readable* when it
-expires — a `read` returns a `uint64` count of expirations. That last property
+expires: a `read` returns a `uint64` count of expirations. That last property
 is why it belongs in this chapter: a timer that is an fd drops straight into the
 `poll`/`epoll` loop chapter 9 built, no signal handler required.
 
@@ -210,20 +210,20 @@ that to `poll` as its timeout:
 ```
 
 `deadline` is a `steady_clock::time_point` set to `now() + timeout` at session
-start and *reset to a fresh `now() + timeout` on every received frame* — JOIN,
+start and *reset to a fresh `now() + timeout` on every received frame*: JOIN,
 MSG, or PING, all count as traffic. The `poll` array holds three fds: the
 `signalfd` shutdown doorbell, the periodic heartbeat `timerfd`, and the peer
-socket. When `poll` returns 0, the timeout elapsed with nothing to read — the
-peer went silent for `timeout_ms` — and the session returns `TimedOut`. When
+socket. When `poll` returns 0, the timeout elapsed with nothing to read (the
+peer went silent for `timeout_ms`) and the session returns `TimedOut`. When
 the heartbeat fd fires, the loop reads its 8-byte tick and sends a `PING`. This
 is the same one-loop-three-sources shape as chapter 9's `fwatch`, now serving
 liveness instead of file events. The three languages express the deadline
-differently — C++ subtracts two `time_point`s, Rust does the identical
+differently: C++ subtracts two `time_point`s, Rust does the identical
 arithmetic on `Instant`, and Go resets a `time.Timer` and `select`s on its
-channel — but the invariant is one sentence: *the clock is monotonic and the
+channel, but the invariant is one sentence: *the clock is monotonic and the
 deadline is data.*
 
-Reconnection is the connector's job, and it is where jitter earns its keep.
+Reconnection is the connector's job, and it is where jitter matters most.
 After a drop, `run_connect` waits out a backoff before redialing:
 
 ```cpp
@@ -239,17 +239,17 @@ After a drop, `run_connect` waits out a backoff before redialing:
         backoff = std::min(backoff * 2, opts.max_backoff_ms);
 ```
 
-Two ideas are stacked here. **Exponential** — `backoff` doubles per failed
+Two ideas are stacked here. **Exponential**: `backoff` doubles per failed
 attempt (200 → 400 → 800 …) up to `--max-backoff-ms`, so a peer that is down
-for a while is polled ever more gently instead of in a hot loop. **Jitter** —
+for a while is polled ever more gently instead of in a hot loop. **Jitter**:
 the actual `delay` is `half + rand(0..half)`, the "equal jitter" strategy: half
 the interval fixed, half random. Jitter matters because without it, a hundred
 clients that all lost the same server would redial in lockstep on every doubling
 boundary, a synchronized thundering herd that knocks the server back down the
 instant it recovers. Randomizing each client's wait smears the retries across
 the window. A fresh connection resets `backoff` to the base, so a brief blip is
-never punished with a long wait. The wait itself is `sleep_or_shutdown` — a
-`poll` on the signalfd with the backoff as its timeout — so a `SIGTERM`
+never punished with a long wait. The wait itself is `sleep_or_shutdown` (a
+`poll` on the signalfd with the backoff as its timeout), so a `SIGTERM`
 mid-backoff wakes instantly instead of stranding the process for seconds.
 
 ## Errors, three ways
@@ -259,32 +259,32 @@ diagnostic, usage errors exit 2. The interesting failures here are temporal.
 The most important one is a *non-error*: when the peer socket returns EOF (0
 bytes) because the far end closed, `chatterd` does **not** immediately declare
 the peer gone. It sets `sock_dead`, stops polling the socket, and lets the
-*deadline* fire — so death is always declared by the same monotonic timeout
+*deadline* fire, so death is always declared by the same monotonic timeout
 whether the peer crashed silently or closed politely, and the observable line
 is identical. Sending a `PING` into a half-closed socket can raise `EPIPE`; C++
 passes `MSG_NOSIGNAL` so it never becomes a fatal `SIGPIPE`, and the failed send
-is deliberately ignored — "a broken pipe is left to the deadline," as the
+is ignored: "a broken pipe is left to the deadline," as the
 comment says, because the deadline is the single source of truth about
 liveness. `EINTR` on `poll` is retried in C++ and Rust and handled beneath the
 runtime in Go. Bad numeric flags (`--timeout-ms abc`) and missing required
-flags exit 2 through each language's parser — `std::expected` chains in C++,
-error returns in Go, `Result` in Rust — all printing the same `usage:` block.
+flags exit 2 through each language's parser: `std::expected` chains in C++,
+error returns in Go, `Result` in Rust, all printing the same `usage:` block.
 
 ## Concurrency lens
 
 The C++ and Rust sessions are single-threaded: one `poll` loop multiplexes the
 socket, the heartbeat timerfd, and the shutdown signalfd, so there is no shared
-state to lock — the timer and the deadline are just two more fds and one
+state to lock: the timer and the deadline are just two more fds and one
 `time_point`. Go inverts it, exactly as chapter 9 did: a per-connection reader
 goroutine turns the socket into a `chan frame`, and the session is a `select`
-over four cases — `ticker.C` (heartbeat), `deadline.C` (liveness), the frame
+over four cases: `ticker.C` (heartbeat), `deadline.C` (liveness), the frame
 channel, and `ctx.Done()` (shutdown from `signal.NotifyContext`). The subtlety
 Go forces you to get right is `time.Timer` reset: before `deadline.Reset`, the
 code drains a possibly-already-fired timer channel, because a `Timer` that
 expired between `select` iterations leaves a value buffered in `C` that would
 otherwise make the *next* `select` see a phantom timeout. C++ and Rust sidestep
 this entirely by recomputing the `poll` timeout from the deadline each
-iteration — there is no timer object to get out of sync, just arithmetic on a
+iteration: there is no timer object to get out of sync, just arithmetic on a
 monotonic reading. Both designs reach the same behavior; the single-threaded
 one has less to synchronize, the Go one reads more like the protocol.
 
@@ -295,7 +295,7 @@ one has less to synchronize, the Go one reads more like the protocol.
 ```
 
 The runner (`python3 scripts/test-all-examples.py --only
-24-time-timers-deadlines`) reports `PASS PASS PASS` for cpp, go, rust —
+24-time-timers-deadlines`) reports `PASS PASS PASS` for cpp, go, rust;
 `verify.lua` asserts observable behavior, not exit 0. First, `clockprobe` on
 this host:
 
@@ -304,14 +304,14 @@ this host:
 clockprobe: CLOCK_MONOTONIC res=1ns nanosleep(1ms) actual=1056us timerfd(1ms) actual=1013us
 ```
 
-All three languages agree to within noise — Go printed `actual=1066us` /
+All three languages agree to within noise: Go printed `actual=1066us` /
 `1005us`, Rust `1055us` / `1002us`. The number to sit with is the overshoot: a
 1 ms sleep took ~1056 µs, ~56 µs long. That gap is not the clock's resolution
-(1 ns) — it is the *scheduler's wake-up latency*, the time between the timer
+(1 ns); it is the *scheduler's wake-up latency*, the time between the timer
 expiring and your thread actually getting a CPU. On a general-purpose kernel
 this is tens of microseconds and variable; the timerfd path is a touch tighter
 (~1013 µs) because it wakes straight out of `read` rather than through
-`nanosleep`'s return. Now the heartbeat scenario, driven by hand — a listener
+`nanosleep`'s return. Now the heartbeat scenario, driven by hand: a listener
 `A` and a connector `B` on loopback, then `A` killed:
 
 ```console
@@ -334,15 +334,15 @@ chatterd: B shutting down          # after SIGTERM
 
 The backoff line is the whole design on one screen. Base is 200 ms, so the
 first `delay` is `100 + rand(0..100)` = 107 ms; then the ceiling doubles and the
-window grows — 245 (from base 400), 712 (from 800), 1055 (from 1600) — each a
+window grows: 245 (from base 400), 712 (from 800), 1055 (from 1600), each a
 jittered draw inside its window, never a bare power of two. `SIGTERM`
 mid-backoff prints `B shutting down` and exits 0, waking out of the `poll`
 immediately. Figure 24.2 is this sequence.
 
 {% include excalidraw.html
    file="24-heartbeat-timeout-seq"
-   alt="Two lifelines: connector B (amber) on the left, listener A (grey, ending early) on the right. Top: JOIN 'B' from B to A and JOIN 'A' back, then a note that both print linked and exchange messages. Middle: amber PING arrows every 300 ms in both directions, each resetting B's deadline, with a note that any frame sets deadline = mono_now() + timeout. Then A killed, socket EOF, and a dashed PING from B that is dropped on the broken pipe. Bottom on B's side: an amber box 'deadline fires on silence — chatterd: peer A timed out', then three stacked reconnect boxes 107 ms, 245 ms, 712 ms chained by amber arrows, beside a note explaining equal-jitter backoff delay = B/2 + rand(0..B/2) with B doubling per attempt and capped at max-backoff."
-   caption="Figure 24.2 — chatterd v3 from link to loss to reconnect: the monotonic deadline fires on silence, then jittered exponential backoff (real 107/245/712 ms from this run) paces the redials" %}
+   alt="Two lifelines: connector B (amber) on the left, listener A (grey, ending early) on the right. Top: JOIN 'B' from B to A and JOIN 'A' back, then a note that both print linked and exchange messages. Middle: amber PING arrows every 300 ms in both directions, each resetting B's deadline, with a note that any frame sets deadline = mono_now() + timeout. Then A killed, socket EOF, and a dashed PING from B that is dropped on the broken pipe. Bottom on B's side: an amber box 'deadline fires on silence: chatterd: peer A timed out', then three stacked reconnect boxes 107 ms, 245 ms, 712 ms chained by amber arrows, beside a note explaining equal-jitter backoff delay = B/2 + rand(0..B/2) with B doubling per attempt and capped at max-backoff."
+   caption="Figure 24.2: chatterd v3 from link to loss to reconnect: the monotonic deadline fires on silence, then jittered exponential backoff (real 107/245/712 ms from this run) paces the redials" %}
 
 ## Cross-check: the vDSO's absence, and the heartbeat live under strace
 
@@ -357,7 +357,7 @@ monotonic clock four times (`t0`, after the sleep, `t1`, after the timerfd) plus
 ```
 
 Zero lines. Not because the program never reads the clock, but because those
-reads never became syscalls — they were served from the vDSO page in userspace.
+reads never became syscalls: they were served from the vDSO page in userspace.
 What *does* trap is visible when you trace the sleeping calls:
 
 ```console
@@ -370,10 +370,10 @@ What *does* trap is visible when you trace the sleeping calls:
 ```
 
 `clock_nanosleep` (glibc implements `nanosleep` on top of it), `timerfd_create`,
-`timerfd_settime` — each once, exactly as the source calls them — and no
+`timerfd_settime` (each once, exactly as the source calls them) and no
 `clock_gettime` row at all. The Rust binary shows
 `clock_nanosleep(CLOCK_MONOTONIC, …)` because it calls that clock explicitly;
-the C++ one shows `CLOCK_REALTIME` because that is glibc's `nanosleep` default —
+the C++ one shows `CLOCK_REALTIME` because that is glibc's `nanosleep` default,
 a fine reminder that the *sleep* clock and the *deadline* clock are chosen
 independently.
 
@@ -393,19 +393,19 @@ poll([{fd=3,...}, {fd=5,...}, {fd=4,...}], 3, 900) = 1 ([{fd=4, revents=POLLIN}]
 
 Every claim in the chapter is on those lines. `timerfd_settime` arms the
 heartbeat with a 300 ms interval. The `sendto(4, "CH\1\1\0\1B", 7, …)` is the
-7-byte JOIN frame — `43 48 01 01 00 01 42`, the canonical header (`CH`,
-version 1, type 1 = JOIN) plus the name `B` — matching the wire format byte
+7-byte JOIN frame, `43 48 01 01 00 01 42`, the canonical header (`CH`,
+version 1, type 1 = JOIN) plus the name `B`, matching the wire format byte
 for byte, the same header chapters 21–23 used; only the TYPE byte and the
 engine around it differ by chatterd version. When fd 5 (the timerfd) fires,
-the loop reads its 8-byte tick (`\1\0\0\0\0\0\0\0` — one expiration) and
+the loop reads its 8-byte tick (`\1\0\0\0\0\0\0\0`, one expiration) and
 sends the 6-byte PING `CH\1\5\0\0` (`43 48 01 05 00 00`). And
 the `poll` timeout *is* the deadline countdown: `1200` right after receiving a
-frame (the deadline was just reset), then `900` after a heartbeat-only wakeup —
+frame (the deadline was just reset), then `900` after a heartbeat-only wakeup:
 the monotonic deadline shrinking exactly as `deadline - steady_clock::now()`
 says it should. The trace and the printed output tell one story: the timer
 drives the PINGs, the monotonic deadline drives the timeout.
 
-> **On the lab VM** <span class="status status--unverified">unverified</span> —
+> **On the lab VM** <span class="status status--unverified">unverified</span>:
 > the scheduler wake-up latency that `clockprobe` measures as ~56 µs of
 > overshoot has a proper tool, `cyclictest`, which stresses the timer path and
 > reports latency percentiles; and comparing a `PREEMPT` versus `PREEMPT_RT`
@@ -419,17 +419,17 @@ drives the PINGs, the monotonic deadline drives the timeout.
   duration or deadline; `CLOCK_BOOTTIME` adds suspend time;
   `CLOCK_PROCESS_CPUTIME_ID` measures CPU, not wall time. `chatterd` measures
   silence on the monotonic clock so an NTP correction can never fake a timeout.
-- `clock_gettime` on the common clocks is a vDSO read, not a syscall — `strace`
+- `clock_gettime` on the common clocks is a vDSO read, not a syscall: `strace`
   showed **zero** `clock_gettime` lines for a program that read the clock four
   times, while `clock_nanosleep` and `timerfd_settime` (which must trap) each
   appeared once.
-- A `timerfd(CLOCK_MONOTONIC)` is a timer you can `poll` — it drops the
+- A `timerfd(CLOCK_MONOTONIC)` is a timer you can `poll`: it drops the
   heartbeat into the same event loop as the socket and the shutdown signalfd,
   and `clockprobe` measured a 1 ms timer landing at ~1013 µs, the ~13 µs
   overshoot being scheduler wake-up latency, not clock resolution.
 - Jittered exponential backoff (`delay = B/2 + rand(0..B/2)`, `B` doubling to a
   cap, reset on a fresh link) paces reconnects and de-synchronizes a fleet of
-  clients — the live run drew 107, 245, 712, 1055 ms, growing but never a bare
+  clients: the live run drew 107, 245, 712, 1055 ms, growing but never a bare
   power of two.
 
 Next, **shared state and the futex**: `chatterd`'s peers coordinated by passing
@@ -438,7 +438,7 @@ a lock is a userspace atomic that only touches the kernel when it must block.
 
 ---
 
-<p><span class="status status--verified">verified</span> — every number and
+<p><span class="status status--verified">verified</span>: every number and
 output excerpt above was produced on the Fedora 44 reference host (kernel
 7.1, strace 7.1) this session: the runner printed
 <code>24-time-timers-deadlines  PASS  PASS  PASS</code> (3 passed, 0 failed, 0
