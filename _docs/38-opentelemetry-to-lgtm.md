@@ -6,6 +6,24 @@ description: "lsp-otel is a traced request/response server that exports OpenTele
 duration: "50 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Emit a parent/child trace tree per request with `StartSpan`/`tracer.Start`/`span_builder` across C++, Go, and Rust
+- Record a monotonic counter (`requests_total`) and a histogram (`request_duration`) alongside that trace
+- Carry parent/child span context three ways: Go's explicit `context.Context`, Rust's `Context::current_with_span`, and C++'s `Scope` guard
+- Export spans and metrics over OTLP/HTTP to a collector, batching on a short interval and flushing on shutdown
+- Verify the export landed by querying Tempo and Prometheus through Grafana's datasource proxy instead of trusting the program's own output
+- Tag each language's exporter with a distinct `service.name` so three services share one LGTM stack without colliding
+- Reconcile each language's shutdown signal handling (a signal-driven flush, `select`, or an `mpsc` channel) against the same OTLP contract
+
+## Why this matters
+
+A program that claims to export telemetry and a program that actually exports telemetry look identical from the terminal: both print a clean exit and move on. The only way to tell them apart is to go read the backend the export was supposed to reach, which is exactly what this chapter's verification step does instead of trusting `serve`'s own stdout.
+
+That distinction matters because the usual failure mode here is silent: a wrong OTLP endpoint path, a default SDK log flooding the output contract, or a batch that never flushes before the process exits all produce a program that looks healthy and ships nothing. Querying Tempo and Prometheus back is what turns "I instrumented the service" into a claim you can actually stand behind.
+
 Chapter 37's `loadmix analyze` printed a USE-method verdict to a terminal, and
 Chapter 36's `sysagent` served one JSON snapshot per HTTP request. Both make you
 *present* to read the number: someone has to be running the command, or scraping

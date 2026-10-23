@@ -6,6 +6,42 @@ description: "The coordination ladder from a 1 ms poll loop through POSIX messag
 duration: 60 minutes
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain why `futex(2)` is the kernel's one real coordination primitive and
+  how `FUTEX_WAIT`/`FUTEX_WAKE` close the check-then-sleep race that plain
+  polling cannot
+- Distinguish a private futex (keyed by virtual address) from a shared
+  futex (keyed by inode and offset) and choose correctly for unrelated
+  processes
+- Implement a seqlock for read-mostly shared data, including why the writer
+  bumps the sequence word twice per update
+- Bind process-shared atomics onto mapped memory with `std::atomic_ref`,
+  `AtomicU32::from_ptr`, and Go's `sync/atomic`, and state each language's
+  safety contract
+- Measure and rank a coordination ladder (poll loop, POSIX message queues,
+  futex, pipe, eventfd, UNIX socket) by p50/p99 latency
+- Extend `shmkv` (v1) with a watcher that sleeps on a futex instead of
+  polling, verified with `strace` and `/proc`'s `voluntary_ctxt_switches`
+
+## Why this matters
+
+Polling a shared value in a loop is the first instinct for interprocess
+coordination, and it is also the most common unnecessary cost in a
+latency-sensitive system: measured on this host, a 1 ms poll loop runs
+three orders of magnitude slower than the alternative. Every mutex,
+condition variable, and semaphore in a C++, Go, or Rust runtime is
+userspace protocol built on one kernel call, and understanding that call
+directly is what lets you choose correctly between polling, message
+queues, and shared-memory wakeups.
+
+This chapter builds `shmkv` v1 on `futex(2)` and a seqlock: writers that
+never block, readers that retry on a torn copy instead of taking a lock,
+and a measured latency ladder that ranks every coordination channel this
+book has built so far.
+
 Chapter 16 (mmap and shared mappings) left `shmkv` in an awkward state: two
 processes share a page of key-value slots, but a reader who wants to *notice*
 a change has no option except reading the page again, and again, and again.

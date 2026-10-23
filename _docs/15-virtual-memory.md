@@ -6,6 +6,41 @@ description: "The address space read line by line from /proc/self/maps, brk vers
 duration: 45 minutes
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Read a process's address space line by line from `/proc/self/maps` and
+  identify VMAs, the `[heap]`, the mmap region, `[stack]`, and the
+  `[vvar]`/`[vdso]` pages
+- Trace an allocation with `strace -e trace=mmap,brk,madvise` to tell
+  whether `malloc`, Rust's default allocator, or Go's runtime services it
+  with `brk` or `mmap`
+- Measure minor and major page faults with `getrusage(2)` deltas and explain
+  fault-around batching for cached file reads
+- Distinguish VSZ, RSS, and PSS, and read `/proc/<pid>/smaps_rollup` to find
+  the number that sums correctly across a fleet
+- Read overcommit policy (`vm.overcommit_memory`, `CommitLimit`,
+  `Committed_AS`) and the OOM killer's `oom_score_adj` without writing to
+  `/proc/sys/vm`
+- Apply `madvise(2)` hints (`MADV_WILLNEED`, `MADV_DONTNEED`, `MADV_FREE`,
+  `MADV_HUGEPAGE`) to a mapped range
+- Build and run `memmap` in C++, Go, and Rust to inspect a process's own
+  address space under five allocation modes
+
+## Why this matters
+
+A segfault, a stalled service, or a container killed without warning
+usually traces back to a wrong assumption about memory: that an allocation
+reserves RAM, that `free` returns pages to the kernel, or that RSS measures
+what a process costs a host. None of those assumptions hold, and the gap
+between what a program asked for and what the kernel delivered is exactly
+where capacity planning goes wrong under load.
+
+This chapter builds the vocabulary, VMAs, faults, VSZ/RSS/PSS, overcommit,
+that every later memory and IPC chapter assumes, including `shmkv`, the
+key-value store the rest of this part builds directly on mapped pages.
+
 Part 3 closed with `pmon` dropping privileges in chapter 14; this part turns
 inward, to the memory every one of those processes lives in. The one new idea
 is that **an address is a promise, not a page**: when `malloc`, `make`, or

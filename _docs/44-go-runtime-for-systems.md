@@ -6,6 +6,24 @@ description: "go-runtime-for-systems is a single Go binary that observes its own
 duration: "45 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain the GMP scheduler model (goroutines, machines, processors) and how work-stealing moves half a queue between P's
+- Force signal-based async preemption of a non-yielding goroutine under `GOMAXPROCS=1` and name `SIGURG`'s role in it
+- Tune GC pacing with `GOGC` and `GOMEMLIMIT` (`debug.SetGCPercent`, `debug.SetMemoryLimit`) and measure the resulting cycle-count effect
+- Distinguish a blocking read from a netpoller-parked read, and explain why 2,000 blocked goroutines need only a handful of OS threads
+- Read `/proc/self/status`'s `Threads:` field to cross-check the runtime's own goroutine and thread bookkeeping
+- Interpret `GODEBUG=gctrace=1` and `GODEBUG=schedtrace=1000,scheddetail=1` output
+- Disable async preemption with `GODEBUG=asyncpreemptoff=1` and observe the scheduler's own verdict flip to FAIL
+
+## Why this matters
+
+Every earlier Go chapter in this book leaned on the runtime without looking at it: goroutines that seemed to run in parallel, garbage that seemed to collect itself, sockets that seemed to block without blocking a thread. This chapter makes the runtime answer for itself, asking the scheduler, the collector, and the netpoller direct questions and printing the answers as computed verdicts rather than taking any of it on faith.
+
+The netpoller theme is the clearest payoff: 2,000 goroutines blocked on a read and a thread count that stays in the double digits is the concrete, measured reason Go programs can hold far more concurrent work in flight than their OS thread count would suggest, and the chapter proves it against the kernel's own `/proc/self/status` accounting, not the runtime's self-report.
+
 Chapter 43 spent its whole budget on Rust's compiler doing extra work at
 build time -- a proc-macro crate that runs once, produces tokens, and gets
 out of the way. This chapter is the mirror image: a runtime that never gets

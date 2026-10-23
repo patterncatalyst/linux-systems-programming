@@ -6,6 +6,23 @@ description: "The readiness model: nonblocking fds multiplexed by one epoll loop
 duration: 50 minutes
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Register nonblocking file descriptors with `epoll_create1`/`epoll_ctl` and explain why a kernel-side interest list lets `epoll_wait` scale where `poll`/`select` cannot.
+- Distinguish level-triggered from edge-triggered (`EPOLLET`) readiness, state the drain-to-`EAGAIN` discipline each requires, and identify when `EPOLLONESHOT` applies.
+- Build an inotify watch with `inotify_init1`/`inotify_add_watch`, parse packed `inotify_event` records, and recognize `IN_Q_OVERFLOW` as the signal to fall back to a snapshot/diff rescan.
+- Fold `timerfd` and `signalfd` into one epoll loop as ordinary readable fds, including the one-shot re-arm pattern and the block-then-read signalfd prerequisite.
+- Compare the explicit C++/Rust single-threaded epoll loop against Go's goroutine-plus-channel `select` design built on the runtime's netpoller.
+- Inspect a running watcher's interest list and fd table through `/proc/<pid>/fdinfo` and read `strace` output for `epoll_wait`, inotify, timerfd, and signalfd calls.
+
+## Why this matters
+
+Every scalable network service, file watcher, and terminal multiplexer rests on the same decision: decouple waiting from the work the wait is for. The readiness model is how a single thread tracks thousands of file descriptors without a thread per source, and it is the direct ancestor of the event loops behind editors, sync clients, and the servers Part 6 builds.
+
+This chapter also establishes the comparison that drives the rest of this part: an explicit, visible-in-source epoll loop versus a runtime that hides the same machinery behind channels and goroutines. Chapter 10 builds on this foundation by introducing the completion model, io_uring, as the second half of the readiness-versus-completion pair.
+
 Chapter 8 closed on a question durability cannot answer: "which of ten
 thousand fds is ready?" This chapter answers it with the **readiness model**:
 the kernel will tell you *when an fd has something for you*, and a program

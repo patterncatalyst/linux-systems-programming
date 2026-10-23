@@ -6,6 +6,39 @@ description: "pmon v4 turns the supervisor into a log pipeline: the pipe as a ri
 duration: "45 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Read a pipe's capacity live with `fcntl(F_GETPIPE_SZ/F_SETPIPE_SZ)` and
+  explain why a full or empty ring applies back-pressure instead of losing
+  data
+- State what `PIPE_BUF` atomicity guarantees, and does not guarantee, about
+  message framing, large writes, and reads
+- Create a FIFO with `mkfifo` and reason through the `open(2)` blocking
+  table, including the `O_WRONLY|O_NONBLOCK`/`ENXIO` retry pattern
+- Handle `SIGPIPE`/`EPIPE` as the writer's contract for a long-lived relay
+  that must survive a detached reader
+- Move bytes between a file and a pipe with `splice(2)` without a userspace
+  copy, and explain why the file offset advances only for delivered bytes
+- Extend `pmon` (v4) to capture a child's stdout and stderr into a framed
+  log and republish it through a FIFO, verified with `strace`, `/proc`, and
+  a `dd` throughput run
+
+## Why this matters
+
+Every shell pipeline and every process supervisor depends on pipes behaving
+correctly under load: back-pressure instead of data loss, a predictable end
+when a reader vanishes, and a parent that does not accidentally keep its
+own pipe open forever. Getting any of those wrong produces a supervisor
+that hangs, a log that silently stops mid-stream, or a pipeline a shell
+cannot terminate cleanly.
+
+This chapter treats the pipe as what it is, a bounded ring of kernel pages,
+and builds `pmon` v4's log pipeline on that model: framed capture that
+never relies on `PIPE_BUF` for message boundaries, and a `splice`-based
+FIFO relay that moves bytes without a userspace copy.
+
 This part of the book is about processes talking to each other, and it opens
 with the primitive every shell has used since 1973. `pmon` ended the process
 part supervising a crashing child with two byte-identical engines, pidfd and

@@ -6,6 +6,39 @@ description: "File-backed vs anonymous and MAP_SHARED vs MAP_PRIVATE copy-on-wri
 duration: 50 minutes
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Distinguish file-backed from anonymous mappings and `MAP_SHARED` from
+  `MAP_PRIVATE`, and demonstrate copy-on-write with a live mmap scribble
+- Use `msync(MS_SYNC)` to force dirty page-cache pages to disk, and explain
+  why visibility between `MAP_SHARED` mappers needs no syscall at all
+- Perform the `ftruncate`-then-`mmap` lifecycle correctly and explain why
+  touching a mapped page past EOF raises `SIGBUS`
+- Create and seal an anonymous `memfd_create` file with `F_SEAL_SHRINK`,
+  `F_SEAL_GROW`, and `F_SEAL_FUTURE_WRITE`
+- Define a byte-exact binary format (a `u32` little-endian field, NUL-padded
+  slots) that C++, Go, and Rust read and write interchangeably, verified
+  with `cmp`
+- Build `shmkv` v0 and read `strace`, `/proc/<pid>/maps` (the `rw-s`
+  permission bits), and `cmp` output to prove one physical page is shared
+  across processes
+
+## Why this matters
+
+Treating a mapped file like ordinary memory is a reasonable mental model
+right up until two processes write to it at once, or a peer truncates the
+file out from under your mapping. `MAP_SHARED` collapses memory, the page
+cache, and the file on disk into one set of physical pages, which is fast
+and risky in exactly the ways a systems programmer needs to see directly
+rather than take on faith.
+
+This chapter gives you the mapping quadrant (file-backed versus anonymous,
+shared versus private) and the discipline, `msync` for durability,
+`ftruncate` before `mmap`, sealed memfds for untrusted peers, that `shmkv`
+v0 needs to be a safe, cross-language, byte-exact store.
+
 The previous chapter took the address space apart (VMAs, page tables, faults)
 without ever asking where a mapping's bytes come from. This chapter answers
 that with the book's next artifact: `shmkv`, a key/value store whose entire

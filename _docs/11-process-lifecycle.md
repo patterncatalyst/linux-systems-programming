@@ -6,6 +6,23 @@ description: "fork, exec, and wait walked end to end as pmon v0 spawns and reaps
 duration: "45 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Trace a process from `fork(2)` through `execve(2)` to `wait4(2)`/`waitid(2)`, and explain what copy-on-write actually copies.
+- Build a `O_CLOEXEC` self-pipe that lets a parent distinguish "exec failed" from "the program ran and exited."
+- Observe a zombie process live in `ps` and `/proc/<pid>/stat`, and explain why a parent must reap it before its pid can be reused.
+- Distinguish exit codes from termination signals (`WIFEXITED`/`WEXITSTATUS` versus `WIFSIGNALED`/`WTERMSIG`) and apply the shell's `128+n` convention.
+- Compare the `clone`/`clone3` flavors that glibc's `fork`, Go's `os/exec`, and Rust's `Command` each issue, verified with `strace -f`.
+- Explain orphan reparenting to a subreaper (`PR_SET_CHILD_SUBREAPER`) and why an orphaned child is never left permanently abandoned.
+
+## Why this matters
+
+Fork, exec, and wait are the three syscalls underneath every process a Linux system runs, from a shell pipeline to a container runtime launching an entry point. Getting the gap between fork and exec right, and reaping promptly, is the difference between a supervisor that works and one that silently leaks zombies or orphans until `pid_max` runs out.
+
+This chapter opens `pmon`, the process monitor that carries through the rest of this part: signal handling in Chapter 12, pidfd-based supervision in Chapter 13, and privilege dropping in Chapter 14 all build directly on the spawn-and-reap discipline established here.
+
 This chapter opens the book's third part with a new long-running artifact:
 `pmon`, a process monitor that will grow signal forwarding, pidfd-based
 supervision, and privilege dropping over the next three chapters. Version 0

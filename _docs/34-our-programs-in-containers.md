@@ -6,6 +6,24 @@ description: "The same three daemons this book has built all along, now shipped 
 duration: "60 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Write a multi-stage Containerfile that builds in a full UBI toolchain image and ships only a static-linked binary copied into a minimal `ubi10-micro` runtime stage
+- Explain how rootless podman's user-namespace uid mapping (`/etc/subuid`, `podman unshare cat /proc/self/uid_map`) lets container root remain an unprivileged host user
+- Implement a container entrypoint that handles PID 1's signal and reaping duties explicitly, instead of relying on a default action that the kernel never supplies
+- Read a container's own cgroup-imposed CPU and memory ceiling from `/proc/self/cgroup` and `/sys/fs/cgroup`, and contrast `hardware_concurrency()` against cgroup-aware `GOMAXPROCS`/`available_parallelism()`
+- Reset an inherited signal mask after `fork(2)` so a forwarded `SIGTERM` is not left permanently pending in a child
+- Reach a container's PID 1 from the bare host with `podman exec`, `podman unshare nsenter`, and a direct `gdb -p` attach, and explain why plain `nsenter` fails
+- Probe podman's default seccomp profile to show it silently denies `io_uring` syscalls that an unmodified program might depend on
+
+## Why this matters
+
+Shipping a daemon as a container changes facts the program itself can observe and must handle correctly: what counts as CPU parallelism, what happens to an unhandled signal on PID 1, and which syscalls are even reachable. Getting any of these wrong doesn't fail loudly, a C++ build that trusts `hardware_concurrency()` inside a `--cpus=2` container just oversubscribes silently, and a naive entrypoint just sits through a full `podman stop` grace period before being killed.
+
+This chapter also closes the loop on two mechanisms the book built from raw syscalls in Chapters 32 and 33: a container runtime assembles namespaces, cgroups, and a seccomp profile for you, but the pid-1 obligations and the per-thread signal-mask hazards underneath them are the same ones you'd hit building a container tool by hand.
+
 Chapter 32 gave one of our programs its own namespaces and cgroup directly,
 by calling `unshare`/`clone3` itself. Chapter 33 had `fwatch` sandbox itself
 with seccomp and Landlock. This chapter hands both jobs to something else:

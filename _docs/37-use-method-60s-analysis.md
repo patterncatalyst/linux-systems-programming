@@ -6,6 +6,24 @@ description: "loadmix is Brendan Gregg's Utilization/Saturation/Errors checklist
 duration: "50 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Apply Brendan Gregg's USE method (Utilization, Saturation, Errors) as a fixed threshold table against a resource, rather than an informal checklist
+- Parse `vmstat`, `mpstat -P ALL`, `iostat -xz`, `sar -n DEV`, and `pidstat` output by column name from each tool's own header row, so a parser survives a `sysstat`/`procps-ng` version bump that reorders columns
+- Handle each sampled tool's specific quirk (the since-boot first row in `vmstat`/`iostat`, `mpstat`'s `Average:` aggregate rows, `dmesg`'s permission-denied path) without failing the whole run
+- Spawn five interval samplers concurrently and join them once so an N-second checklist costs N seconds, not five times N
+- Scale a saturation threshold to the machine it runs on (`run_queue >= cpus + 2`) where that is the accurate signal, instead of a flat constant
+- Rank resources by Saturation-value-to-threshold ratio rather than raw Saturation value, so a high-scale metric doesn't always win
+- Diagnose a `std::jthread` RAII ordering bug (`request_stop()` firing before a worker's own deadline) and fix it by holding the parent scope open with `sleep_until`
+
+## Why this matters
+
+Most engineers triaging a live system reach for `uptime`, `vmstat`, `mpstat`, `iostat`, and `pidstat`, not a custom collector, because those tools are already trusted and already parse a running kernel correctly. `loadmix analyze` encodes that exact workflow as a program, so understanding how it parses tool output and scales its thresholds is understanding how an on-call engineer's checklist actually works under the hood.
+
+The column-name parsing discipline and the concurrent-sampler design generalize past this one tool: any program that wraps an external CLI's plain-text output needs the same defense against a version bump reordering fields, and any program running several blocking interval samples needs the same concurrency shape to avoid turning a one-minute checklist into a five-minute one.
+
 Chapter 36's `sysagent` built a USE-method collector from first principles:
 reading `/proc/stat`, `/proc/net`, `/proc/diskstats`, and cgroup PSI directly,
 no external process, no tool you'd have to trust. That is the right call for a

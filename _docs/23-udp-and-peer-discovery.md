@@ -6,6 +6,42 @@ description: "chatterd learns to find peers it was never told about: UDP multica
 duration: "55 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Open and configure a UDP multicast socket with `IP_ADD_MEMBERSHIP`,
+  `IP_MULTICAST_IF`, `IP_MULTICAST_TTL`, and `IP_MULTICAST_LOOP` to join and
+  send to an administratively-scoped group.
+- Explain why connectionless, message-oriented, best-effort UDP suits
+  discovery while TCP suits the conversation that follows, and why a beacon
+  must stay inside one unfragmented MTU.
+- Dedupe repeated beacons by peer name and bridge a first-seen discovery into
+  a TCP dial carrying the existing canonical chat frame.
+- Coordinate shutdown of a blocking UDP receive loop with a socket read
+  timeout plus a stop signal (`stop_token`, cancelled `context`, or
+  `AtomicBool`, depending on language).
+- Verify multicast group membership and socket state with `ip maddr` and
+  `ss -uap`, and capture beacons on the wire with `tcpdump -X`.
+- Run a two-host discovery exchange across a libvirt bridge and explain why a
+  TTL-1 multicast beacon stays link-local without any NAT workaround.
+
+## Why this matters
+
+A peer that has to be told every address in advance does not scale past a
+demo: real services find each other. UDP multicast gives one `sendto` a way
+to reach every listener in a group without the sender knowing who or how many
+they are, and the dedup-then-dial pattern this chapter builds, a
+connectionless announcement bridged into a connection-oriented conversation,
+is the shape behind most service-discovery protocols you will meet later,
+whatever their wire format.
+
+The chapter also draws a hard line worth keeping: discovery tolerates loss
+and reorder, so it belongs on UDP, while the conversation that follows needs
+ordering and reliability, so it belongs on TCP. Picking the wrong protocol for
+either half either drops messages you needed or pays connection overhead you
+did not.
+
 Chapters 21 and 22 built `chatterd` on TCP: the canonical chatterd chat
 frame (magic `"CH"`, version, type, a big-endian length, and a payload)
 carried between two endpoints you already knew, since you typed the peer's

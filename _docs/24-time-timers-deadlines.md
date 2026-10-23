@@ -6,6 +6,42 @@ description: "chatterd v3 learns to survive a peer that vanishes: the POSIX cloc
 duration: "45 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Distinguish `CLOCK_REALTIME`, `CLOCK_MONOTONIC`, `CLOCK_BOOTTIME`, and
+  `CLOCK_PROCESS_CPUTIME_ID`, and explain why any duration or deadline must be
+  measured on a monotonic clock.
+- Explain why `clock_gettime` on the common clocks is served from the vDSO
+  with no syscall, and confirm it with `strace` showing zero `clock_gettime`
+  lines.
+- Create and arm a `timerfd(CLOCK_MONOTONIC)` as a periodic heartbeat that
+  drops into the same `poll`/`epoll` loop as a socket and a `signalfd`.
+- Implement a liveness deadline that resets on every received frame and
+  declares a peer dead only when the monotonic deadline elapses, not on a raw
+  socket error.
+- Implement jittered exponential backoff for reconnection and explain why the
+  jitter term prevents a synchronized thundering herd on recovery.
+- Trace a live heartbeat/timeout/backoff session with `strace` to confirm the
+  sequence of `timerfd_settime`, `sendto`, and the shrinking `poll` timeout.
+
+## Why this matters
+
+A peer that vanishes without closing its socket is the common case in
+production, not the exception: a pulled cable or a killed process leaves the
+other end blocked in `read` forever unless something measures silence and
+acts on it. Getting that measurement right depends entirely on which clock
+you read, and the wrong choice (a wall-clock deadline that NTP can step
+backward) turns a heartbeat into a liability instead of a safety net.
+
+The timerfd pattern here also pays off beyond chat: any program that needs a
+periodic tick inside an existing `poll`/`epoll` loop, without a separate
+thread or a signal handler, uses this exact mechanism. Pairing it with
+jittered exponential backoff is the standard discipline for reconnecting to a
+recovering service without a fleet of clients hammering it back down the
+moment it comes up.
+
 Chapters 21–23 built `chatterd` into a peer-to-peer chat daemon that links two
 hosts over TCP and passes framed messages. It has one fatal naïveté: it assumes
 the peer stays. Pull the cable, kill the process, or let a switch drop the

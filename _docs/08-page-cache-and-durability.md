@@ -6,6 +6,48 @@ description: "What write(2) actually promises, and what durability costs: dirty 
 duration: 45 minutes
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain what a successful buffered `write(2)` actually guarantees: a
+  dirty page in the page cache, visible to readers, nothing about the device
+- Distinguish `fsync`, `fdatasync`, and `sync_file_range` by exactly what
+  each flushes, and explain why `sync_file_range` is not a durability
+  primitive despite touching the device
+- Use `O_DIRECT` correctly: respect its block-alignment requirements and
+  treat an `EINVAL` at `open(2)` as a documented, filesystem-dependent
+  outcome rather than a generic error
+- Implement the tmpfile → `fsync` → `rename` → `fsync(dir)` pattern for
+  crash-safe file replacement
+- Build and run `iobench`, a tri-language write benchmark with buffered,
+  fsync-every, and direct modes, and read its `MiB/s` and `fsync_ms` output
+  as two different claims
+- Measure writeback and durability cost independently of the benchmark's own
+  numbers, using `/proc/meminfo`'s `Dirty:` counter, `/proc/<pid>/io`, and
+  `strace -c`
+
+## Why this matters
+
+"The write succeeded" is one of the most quietly overloaded sentences in
+systems programming. A successful `write(2)` return code says only that your
+bytes reached kernel memory; whether they survive a power loss a second later
+depends on a sync call you have to ask for explicitly, and getting that
+choice wrong is how real databases lose real data after passing every test
+that never pulled the power cord. This chapter turns that gap from folklore
+into a measured quantity: 21 ms to "write" 64 MiB, 138 ms to write it
+durably, watched directly in `/proc/meminfo` and `/proc/<pid>/io` rather than
+taken on faith.
+
+It also closes the loop Chapter 7 opened. That chapter gave you a precise
+model of what a file descriptor is; this one gives you a precise model of
+what happens to the bytes you push through it, which is the other half of
+"I wrote a file" that most introductions skip. The durability tools
+introduced here, `fsync`/`fdatasync` semantics, the atomic-rename pattern,
+`O_DIRECT`'s tradeoffs, are exactly the primitives Part 2's remaining
+chapters (event loops, and eventually `fwatch`'s own durability story) build
+on next.
+
 Chapter 7 ended with a file descriptor safely wrapped in RAII and a byte
 successfully written through the VFS. This chapter is about the uncomfortable
 question that follows: written *where*? A successful `write(2)` puts your

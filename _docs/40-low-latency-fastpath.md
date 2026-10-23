@@ -6,6 +6,24 @@ description: "chatterd-fastpath strips the ch21 echo hot path down to a pinned c
 duration: "50 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Pin a process to one CPU with `sched_setaffinity(2)` and confirm placement through `/proc/<pid>/status`'s `Cpus_allowed_list`
+- Eliminate per-message heap allocation by reusing a single stack buffer across the life of a connection
+- Replace a blocking `read(2)` with a non-blocking `recv` busy-poll loop that spins on `EAGAIN` instead of sleeping
+- Count voluntary context switches through `/proc/<pid>/status` to prove a server never blocks, rather than trusting what it prints
+- Resolve a CPU-count discrepancy between `sysconf(_SC_NPROCESSORS_ONLN)` and Go's `runtime.NumCPU()` under a `taskset` affinity mask
+- Shut down cleanly across three mechanisms: a non-`SA_RESTART` handler consuming `EINTR`, and Go's poller-driven fd close
+- Benchmark a naive server against a fastpath server under identical `taskset` placement and report the percentile gap
+
+## Why this matters
+
+Chapter 39 earned the right to trust a `p99`. This chapter spends that trust on the next question: once you believe the number, how do you make it small? Pinning, zero allocation, and busy-poll each remove one specific, nameable source of tail latency, and each carries a real cost, most of all busy-poll's whole dedicated core, so the chapter's real lesson is picking the right trade for a latency-critical path rather than applying every trick everywhere.
+
+The proof discipline matters as much as the techniques. `Cpus_allowed_list` and `voluntary_ctxt_switches` come from the kernel's own accounting in `/proc/<pid>/status`, not from anything the server prints about itself, which is what turns "this server is pinned and never sleeps" from a claim into something you can check.
+
 Chapter 39 taught you to trust a latency number: warm the code, time each
 iteration, correct for coordinated omission, and report the tail instead of the
 mean. This chapter spends that discipline. If you now believe a `p99` you

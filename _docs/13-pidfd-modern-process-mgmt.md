@@ -6,6 +6,23 @@ description: "The pid-reuse race constructed step by step, then closed for good:
 duration: "45 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Construct the five-step pid-reuse race and explain why an integer pid carries no identity guarantee once it is reaped.
+- Open a pidfd with `pidfd_open(2)`, or obtain one atomically at spawn time with `clone3`'s `CLONE_PIDFD` flag.
+- Poll a pidfd for exit readiness, reap it with `waitid(P_PIDFD, ...)`, and signal it with `pidfd_send_signal(2)`.
+- Explain why `pidfd_send_signal` returns `ESRCH` instead of silently signaling a recycled pid.
+- Compare how Go's runtime (which adopts `CLONE_PIDFD` for every child) and Rust's stable standard library (which keeps pidfd support behind the unstable `linux_pidfd` feature) handle process identity today, verified with `strace`.
+- Inspect a pidfd's target process through the `Pid:` line of `/proc/<pid>/fdinfo/<fd>`.
+
+## Why this matters
+
+A supervisor that names its children by pid carries a race it usually never notices: any reap it does not control, a runtime, a library, a signal handler, can free that pid for reuse before the supervisor acts on it again. On a busy build server or a container with a small `pid_max`, that window is not theoretical.
+
+Pidfds close the race by making a process a referenceable object instead of a reused number, and they compose directly with the event-loop model Chapter 9 built: a process exit becomes ordinary fd readiness. This chapter makes pidfds pmon's default engine, completing the supervision story Chapters 11 and 12 started before Chapter 14 turns to privilege.
+
 `pmon` v1 ended the last chapter supervising a crashing child correctly: no
 async handlers, SIGCHLD arriving as data through a signalfd, a `WNOHANG` reap
 classifying every death. But it still carries a lie it inherited from 1970s

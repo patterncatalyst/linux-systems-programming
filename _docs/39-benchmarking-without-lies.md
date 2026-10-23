@@ -6,6 +6,24 @@ description: "benchlab measures the ch21 chatterd frame codec two ways in the sa
 duration: "50 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Discard a warmup period before timing, separating cold-start cost from steady-state latency
+- Collect per-iteration samples and report percentiles (min/median/p99/max) instead of a single average
+- Correct a closed-loop benchmark for coordinated omission by backfilling synthetic samples down to an expected interval
+- Read the CPU frequency governor (`scaling_governor`, `cpupower frequency-info`) and treat it as a confound in tail latency
+- Prevent dead-code elimination by folding every result into an observable checksum, and confirm the difference by reading `objdump` output
+- Cross-check wall-clock percentiles against `perf stat` cycles and instructions counts
+- Implement the identical warmup/percentile/coordinated-omission algorithm in C++, Go, and Rust and verify matching behavior across all three
+
+## Why this matters
+
+A microbenchmark you wrote yourself is the easiest number in the whole book to get quietly wrong, because nothing stops it from compiling cleanly and printing a confident, reproducible figure for code that never ran, or for a stall a closed loop recorded once when a real caller would have felt it hundreds of times over. `benchlab` is built to show both traps happening in the same binary, so the gap between a misleading number and a real one is something you can watch rather than take on faith.
+
+The payoff carries past this chapter: Chapter 40 spends the discipline earned here, pinning a core and reusing a buffer to shrink exactly the tail this chapter learned to measure accurately.
+
 Chapter 37 gave you the USE method's 60-second checklist for a system already
 in trouble, and Chapter 38 wired that telemetry into the LGTM stack you can
 query back. Both assume the numbers arriving are real. This chapter asks the

@@ -6,6 +6,46 @@ description: "Stand up the Grafana LGTM all-in-one container with podman compose
 duration: "30 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Stand up the Grafana `grafana/otel-lgtm` all-in-one container with `podman
+  compose`, pinned to a fixed image tag for reproducible output
+- Enable the `podman.socket` systemd user unit so `podman compose` has a
+  Docker API endpoint to delegate to
+- Explain OTLP's two transports (gRPC on `:4317`, HTTP on `:4318`) and why
+  this book standardizes on the curl-able HTTP path
+- Post a minimal OTLP/JSON trace to `:4318/v1/traces` with `curl` and query
+  it back through Grafana's Tempo datasource proxy
+- Declare an example's telemetry dependency with `requires: [lgtm]` and
+  explain why the harness marks a missing backend SKIP, never FAIL
+- Reach the host's LGTM stack from inside a lab VM through the libvirt
+  gateway address and forward `OTEL_ENDPOINT` past `sudo`'s environment strip
+- Cross-check `podman compose`'s claims independently with `podman ps` and
+  Grafana's own `/api/health` endpoint
+
+## Why this matters
+
+Every language runtime and every syscall wrapper in this book eventually
+needs somewhere to send what it observes about itself: a span, a counter, a
+log line. Without a backend that telemetry is just `printf` with extra
+ceremony, read once and discarded. Standing up the pipeline here, before any
+instrumented example exists, means every later chapter can treat
+"telemetry works" as a given rather than a per-chapter chore, and it means
+the choice of transport (OTLP over HTTP) and the shape of the check
+(`requires: [lgtm]`, skip-not-fail) get decided once instead of twenty-six
+times.
+
+It also previews a discipline that recurs constantly in systems programming:
+building the smallest thing that gives you the real interface. A production
+observability stack is four independently scaled services; a workbench needs
+the interface those services expose, not their scale. Knowing how to collapse
+infrastructure to its essential shape, and verifying the collapse with the
+same tools (`curl`, `podman ps`) you would use against the real thing, is a
+skill this book leans on again when the lab VMs and later the page cache
+force the same kind of judgment call.
+
 Chapter 1 gave you three toolchains; Chapter 2 gave you two disposable VMs.
 This chapter adds the last piece of the workbench: somewhere for telemetry to
 *go*. Many chapters in this book emit metrics, traces, or logs (a syscall

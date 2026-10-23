@@ -6,6 +6,23 @@ description: "Dispositions, per-thread masks, and the pending set, then three ra
 duration: 50 minutes
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Describe the three kernel-level signal states: per-process disposition, per-thread mask, and the coalescing pending set.
+- Explain async-signal-safety and why most library and runtime code (`malloc`, `printf`, locks) must never run inside a handler.
+- Implement the self-pipe trick and `signalfd(2)`, and compare how pmon's C++, Go, and Rust builds each turn a signal into ordinary data.
+- Build a restarting supervisor (pmon v1) around a single blocking wait whose timeout doubles as debounce and backoff.
+- Reset a child's signal mask between fork and exec so an inherited blocked SIGTERM cannot make the child unstoppable.
+- Read `/proc/<pid>/status` `Sig*` bitmasks and interpret `strace` evidence of `rt_sigaction` and `tgkill` to compare the three languages' signal-handling internals.
+
+## Why this matters
+
+A signal handler runs at an arbitrary instant inside arbitrary code, which makes it one of the easiest places in a Linux program to introduce a deadlock or a race that only shows up under load. The discipline this chapter teaches, converting signals into data and handling them in a plain loop, is what separates a supervisor that restarts cleanly from one that occasionally hangs on SIGTERM.
+
+This chapter turns pmon from a one-shot runner (Chapter 11) into an actual supervisor: restart on crash, clean shutdown, and configuration reload all ride the same signal-to-data conversion. Chapter 13 closes the one race this design still carries, a recycled pid receiving a forwarded signal meant for a dead child.
+
 Chapter 11 taught `pmon` to run one child and report how it died. Version 1
 makes it a real supervisor: restart a crashing child with a doubling backoff,
 shut down cleanly on SIGTERM or SIGINT, and replace the child on SIGHUP. That

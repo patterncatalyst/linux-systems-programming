@@ -6,6 +6,48 @@ description: "bugfarm seeds five defects: leak, use-after-free, an uninitialised
 duration: "60 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Distinguish runtime binary-translation tools (valgrind's `memcheck`,
+  `helgrind`, `massif`) from compile-time source instrumentation
+  (`ASan`/`UBSan`/`TSan`/`LSan`), and state the rebuild/overhead trade-off
+  each implies.
+- Run valgrind `memcheck` against an unmodified binary to catch a leak, an
+  uninitialized read, a use-after-free, and a heap overflow, and read its
+  addressability/definedness shadow-bit model.
+- Build and run `ASan`/`TSan`-instrumented binaries and read a shadow-memory
+  report (redzone, freed-block, `heap-use-after-free`) down to the exact
+  tripped byte.
+- Explain why valgrind misreports or misses defects in a Go binary whose
+  runtime manages memory outside libc, and why `go build -race` (which links
+  ThreadSanitizer directly) does not.
+- Use `cargo miri` to catch undefined behavior reachable only through
+  `unsafe` Rust, naming the exact allocation and deallocation sites of a
+  use-after-free.
+- Compare three independent data-race detectors (ThreadSanitizer, helgrind,
+  `go -race`) converging on the same colliding source line by three different
+  mechanisms.
+
+## Why this matters
+
+Memory and concurrency bugs rarely announce themselves where they happen: a
+use-after-free can run clean for years before the freed block gets reused,
+and a data race can print the right answer nine times out of ten. The tools
+in this chapter catch five such defects at the moment they occur rather than
+however many steps later they happen to corrupt something visibly, and each
+tool does it with a different cost: no rebuild but an order-of-magnitude
+slowdown for valgrind, a required rebuild but near-native speed for a
+sanitizer, symbolic interpretation with no compiled binary at all for miri.
+
+Which tool fits depends on the language and the situation: a borrow checker
+or a garbage collector can rule a whole bug class out before any tool runs,
+and knowing which three of the five defects C++, Go, and Rust each still
+need to worry about (directly from this chapter's own catch/miss matrix) is
+what turns "run every tool on everything" into picking the right one for the
+binary in front of you.
+
 Chapter 28 read a crash after it happened. This chapter catches five bugs
 *before* they get the chance to crash anything; or, in one case, watches a
 tool fail to catch one at all. `bugfarm` is a single CLI,
