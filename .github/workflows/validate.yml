@@ -37,6 +37,15 @@ jobs:
       - name: Run validate.py
         run: python3 scripts/validate.py
 
+  host-ids:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: No machine or owner identifiers in tracked files
+        run: python3 scripts/host_ids.py check
+
   smoke-go:
     runs-on: ubuntu-latest
     steps:
