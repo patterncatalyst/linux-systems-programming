@@ -4,8 +4,9 @@
 # The disposable lab guests (systems-target, systems-peer) are Fedora VMs whose own
 # values are book content: the cloud image's default account home and the pinned
 # guest kernel. Each regex matches that public value wherever it appears, so a host
-# value in the same file is still found.
+# value in the same file is still found. The second kernel-build value is the Fedora
+# kernel-devel package build shipped in the guest image (_docs/30 discusses the mismatch).
 [allow_match]
 home-path = ['^/home/fedora$']
-kernel-build = ['6[.]19[.]10-300[.]fc44']
+kernel-build = ['6[.]19[.]10-300[.]fc44', '^7[.]1[.]3-201[.]fc44$']
 kernel-version = ['^#1 SMP PREEMPT_DYNAMIC Wed Mar 25 18:23:49 UTC 2026$']

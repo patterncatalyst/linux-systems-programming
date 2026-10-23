@@ -221,11 +221,14 @@ KERNEL_BUILD = (
 )
 # The same release written without its architecture ("kernel 7.1.3-201.fc44"). A bare
 # name-version-release would also match every Fedora package version, so this form is
-# matched only after a word that says it is a kernel.
+# matched after a word that says it is a kernel (allowing quotes, markup or a line break
+# in between), or by the shape of a Fedora kernel release: a three-digit release number
+# in the 100s to 300s, which ordinary packages do not use.
 KERNEL_BUILD_NOARCH = (
-    r"\b((?:[Kk]ernel|Linux|vmlinuz-|uname -r\W{0,4})\s*)"
+    r"\b((?:[Kk]ernel|Linux|vmlinuz-|uname -r)\W{0,8}?(?:<code>)?)"
     r"(\d+\.\d+)\.\d+-\d+(?:\.\w+)*?\.(?:fc|el)\d+(?:_\d+)?\b"
     r"(?!\.(?:x86_64|aarch64|src|rpm))"
+    r"|(?<![\w.-])()([4-9]\.\d+)\.\d+-[1-3]\d\d\.fc\d+\b(?!\.(?:x86_64|aarch64|src|rpm))"
 )
 
 
@@ -277,7 +280,7 @@ def generic_rules(cpu_class: str) -> list[Rule]:
             r'\1"redacted"',
         ),
         Rule("kernel-build", re.compile(KERNEL_BUILD), r"\1\2"),
-        Rule("kernel-build", re.compile(KERNEL_BUILD_NOARCH), r"\1\2"),
+        Rule("kernel-build", re.compile(KERNEL_BUILD_NOARCH), r"\1\2\3\4"),
         Rule(
             "kernel-version",
             re.compile(
@@ -438,7 +441,7 @@ def hits(text: str, rules: list[Rule], cfg: Config, rel: str) -> list[tuple[int,
                 continue
             if cfg.value_allowed(r.category, m.group(0)):
                 continue
-            found.append((text.count("\n", 0, m.start()) + 1, r.category))
+            found.append((text.count("\n", 0, m.end() - 1) + 1, r.category))
     return sorted(set(found))
 
 
@@ -673,6 +676,8 @@ def self_test() -> int:
         "e.txt": "other machine: /home/someone/x, an AMD Ryzen 7 5800X, 6.8.0-45-generic\n",
         "pins.sh": "SRPM=kernel-7.2.11-200.fc44.src.rpm\nGUEST=7.2.11-200.fc44.x86_64\n",
         "noarch.md": "the host ran kernel 6.9.4-200.fc40 that day\n",
+        "noarch2.md": "kernel `6.9.4-200.fc40`, kernel\n<code>6.8.1-100.fc40</code>\n"
+        "| 6.7.2-300.fc39 | host |\n",
         "mixed.md": "guest 7.3.1-100.fc45.x86_64, host 6.9.4-200.fc40.x86_64, /home/fedora/app\n",
         "pkgs.md": "pcp 7.1.5-3.fc44 and kernel-devel-7.1.3-201.fc44 are pinned\n",
         "clean.md": "a ~/x path, <repo>/y, /home/user/z, kernel 7.2 PREEMPT_DYNAMIC\n",
@@ -711,6 +716,10 @@ def self_test() -> int:
             not hits(cases["pkgs.md"], rules, cfg, "pkgs.md"), "package versions pass"
         )
         expect(
+            len(hits(cases["noarch2.md"], rules, cfg, "noarch2.md")) == 3,
+            "quoted, next-line and table-cell kernels flagged",
+        )
+        expect(
             [c for _, c in hits(cases["mixed.md"], rules, cfg, "mixed.md")]
             == ["kernel-build"],
             "mixed.md: only the host kernel is flagged",
@@ -741,6 +750,9 @@ def self_test() -> int:
         expect(out == want, f"mixed.md exact: {out!r}")
         out = (repo / "noarch.md").read_text(encoding="utf-8")
         expect(out == "the host ran kernel 6.9 that day\n", f"noarch.md exact: {out!r}")
+        out = (repo / "noarch2.md").read_text(encoding="utf-8")
+        want = "kernel `6.9`, kernel\n<code>6.8</code>\n| 6.7 | host |\n"
+        expect(out == want, f"noarch2.md exact: {out!r}")
         out = (repo / "pins.sh").read_text(encoding="utf-8")
         expect(out == cases["pins.sh"], "allowed pin untouched by scrub")
         gz = (repo / "g.log.gz").read_bytes()
