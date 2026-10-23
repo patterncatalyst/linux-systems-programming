@@ -29,9 +29,12 @@ Ruby), examples in `examples/NN-slug/{cpp,go,rust}/`, chapters in
 
 - Front matter: `title/order/part/description/duration`; `part:` must equal a
   `_parts` `part_name` exactly; quote values containing colons.
-- Spine: hook → figure → concept → "How the code works" → "Errors, three ways"
-  → "Concurrency lens" → "Build, run, observe" → cross-check → "What you
-  learned" → status footer.
+- Spine: "Learning objectives" → "Why this matters" → hook → figure → concept →
+  "How the code works" → "Errors, three ways" → "Concurrency lens" → "Build, run,
+  observe" → cross-check → "What you learned". ("Learning objectives" is "By the
+  end of this chapter you can:" + action-verb capability bullets; both it and
+  "Why this matters" are the first two H2s after the front matter on body
+  chapters. Intro/prerequisites/lab-setup/outline/appendix chapters are exempt.)
 - **Tools used box (required)**: immediately after the intro/figure, a callout
   listing every tool the chapter invokes and where it runs, e.g.
   `> **Tools used** — `strace` (host), `gdbserver` (systems-target VM),
@@ -81,12 +84,13 @@ Ruby), examples in `examples/NN-slug/{cpp,go,rust}/`, chapters in
 - CI (`validate.yml`) checks site integrity + build smoke only; the
   authoritative gate is a host run of the runner with the lab up, recorded in
   `_plans/`.
-- `_plans` is a **published** collection (`output: true`), and
-  `_plans/iteration-plan.md` is reader-facing — it is linked as "Roadmap" from
-  `_includes/footer.html` and `_layouts/part_index.html`, so never unpublish or
-  rename it without fixing both links. **Internal working plans and capture
-  dumps must set `published: false` in their front matter** so they stay in git
-  for resumability without shipping to the site.
+- `_plans` is an **unpublished** collection (`output: false`): iteration plans,
+  roadmap, and capture dumps stay in git for resumability but never ship to the
+  site (site chrome links only reader content: chapters, examples, bibliography).
+  The former "Roadmap" links in `_includes/footer.html` and
+  `_layouts/part_index.html` were removed; the part-index "Coming soon" callout
+  now points at the outline instead. Verification-status records are banked in
+  `_plans/verification-log.md`.
 
 ## Publishing rule: nothing identifies the machine or its owner
 
