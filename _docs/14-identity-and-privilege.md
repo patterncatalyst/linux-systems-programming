@@ -6,6 +6,22 @@ description: "Real, effective, and saved uids as one state machine that setresui
 duration: "50 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain the three-uid state machine (real, effective, saved) and why `setresuid(2)` replaces the error-prone `setuid`/`seteuid`/`setreuid` sequence.
+- Apply the umask to explain how file-creation modes are filtered, and why a staged binary needs a world-readable path once a process drops privilege.
+- Distinguish the five process capability sets (permitted, effective, inheritable, bounding, ambient) from the three file capability sets, and state why the ambient set exists.
+- Execute the ordering-sensitive privilege-drop sequence (`PR_SET_KEEPCAPS`, `setgroups`/`setresgid`/`setresuid`, `capset`, `PR_CAP_AMBIENT_RAISE`, `execve`) and explain why reordering any step breaks it.
+- Verify a privilege drop with a positive/negative control pair, using `getpcaps`, the `Cap*` lines of `/proc/<pid>/status`, `capsh --decode`, and a `bpftrace` probe on `cap_capable`.
+
+## Why this matters
+
+Most daemons start as root because they need a privileged resource (a port below 1024, a protected path) and must stop being root the moment they no longer do. Getting that transition wrong in either direction, leaving root behind by accident or stripping the one capability the service needed, is a recurring real-world vulnerability class, not a theoretical one.
+
+This chapter gives pmon the final piece of its supervision story: dropping privilege correctly while carrying exactly one capability across an identity change and an `execve`, proven with a paired positive and negative run rather than a single claim. It closes out Part 3's process-and-identity arc before Part 4 turns to virtual memory.
+
 `pmon` can spawn a child, shepherd it through signals, and supervise it
 race-free through a pidfd. Version 3 faces the question every real supervisor
 meets next: it starts as root (it has to, to become another user) and

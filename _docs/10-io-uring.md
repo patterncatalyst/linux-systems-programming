@@ -6,6 +6,22 @@ description: "fwatch grows a batched sync engine and meets the second of the two
 duration: 60 minutes
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain the difference between the readiness model (epoll asks "may I?") and the completion model (io_uring reports "it is done").
+- Construct an io_uring instance with `io_uring_setup`, map the SQ ring, CQ ring, and SQE array via the canonical `mmap`s, and submit batched operations with `io_uring_enter`.
+- Write and link submission queue entries (`IORING_OP_READ`/`IORING_OP_WRITE`) with `IOSQE_IO_LINK` to express intra-pair ordering without a userspace round trip.
+- Measure when completion-based I/O helps and when it costs more than a synchronous read/write loop, using `strace -c` syscall counts and wall-clock timings.
+- Account for io_uring's security exposure, including why container seccomp profiles deny it by default, and explain Go's deliberate refusal to expose a uring engine.
+
+## Why this matters
+
+Readiness and completion are the two mental models underlying every I/O-heavy system on Linux, and knowing which one a workload needs is a design decision with measurable consequences: this chapter's own numbers show a completion-based engine running roughly ten times slower than a synchronous loop on warm, small files, while the same engine would win decisively against deep queues on real storage or busy sockets. Fewer syscalls is not automatically faster, and this chapter proves it rather than asserting it.
+
+The chapter also surfaces a security tradeoff worth carrying forward: io_uring's opcode-dispatched interface can bypass syscall filters written against `read`/`write`/`connect`, which is why container runtimes deny it by default. That tension between a powerful kernel interface and a shrinking attack surface returns when Part 7 moves these programs into containers.
+
 Chapter 9 ended with `fwatch` blocked in an event loop, and with a promise:
 epoll would not be the last word on Linux I/O. Epoll answers one question:
 *which of these fds may I touch without blocking?* Then it leaves every

@@ -6,6 +6,24 @@ description: "app hot and app alloc are the same trial-division prime count and 
 duration: "55 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Read a flamegraph in one scan by tracing the widest column from the root frame to the leaf, regardless of which language produced it
+- Capture a CPU profile with `perf record --call-graph fp` and summarize it with `perf report --stdio` against a native ELF binary
+- Drive Go's in-process profilers (`runtime/pprof`'s `--cpuprofile`/`--memprofile`, `runtime/trace`'s `--trace`) and read their output with `go tool pprof --top` and `go tool trace`
+- Render a `cargo flamegraph` SVG and explain how `inferno` collapses and draws the same samples `perf report` tabulates as text
+- Script a `dlv`/`gdb`-style breakpoint session to confirm a profiler's named hot frame independently
+- Run static analyzers (`clang-tidy`, GCC `-fanalyzer`, `cargo clippy`) and distinguish a "this is slow" finding from a "this pattern is suspicious" finding
+- Cross-check three unrelated profiling tools against one shared `app hot`/`app alloc` target to confirm they agree on the hot path
+
+## Why this matters
+
+A profiler only answers "where does the time go" if you can read what it hands back, and every language hands it back differently: `perf` attaches to any ELF binary from the outside, Go's profilers live inside the binary as libraries the program calls into, and Rust sits in between, native enough for `perf` but shipping its own `cargo flamegraph` wrapper on top. A systems programmer who only knows one of these toolbelts is stuck guessing on every other stack.
+
+The payoff is the cross-check this chapter runs at the end: three profiling tools, built by three unrelated projects, reading three different kinds of instrumentation, all converge on the same function name at the same overwhelming share of samples. That agreement, not any single tool's output, is what makes a profiling result trustworthy enough to act on.
+
 Chapter 28 opened this part by reading a crash gdb already knew about;
 Chapter 29 broke code by design and watched a sanitizer catch it. Both
 chapters answer "what is wrong". This one answers a different question that

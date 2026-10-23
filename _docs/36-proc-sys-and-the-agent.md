@@ -6,6 +6,24 @@ description: "sysagent v0 is a USE-method metrics collector that reads /proc and
 duration: "50 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Compute CPU utilization as a delta between two `/proc/stat` reads `--interval-ms` apart, rather than treating a single cumulative-tick read as a percentage
+- Gather independent `/proc` sources (`loadavg`, `meminfo`, `diskstats`, `net/dev`, cgroup PSI) concurrently with the sampling sleep so a snapshot costs `max(interval_ms, gather_time)`, not the sum
+- Resolve a process's own cgroup v2 PSI files via the `0::<path>` line in `/proc/self/cgroup`, with a system-wide `/proc/pressure` fallback
+- Design a schema field (`psi_available`) that lets a missing signal degrade a result instead of failing the whole collection
+- Hand-write a JSON serializer with a fixed field order and consistent float formatting so three languages' output is byte-identical, instead of relying on each language's default library
+- Expose the same snapshot through both a one-shot `sample --json` CLI and a `serve --port P` HTTP `/metrics` endpoint
+- Choose a concurrency shape per language, shared-struct writes to disjoint fields in C++/Go versus `thread::scope` with owned return values in Rust, driven by each language's memory model
+
+## Why this matters
+
+A metrics agent that's going to run continuously in production can't afford to fork a subprocess or shell out to a tool for every sample; reading `/proc` and `/sys/fs/cgroup` directly is the only approach cheap enough to run every second for months between deploys. Getting the `/proc/stat` delta wrong, or treating a cumulative counter as an instantaneous reading, is one of the most common correctness bugs in hand-rolled monitoring code.
+
+The cross-language schema discipline here also matters beyond this one example: a dashboard, a `jq` filter, or a test suite that has to understand three different field-naming and serialization conventions across a C++, Go, and Rust build of the same tool is not a tool anyone will actually standardize on. Byte-identical output is what makes the three builds interchangeable in practice, not just in principle.
+
 Chapter 35's `overheadbench` measured syscall, memory, and I/O overhead across
 a bare process, a container, and a VM, but every one of those numbers came
 from watching `strace -c` and hand-timed loops wrapped around each run. That's

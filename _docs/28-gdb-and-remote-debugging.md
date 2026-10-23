@@ -6,6 +6,41 @@ description: "app crashes by design, three ways: a real SIGSEGV and a systemd-co
 duration: "55 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Extract a `systemd-coredump` core with `coredumpctl` and open it in `gdb`
+  for a full DWARF-driven backtrace, instead of trusting a lightweight
+  summary trace that can silently omit frames.
+- Read pretty-printed values in `gdb` (`std::string_view`, struct fields) and
+  layout-aware Rust values in `rust-gdb` (`Option`/enum variants by name)
+  rather than raw memory offsets.
+- Explain how C++, Go, and Rust each handle the same fault differently: a
+  hardware `SIGSEGV` and a core file, a runtime-converted panic, and an
+  unwind-only `Option::unwrap()` panic with no signal at all.
+- Recognize `gdb`'s blind spot on Go (it models OS threads, not goroutines)
+  and identify when a goroutine-aware tool like `delve` is needed instead.
+- Set up remote debugging with `gdbserver` and `gdb`'s `target remote`,
+  keeping every symbol table and pretty-printer on the host side of the link.
+- Cross-check a `gdb` backtrace's addresses against the DWARF `.debug_line`
+  table independently, using `readelf` and `objdump`.
+
+## Why this matters
+
+A `println` tells you what the code did up to the point you placed it, and
+only if you remembered to put one there before the bug happened. A debugger
+reads a crash, or a running process, after the fact, without changing a line
+of source, which is the only approach that works once a bug only reproduces
+occasionally or only in an environment you cannot freely recompile in.
+
+The three languages also make the same bug look completely different at the
+tooling layer: a core file is the right artifact for C++, useless for Rust's
+panic-and-unwind, and only accidentally adequate for Go once goroutines enter
+the picture. Knowing which tool actually sees your language's failure mode,
+and which one just looks like it does, is what keeps a debugging session from
+turning into a search for frames that were never going to be there.
+
 Every debugger so far in this book has been a `println` you had to recompile
 to move. This chapter replaces that habit with the real tool: a crash that
 already happened, frozen in a core file or a live process, that you can

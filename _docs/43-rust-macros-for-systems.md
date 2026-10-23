@@ -6,6 +6,24 @@ description: "sysmacros is chapter 43's proc-macro crate, powering two Rust-only
 duration: "35 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Build a `proc-macro = true` crate that parses tokens with `syn 2.0` and emits code with `quote!`
+- Derive a `Display`/`Error` implementation from one `#[error("...")]` attribute per enum variant, across `Fields::Named`, `Unnamed`, and `Unit` shapes
+- Write an `#[instrument]` attribute macro that wraps a function body to log its entry, exit, and `Instant`-measured duration
+- Perform a sound `unsafe` unaligned read with `core::ptr::read_unaligned`, guarded by an explicit bounds `assert!`
+- Validate the read's memory safety with `cargo +nightly miri run` and read a located Undefined Behavior diagnostic
+- Convert a malformed macro input into a `compile_error!` via `syn::Error::to_compile_error()`
+- Distinguish miri's correctness-checking role from profiling by comparing a native run's duration against an interpreted one
+
+## Why this matters
+
+A hand-written error type and a hand-written timing wrapper are both boilerplate you have written before, which makes them a reasonable place to ask how much a proc-macro can write for you instead: `#[derive(SysError)]` and `#[instrument]` both turn an annotation into real code, generated once at compile time, with zero runtime cost once `app` is built.
+
+The second half of the chapter asks a sharper question: how do you prove an `unsafe` block is still doing exactly what its comment claims? `assert!` enforces the bound a sound read depends on, and `miri` is what catches the one line that skips it, turning a silent out-of-bounds read that a normal `cargo run` sails straight through into a located, reproducible diagnostic.
+
 Every chapter so far has mirrored the same behavior across C++23, Go, and
 Rust, because the point of those chapters was a Linux mechanism (a
 syscall, a signal, a namespace) that all three languages sit on top of

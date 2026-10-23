@@ -6,6 +6,24 @@ description: "41-capstone-fleet is one binary with four subcommands that assembl
 duration: "60 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Drop the capability bounding set and set `no_new_privs` with `prctl(2)` before spawning any child process
+- Self-re-exec one binary as three supervised services (`chatterd`, `sysagent`, `fwatch`) through fork/exec and `waitpid`
+- Restart a crashed child with a backoff while forwarding `SIGTERM`/`SIGINT` to every supervised child
+- Bridge `chatterd` across two hosts by joining a peer connection under a `bridge@<node>` nick
+- Export `sysagent`'s cpu/mem/load1 gauges over OTLP when `OTEL_EXPORTER_OTLP_ENDPOINT` is set
+- Sandbox `fwatch` under a Landlock ruleset scoped to one directory and probe the kernel's enforced ABI
+- Verify a two-host fleet end to end: health lines from each supervisor, a cross-host message delivery, and a gauge reaching Prometheus through the libvirt gateway
+
+## Why this matters
+
+This is the final project: four of the book's six recurring programs, assembled into one supervised, sandboxed, observed system running on two real hosts instead of four separate demos on one. `pmon` plays the fleet's own init, which means every sandboxing and signal-handling discipline from earlier chapters (capability drop, Landlock, self-re-exec, three different ways to consume a shutdown signal) has to cooperate inside a single process tree instead of standing alone.
+
+The chapter also closes the loop this book keeps returning to: prove the claim, don't just print it. A healthy-looking `pmon: health` line is not proof the fleet works; a message that crosses two real hosts and a gauge that lands in the host's own Prometheus through the libvirt gateway are.
+
 Chapter 0's course map promised six programs that would grow chapter by
 chapter into real systems software. By now four of them have grown enough to
 stand on their own: `pmon` learned to fork, exec, wait, drop privilege, and

@@ -6,6 +6,24 @@ description: "The eight Linux namespaces and cgroup v2's unified hierarchy as th
 duration: "55 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Name the job of each of the eight Linux namespace types and identify which four `pmon containerize` requests
+- Choose between `unshare(2)`, `setns(2)`, and `clone3(2)` based on whether you're moving the caller, joining an existing namespace, or creating a child and its namespaces atomically
+- Explain the pid-1 reparenting and reaping obligations a process takes on inside a fresh PID namespace, and why `pmon containerize` sidesteps both by `exec`ing CMD immediately
+- Build a cgroup v2 leaf by writing `cgroup.subtree_control`, `memory.max`, and `cpu.max`, and read `memory.pressure` (PSI) as a per-cgroup stall signal distinct from utilization
+- Verify a cgroup memory ceiling with a negative control, confirming the OOM killer fires and reading its `dmesg` evidence (`oom_memcg=`)
+- Diagnose the `ENOMEM` a threaded Go runtime hits calling `unshare(CLONE_NEWPID)` directly, and fix it with `exec.Cmd.SysProcAttr.Cloneflags` instead of `runtime.LockOSThread()`
+- Inspect namespace identity directly with `readlink /proc/<pid>/ns/*` and demonstrate a missing `/proc` remount with `nsenter`
+
+## Why this matters
+
+"Container" names no single kernel object: it is namespaces and cgroups, two independent primitives any userspace program can assemble by hand. Seeing them built from raw syscalls, rather than through `podman run`, is what makes the pid-1 reparenting rules, the per-thread nature of `unshare`, and a cgroup's enforcement all concrete instead of folklore.
+
+The Go `ENOMEM` failure in this chapter is a real, reproduced defect, not a hypothetical: `unshare(CLONE_NEWPID)` caps the caller to exactly one child in the new namespace, and `os/exec`'s internal probe fork silently spends it. Knowing that restriction, and the `SysProcAttr.Cloneflags` fix that avoids it entirely, is the difference between a container tool that works on the host you tested and one that fails unpredictably on every other kernel.
+
 Every `pmon` version so far has supervised, signaled, and identified a
 child, but the child has always lived in the same world as its parent: same
 process-id space, same hostname, same view of every device and byte of

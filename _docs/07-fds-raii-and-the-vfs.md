@@ -6,6 +6,45 @@ description: "The three-layer model behind every file descriptor (fd table, open
 duration: 45 minutes
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain the three-layer fd model: the per-process fd table (home of the
+  close-on-exec bit), the system-wide open file description (flags and
+  offset), and the VFS inode (type, size, mtime)
+- Justify `O_CLOEXEC` at open time as the only race-free way to stop an fd
+  leaking into a `fork`/`exec`'d child, versus a later `fcntl` call
+- Walk a directory tree safely with `openat`/`fstatat` anchored on a
+  directory fd, avoiding the re-resolution races a path-based walk invites
+- Build and compare owning fd wrappers across languages: a move-only C++
+  `Fd` class with an explicit `release()`, Go's `os.File` with a deferred
+  `Close`, and Rust's `OwnedFd`/`BorrowedFd`
+- Implement `fwatch` v0, a deterministic snapshot/diff tool, identically in
+  C++23, Go, and Rust, including its `+`/`-`/`~` diff format
+- Verify fd-table, open-file-description, and inode claims independently
+  using `/proc/<pid>/fd`, `/proc/<pid>/fdinfo`, `strace`, `ls -li`, and `lsof`
+
+## Why this matters
+
+Most bugs involving file descriptors come from treating "the fd" as a single
+thing when it is really three: a slot in your process, a shared kernel
+object, and the file itself. Conflating them is how a `dup`'d descriptor
+surprises you by sharing an offset, how a privileged fd leaks across `exec`,
+or how a deleted file keeps its storage alive because something still holds
+it open. This chapter gives you the vocabulary to say precisely which layer
+a bug lives on, and the tools (`/proc/<pid>/fd`, `fdinfo`, `strace`) to prove
+it rather than guess.
+
+That precision also opens the book's second long-running artifact. `fwatch`
+starts here as a plain snapshot/diff tool with no events at all, by design:
+before it can react to filesystem changes in later chapters (inotify, epoll,
+io_uring, and eventually a Landlock sandbox), it needs an owning fd
+abstraction and a race-free directory walk that will not need to be rebuilt
+once real concurrency and real kernel notifications enter the picture. The
+RAII-style wrapper and the anchored `openat`/`fstatat` walk built here are
+required by every version of `fwatch` that follows.
+
 This chapter starts the second of the book's long-running artifacts: `fwatch`,
 the file watcher that will grow inotify, epoll, io_uring, and finally a
 Landlock sandbox over the next several chapters. Version 0 has no events at

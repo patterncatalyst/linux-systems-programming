@@ -6,6 +6,51 @@ description: "The second thread that runs the whole book: how each language shar
 duration: 50 minutes
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Compare C++23's `jthread`/`stop_token`/`condition_variable_any`, Go's
+  goroutines with channels and `context.Context`, and Rust's scoped threads
+  with `Send`/`Sync` as three vocabularies over the same `clone(2)`/`futex(2)`
+  kernel primitives
+- Build `parhash`, a four-worker parallel file hasher that produces
+  byte-identical stdout across all three languages despite each one walking
+  the tree in a different order
+- Implement safe cross-thread SIGINT cancellation per language: blocking the
+  signal and consuming it with `sigtimedwait` in C++, `signal.NotifyContext`
+  in Go, and a `signal_hook`-driven `AtomicBool` in Rust
+- Explain why `mpsc::Receiver` is not `Sync`, why that forces
+  `Arc<Mutex<Receiver>>`, and how `thread::scope` lets workers borrow stack
+  data without reference counting
+- Verify a cancellation-drain contract live, stop accepting new work, finish
+  what is in flight, report what completed, exit 130, by sending a real
+  SIGINT mid-run
+- Inspect a running process's threads with `/proc/<pid>/task` and each
+  thread's `wchan` to confirm all three language models reduce to the same
+  kernel threads
+
+## Why this matters
+
+Every language in this book claims to make concurrency easier, and each one
+is telling the truth about a different part of the problem. C++ gives you
+the raw parts and trusts you to assemble a correct queue and signal
+discipline; Go gives you a runtime that hides the threads entirely behind
+channels and a scheduler; Rust gives you a compiler that refuses to let a
+shared-mutation bug type-check. `parhash` makes that difference concrete
+instead of rhetorical: the same four-worker pool, three times, with
+`/proc/<pid>/task` proving that underneath the vocabulary it is always
+`clone(2)` threads parked on `futex(2)`.
+
+This chapter is also where the book's two permanent threads meet: Chapter 5's
+error policy has to survive concurrent execution, and the cancellation drain
+built here, stop accepting, finish what you hold, report what completed, is
+the pattern every later concurrent example reuses, from the signal handling
+in Part 7 to the event loops in Chapter 27. Understanding *why* each language
+reaches for its own idiom here, rather than just copying the syntax, is what
+makes those later chapters readable at a glance instead of a fresh puzzle
+each time.
+
 Chapter 5 pinned down the first of this book's two permanent threads: how each
 language turns an `errno` into something a caller can act on. This chapter
 pins down the second, how each language *shares work*, and it does it the

@@ -6,6 +6,41 @@ description: "What actually happens between your allocation and the kernel's pag
 duration: 50 minutes
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain why `free(3)` returns chunks to glibc's arena and tcache rather
+  than pages to the kernel, and read `mallinfo2` output to see fragmentation
+  directly
+- Prove with `nm -D` and `ltrace` that Rust's default global allocator is
+  glibc malloc, the same allocator C++ uses
+- Build arena allocators with `std::pmr::monotonic_buffer_resource` (C++),
+  bumpalo's `Bump` (Rust), and `sync.Pool` (Go), and state what each one
+  changes, and does not change, about peak RSS
+- Tune Go's GC pacer live with `GOGC` and `GOMEMLIMIT` and read `gc_cycles`
+  against `peak_rss` to show that memory use is a policy outcome
+- Measure peak RSS and wall time with `getrusage(RUSAGE_SELF)` and
+  cross-check the result against `valgrind --tool=massif`,
+  `/usr/bin/time -v`, and `go tool pprof`
+- Run `allocbench` across C++, Go, and Rust to compare per-object free,
+  arena reclamation, and traced garbage collection on one workload
+
+## Why this matters
+
+Every allocation-heavy service eventually asks the same question: where did
+the memory go? Answering it requires knowing what your language's allocator
+actually does with a `free`, a dropped `Box`, or a Go object the collector
+has not traced yet, because a dashboard only reports the outcome, not the
+mechanism, and "my program freed everything but RSS didn't drop" is a
+question that costs an on-call engineer real time if the mechanism is not
+already familiar.
+
+This chapter opens the allocator and the GC pacer directly: glibc's arena
+and tcache, what `pmr`/`bumpalo` arenas really buy you, and the live
+`GOGC`/`GOMEMLIMIT` knobs that turn Go's memory footprint into a negotiated
+policy rather than a mystery.
+
 The last two chapters dealt in wholesale memory: pages from the kernel, mapped
 and shared with `mmap`. This chapter is retail. Between your `std::string`,
 your `strconv.Itoa`, your `format!` and those pages sits an allocator: glibc

@@ -6,6 +6,24 @@ description: "lua-policy moves pmon's restart/backoff decision out of the compil
 duration: "45 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Move a restart/backoff decision out of compiled code into a sandboxed `policy.lua` behind one `on_exit(info) -> decision` contract
+- Embed the same Lua file in three structurally different runtimes: sol2 (C++/PUC-Rio 5.4), gopher-lua (Go/Lua 5.1), and mlua (Rust/PUC-Rio 5.4)
+- Build a sandbox that never opens `os`, `io`, `package`, or `debug`, and nils `load`/`loadfile`/`dofile`/`require`/`collectgarbage`/`loadstring`
+- Call into a policy under a protected call (`sol::protected_function`, `CallByParam{Protect:true}`, `mlua::Result`) so a script error returns as data, not a crash
+- Reload a policy live on a real `SIGHUP` by rebuilding the Lua state from scratch, with no process restart
+- Write a shared-subset policy file that runs identically on Lua 5.1 and Lua 5.4
+- Compare three languages' sandbox-rejection diagnostics for the identical malicious policy
+
+## Why this matters
+
+A restart policy baked into compiled C++, Go, or Rust means a tuning change costs a rebuild and a redeploy. Moving that decision into one sandboxed `policy.lua` instead means `pmon` can change its crash-looping threshold or its backoff curve on a live `SIGHUP`, with the same process and the same PID throughout, which is the capability an operator actually wants during an incident.
+
+The harder question this chapter answers is whether "the same policy" really means the same behavior once it is embedded three structurally different ways. Proving sol2, gopher-lua, and mlua reach byte-identical restart decisions from one unmodified file, across a Lua 5.1/5.4 version gap, is what makes "one policy.lua, three host runtimes" more than a slogan.
+
 Chapter 12 taught `pmon` to treat a signal as data instead of an
 interruption: block `SIGCHLD` process-wide, then read it off a `signalfd` on
 the next turn of an ordinary `poll` loop. Chapter 41's final-project fleet leaned

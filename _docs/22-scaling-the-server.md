@@ -6,6 +6,43 @@ description: "chatterd v1 holds many connections from one thread: nonblocking ac
 duration: "55 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Build a per-connection state machine (`inbuf`/`outbuf`) that survives across
+  `epoll_wait` wakeups, treating `EAGAIN` as a signal to wait rather than an
+  error.
+- Implement backpressure with an outbound queue and `EPOLLOUT`, arming and
+  clearing write-interest via `epoll_ctl` as the queue fills and drains.
+- Drain `accept4` to `EAGAIN` on a nonblocking listener so one `epoll_wait`
+  wakeup can accept a whole burst of pending connections.
+- Compare Go's goroutine-per-connection model to a hand-rolled epoll loop, and
+  locate the runtime's hidden `epoll_pwait` calls with `strace`.
+- Guard a send to a dead peer with `MSG_NOSIGNAL`, and defer reaping dead
+  connections to the end of an event batch instead of mid-iteration.
+- Read `/proc/<pid>/status` thread counts and `ss -tp` to confirm how many OS
+  threads actually back a given connection-handling design.
+- Measure the C10K cost directly with `strace -c`, comparing `clone3` counts
+  between the epoll and threaded engines under load.
+
+## Why this matters
+
+A server that spends one OS thread per connection runs out of room long
+before it runs out of clients: ten thousand idle sockets mean ten thousand
+stacks and a scheduler doing more context-switching than work. The readiness
+model this chapter builds, nonblocking sockets plus one `epoll_wait`, is how
+a single thread holds that many connections without any of them blocking
+another, and the backpressure discipline (outbound queue, `EPOLLOUT`) is what
+keeps a slow reader from stalling the rest.
+
+It also sets up the comparison every polyglot team eventually has to make:
+Go's goroutine-per-connection code looks nothing like this epoll loop, yet
+underneath it the runtime is running the identical mechanism. Knowing that
+lets you read a Go service's concurrency as threads parked on an epoll
+instance, not as magic, and lets you choose the right language for a given
+connection-handling budget instead of guessing.
+
 Chapter 21 gave `chatterd` a length-prefixed frame protocol and the obvious
 server: one OS thread per connection, each blocked in `recv`. That design is
 correct and it is easy to reason about, right up to the point a decade of

@@ -6,6 +6,47 @@ description: "One error's journey from a failing write(2) into std::expected, a 
 duration: "45 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- State the kernel's error contract (a failing syscall returns `-errno` in
+  `rax`) and explain how glibc's thread-local `errno`, Go's `unix.Errno`
+  value, and rustix's `Errno` wrapper each deliver that same integer
+- Implement `copyx`'s error taxonomy, distinct exit codes for source-side
+  versus destination-side failures, using `std::expected`, a wrapped Go
+  `error`, and a `thiserror` enum
+- Apply the book's EINTR-retry and short-write-resume policies inside
+  `read`/`write` loops in all three languages
+- Draw the values-versus-exceptions line per language: `std::expected`
+  versus exceptions at subsystem boundaries in C++, `error` versus `panic`
+  in Go, `Result` versus an abort-only `panic!` in Rust
+- Reproduce `ENOSPC` deterministically with `/dev/full` and confirm
+  byte-identical error messages and exit codes across the three binaries
+- Use `strace` to catch the exact failing `write(2)` syscall, before any
+  runtime has dressed the failure up as a language-level error
+
+## Why this matters
+
+A syscall failure is not an exceptional event the kernel escalates to you;
+it is an ordinary return value that your language's runtime chooses how to
+represent, and that choice has consequences for every program you write
+afterward. `copyx` turns that choice into something you can hold in your
+hands: one file copier, one kernel fact (`ENOSPC` is 28, no more and no
+less), three
+type systems arguing about what to do with it, and one shared contract
+(exit codes, message format, retry policy) that makes the disagreement
+irrelevant from the outside.
+
+That contract is not local to this chapter. Every program in the rest of the
+book, the concurrent hasher in Chapter 6, the file watcher built across Part
+2, the benchmark in Chapter 8, inherits the EINTR-retry and short-write-resume
+rules established here, and every one of them reaches for the same
+values-versus-exceptions line when a new failure mode shows up. Getting the
+taxonomy right once, with a program small enough to read start to finish,
+is what lets later chapters spend their words on new material instead of
+re-litigating what a correct error policy looks like.
+
 Chapter 4 walked a syscall down to the boundary and back, and ended on the
 detail this chapter is built from: when a syscall fails, the kernel does not
 throw, log, or explain: it puts a small negative integer in a register and

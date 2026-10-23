@@ -6,6 +6,47 @@ description: "app work --seconds N runs an ordinary, unmodified workload on syst
 duration: "55 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Point bcc-tools (`execsnoop`, `opensnoop`, `funccount`, `offcputime`,
+  `biolatency`) at an unmodified running binary to observe file opens, exec
+  calls, function hit counts, off-CPU time, and block I/O latency with no
+  rebuild and no restart.
+- Write `bpftrace` one-liners and scripts that attach to a tracepoint, kprobe,
+  or uprobe, filter on built-ins like `pid`/`comm`/`argN`, and aggregate
+  results with `hist()`/`count()`.
+- Attach a `uprobe`/`uretprobe` pair to time a userspace function's
+  entry-to-return latency and read the resulting histogram.
+- Use `bpftool prog show`/`map show` to independently confirm what the kernel
+  actually has loaded, cross-checking what `bpftrace` itself reports.
+- Demangle Itanium (C++) and Rust v0 mangled symbol names with `c++filt` to
+  find the exact string a uprobe must attach to.
+- Explain why Go's register-based ABIInternal breaks the System-V-assuming
+  `arg0`/`argN` shorthand, and verify the mismatch by reading `RDI` against
+  `RAX` on a live uprobe.
+- Compare this eBPF-based observation path against SystemTap's kernel-module
+  and dyninst backends for the same kind of probe.
+
+## Why this matters
+
+Every technique earlier in this part needed something extra attached to the
+target: debug info for `gdb`, a sanitizer rebuild for ASan/TSan. The eBPF
+observation stack this chapter uses watches a plain, unmodified binary from
+outside, live, while it runs: the kernel loads a small verified program onto
+a probe point and runs it on every hit, with no recompilation and no
+downtime. That is the technique this chapter teaches: pointing existing,
+purpose-built tools (bcc-tools, `bpftrace`, `bpftool`) at your own userspace
+programs, never writing or loading kernel code of your own.
+
+It also surfaces a real trap worth knowing before you hit it live: tools that
+read function arguments by position assume the System V calling convention,
+and Go's compiler does not follow it. A uprobe can report a plausible-looking
+wrong number instead of an error, and the only defense is knowing which
+register a given language and function actually use, confirmed here by
+reading `RDI` next to `RAX` on the same call.
+
 Chapter 28 read a crash gdb already knew about; Chapter 29 caught bugs a
 compile-time instrumentation pass or a binary-translating emulator watched
 for. Both chapters needed something extra glued onto the target: debug

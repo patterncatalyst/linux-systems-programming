@@ -6,6 +6,47 @@ description: "What a system call really is: the syscall instruction, the registe
 duration: 40 minutes
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- State the x86-64 syscall register ABI: the syscall number in `rax`,
+  arguments in `rdi rsi rdx r10 r8 r9`, and the result or `-errno` back in
+  `rax`, including why `r10` stands in for the C ABI's `rcx`
+- Trace a syscall's round trip from the `syscall` trap instruction through
+  `entry_SYSCALL_64` and `sys_call_table` dispatch back to ring 3
+- Identify vDSO-served calls (`clock_gettime`, `vgetrandom`) that never trap,
+  using `/proc/self/maps` and `strace -c` counts
+- Compare how glibc wrappers, the Go runtime's own stubs, and rustix's
+  `linux_raw` backend each reach the kernel, using `objdump`, `ldd`, and
+  `strace`
+- Build and run `sysprobe`, a four-step syscall demonstrator (open, write,
+  sleep, random) implemented identically in C++23, Go, and Rust
+- Read `strace` output closely enough to spot wrapper-layer substitutions
+  (`nanosleep` traced as `clock_nanosleep`) and partial vDSO interception
+- Attribute a binary's total syscall count, via `strace -c`, to runtime
+  startup overhead versus the four steps of actual application work
+
+## Why this matters
+
+Every abstraction in this book, RAII wrappers, error types, concurrency
+primitives, sits on top of the same fact: a user-space program can only ask
+the kernel for anything by trapping into it, and that trap is a register
+convention, not a function call. Until that boundary is precise in your head,
+every later claim about performance, safety, or portability is resting on a
+guess. This chapter replaces the guess with instruments: a register-level
+description of the trap, and three ways of watching it happen (`strace`,
+`objdump`, `/proc/self/maps`) that stay in your toolkit for the rest of the
+book.
+
+It also sets up the book's central comparative method. C++, Go, and Rust are
+not just three syntaxes for the same program; they are three different
+relationships with the kernel ABI, from zero inlined `syscall` instructions
+to 511 to 32. Seeing that difference now, with a trivial four-step program,
+means later chapters on concurrency, I/O multiplexing, and signals can point
+at a runtime behavior and explain it in terms you already have, instead of
+treating each language's quirks as unrelated trivia.
+
 Chapter 1 ended on a number it did not explain: the C++ hello made 64 syscalls,
 the Go hello made 217, and we waved at "the runtime" and moved on. This chapter
 is where that debt gets paid. With the lab and observability stack built, Part

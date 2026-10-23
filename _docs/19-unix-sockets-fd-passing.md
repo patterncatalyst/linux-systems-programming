@@ -6,6 +6,39 @@ description: "pmon grows a control plane on a UNIX stream socket: filesystem vs 
 duration: "50 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Choose among `SOCK_STREAM`, `SOCK_DGRAM`, and `SOCK_SEQPACKET` for a UNIX
+  domain socket based on message shape and authentication needs
+- Bind a filesystem-path `AF_UNIX` socket versus an abstract (NUL-prefixed)
+  one, and read both back with `ss -x`
+- Authenticate a peer with `SO_PEERCRED` instead of trusting a self-reported
+  claim
+- Send and receive an open file descriptor across a socket with
+  `sendmsg`/`recvmsg` and `SCM_RIGHTS`, using the `CMSG_SPACE`/`CMSG_LEN`/
+  `CMSG_DATA` macros correctly
+- Explain why `SCM_RIGHTS` transfers a reference to an open file
+  description, with its shared offset and flags, rather than a number, and
+  confirm it with `/proc` fdinfo on both processes at once
+- Extend `pmon` (v5) with a control-plane socket (`status`/`stop`/`logfd`)
+  that a stranger process can find and use
+
+## Why this matters
+
+A process that wants to be found and trusted by a stranger needs more than
+a shared pipe: it needs an address, a way to check who is really calling,
+and sometimes a way to hand over an already-open resource instead of
+re-deriving it. UNIX domain sockets are the one primitive on the system
+built for exactly that, and `SCM_RIGHTS` gets used constantly without
+anyone being clear on what actually crosses the wire.
+
+This chapter builds `pmon` v5's control plane on `SO_PEERCRED` for
+kernel-vouched identity and `SCM_RIGHTS` for descriptor passing, then
+proves with `/proc` on both processes at once that an open file
+description, not a number, is what moved.
+
 Chapter 18 gave `pmon` a log pipeline built from pipes and FIFOs (fast,
 kernel-buffered, and strictly byte-shaped): a pipe moves data, and only
 between processes that inherited its ends. Version 5 needs something pipes

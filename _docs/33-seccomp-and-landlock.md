@@ -6,6 +6,24 @@ description: "fwatch sandboxes itself with two independent, unprivileged kernel 
 duration: "55 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Build a seccomp-bpf syscall allowlist from a real `strace -f -c` profile rather than guessing which syscalls a program needs
+- Install a filter with `seccomp_init`/`seccomp_rule_add`/`seccomp_load` (or Go's hand-emitted cBPF program) and choose a default action with `prctl(PR_SET_NO_NEW_PRIVS)` set first
+- Contrast `SCMP_ACT_ERRNO` (the caller keeps running and can clean up) against `SCMP_ACT_KILL_PROCESS` (an uncatchable `SIGSYS`, no return) and pick the right one for a given sandbox posture
+- Construct a Landlock ruleset with `landlock_create_ruleset`/`landlock_add_rule`/`landlock_restrict_self` that restricts filesystem reads to one directory
+- Probe the Landlock ABI version at runtime instead of assuming it, and gate a feature on the version number it actually needs
+- Prove a sandbox's effect with paired positive and negative controls, reading the resulting `EPERM`/`EACCES` and the kernel's own `/proc/<pid>/status` seccomp fields
+- Apply both mechanisms process-wide in a threaded runtime using `TSYNC` plus `runtime.LockOSThread()`, instead of restricting only the calling thread
+
+## Why this matters
+
+seccomp-bpf and Landlock let an unprivileged process restrict itself, no root, no namespace, no VM required. That makes them two of the cheapest isolation techniques available to any program this book has built, and they compose directly with the namespaces and cgroups from Chapter 32 as part of what a real container runtime assembles.
+
+Both are also easy to get wrong in ways that look fine until tested: a filter built from a guessed syscall list breaks the program it was meant to protect, an ABI assumed rather than probed misbehaves on a different kernel, and a restriction applied to only one thread in a multithreaded runtime leaves every other thread unsandboxed. The design discipline this chapter teaches, profile first, probe the ABI, verify with a negative control, is what turns seccomp and Landlock from documentation into a sandbox you can trust.
+
 Chapter 32 gave `fwatch` its own view of the process tree and its own
 resource limits through namespaces and cgroup v2 -- isolation the kernel
 grants to a group of processes. This chapter hands the same idea to a

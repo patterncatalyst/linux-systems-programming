@@ -6,6 +6,42 @@ description: "chatterd v0 opens Part 6 with a thread-per-connection TCP chat roo
 duration: "50 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Build a listening TCP socket with the four ordered calls
+  `socket`/`bind`/`listen`/`accept4`, filling in `sockaddr_in` by hand with
+  `htons` and `inet_pton`
+- Explain why `SO_REUSEADDR` is required to rebind a port still held in
+  `TIME_WAIT`
+- Design a length-prefixed wire frame (magic, version, type, big-endian
+  `u16` length) because TCP delivers bytes with no message boundaries
+- Implement a read-exactly-n loop (`read_full`/`io.ReadFull`/`read_exact`)
+  that never mistakes a short read for a complete message
+- Build `chatterd` v0, a thread-per-connection TCP chat room, in C++, Go,
+  and Rust with an RAII/move-only socket that owns every fd
+- Identify the two failure modes of thread-per-connection service
+  (per-connection memory cost, lock-held-across-I/O blocking) that chapter
+  22 addresses
+- Verify a live server with `ss -tlnp`/`-tnp` and read the wire bytes at the
+  `read`/`write` syscall boundary with `strace`
+
+## Why this matters
+
+A TCP server looks like a pipe with an address until the first production
+incident proves otherwise: a restart that cannot rebind its own port, a
+message that arrives split across two `read` calls, or a slow client that
+freezes every other connection behind a shared lock. Each of those is a
+direct consequence of what TCP actually promises, ordered bytes with no
+message boundaries, not what a quick read-write test suggested.
+
+This chapter builds `chatterd` v0 from the four raw syscalls that make a
+listening socket, establishes the length-prefixed frame every later
+networking chapter in this book reuses, and names the two failure modes,
+per-connection cost and a lock held across I/O, that make
+thread-per-connection the wrong model once scale shows up.
+
 Part 5 spent nine chapters moving bytes between processes that already knew
 each other: pipes an ancestor set up, UNIX sockets a stranger found by a
 path on the local machine. `chatterd` opens Part 6 by dropping the last

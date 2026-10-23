@@ -6,6 +6,24 @@ description: "How a VM actually runs: VMX root/non-root modes, EPT, and virtio d
 duration: "50 minutes"
 ---
 
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain the VMX root/non-root mode split, what causes a VM exit, and why a guest syscall like `getpid(2)` never triggers one while `fsync(2)` against `virtio-blk` does
+- Describe the virtio-blk round trip (guest descriptor, kick, VM exit, QEMU backend `fsync`, VM entry) and how Extended Page Tables amortize ordinary memory access to near-native cost
+- Place the four points on the isolation spectrum, bare process, container, microVM, full KVM/QEMU VM, against escape surface and boot/overhead cost
+- Identify the rust-vmm crates (`kvm-ioctls`, `vm-memory`, `virtio-queue`) underlying both Firecracker and Cloud Hypervisor
+- Write a raw-syscall microbenchmark (`bench_syscall`, `bench_mem`, `bench_io`) with anti-dead-code guards appropriate to each language and a monotonic clock
+- Run the same binary unmodified across a bare host, a KVM guest, and a rootless Podman container, and interpret which metrics track the host and which diverge
+- Cross-check a benchmark's claimed syscall count with `strace -c`, and explain why `ptrace` overhead disqualifies it as a timing source
+
+## Why this matters
+
+Choosing between a process, a container, a microVM, and a full VM is a cost decision, not an abstract security ranking, and the cost only becomes real once you measure it in the same units this book has used throughout: nanoseconds per syscall, gigabytes per second, operations per second. `overheadbench` turns "which deployment option" into a question with a number attached, run on the exact hardware and kernel you'll actually ship on.
+
+The VMX mental model matters beyond benchmarking too: knowing that a VM exit is triggered by touching state the guest doesn't own, not merely by "leaving the guest", explains why a program's syscall-heavy and I/O-heavy paths can have wildly different overhead profiles inside the same guest, a distinction that shapes where to spend optimization effort.
+
 Every daemon in this book has, until now, run either directly on the host or
 inside a Podman container sharing the host's kernel. This chapter puts a
 third option on the table: a full KVM guest with its own kernel, and asks the
