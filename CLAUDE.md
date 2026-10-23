@@ -101,12 +101,13 @@ or anything that helps locate or attack it later:
   properties (SMT, cache sizes, frequency driver), never the part.
 - No host kernel build number or build date: give `major.minor` (for example
   `7.1`) and the preempt model. The lab guests' pinned kernel (`systems-target`) is
-  book content and is allowed by path in `.host-scrub.toml`.
-- No `/etc/machine-id`, DMI serial or UUID, MAC or IP address, `root=UUID=` or
-  BOOT_IMAGE.
+  book content and is allowed by value (`allow_match`) in `.host-scrub.toml`.
+- No `/etc/machine-id`, DMI serial or UUID, host MAC or IP address (the lab guests' private libvirt
+  addresses are book content), `root=UUID=` or BOOT_IMAGE.
 - Generated output is scrubbed before it is committed: `python3 scripts/host_ids.py
   scrub <dir>` on a results directory, `scripts/host_ids.py filter` on a captured
   transcript. `scripts/test-all-examples.py` scrubs `build-logs/` after each run.
 - `python3 scripts/host_ids.py check` runs in CI (`host-ids` job) and fails the build
-  on a hit. Allow a legitimate hit by path and category in `.host-scrub.toml`; the
-  file holds no values.
+  on a hit. Allow a legitimate hit by path and category (or by public value with
+  `allow_match`) in `.host-scrub.toml`; the file holds no host values (only public
+  guest values).

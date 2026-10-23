@@ -378,7 +378,7 @@ def scrub_logs() -> None:
                        stdout=subprocess.DEVNULL, check=False)
 
 
-def main(argv: list[str]) -> int:
+def run(argv: list[str]) -> int:
     args = parse_args(argv)
     try:
         examples = load_manifest()
@@ -452,12 +452,17 @@ def main(argv: list[str]) -> int:
     print(f"\n{passed} passed, {failed} failed, {skipped} skipped"
           f" (logs in {LOG_DIR.relative_to(REPO_ROOT)}/)")
 
-    scrub_logs()
-
     if args.junit:
         write_junit(args.junit, selected, results)
         print(f"junit report: {args.junit}")
     return 1 if failed else 0
+
+
+def main(argv: list[str]) -> int:
+    try:
+        return run(argv)
+    finally:
+        scrub_logs()  # also on an exception or Ctrl-C
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 420" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
 <rect x="20" y="30" width="880" height="130" rx="12" fill="#f4f4f4" stroke="#ddd"/>
-<text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">host (rootless user user, uid 1000)</text>
+<text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">host (rootless account `user`, uid 1000)</text>
 <rect x="20" y="190" width="880" height="200" rx="12" fill="#fff8ef" stroke="#ddd"/>
 <text x="32" y="210" font-size="12" font-weight="700" fill="#1d1d1d">podman&#x27;s user namespace (uid 0 in container == uid 1000 on host)</text>
 <rect x="44" y="66" width="260" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
