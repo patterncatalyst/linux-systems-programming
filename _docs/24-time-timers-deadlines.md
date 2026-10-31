@@ -42,7 +42,7 @@ jittered exponential backoff is the standard discipline for reconnecting to a
 recovering service without a fleet of clients hammering it back down the
 moment it comes up.
 
-Chapters 21–23 built `chatterd` into a peer-to-peer chat daemon that links two
+`chatterd` is a peer-to-peer chat daemon that links two
 hosts over TCP and passes framed messages. It has one fatal naïveté: it assumes
 the peer stays. Pull the cable, kill the process, or let a switch drop the
 flow, and a `chatterd` peer sits forever in a `read` that will never return:
@@ -55,13 +55,13 @@ turns a heartbeat into a liability the first time NTP corrects your wall clock.
 
 The code is in `examples/24-time-timers-deadlines/`. `./demo.sh` there builds
 all three implementations; its `README.md` specifies the CLI, the wire format
-(the same canonical frame chapters 21–23 used, now carrying a `PING` TYPE this
+(the same canonical frame the chat protocol already used, now carrying a `PING` TYPE this
 chapter adds), and the exit codes all three languages share.
 
 {% include excalidraw.html
    file="24-clock-taxonomy"
    alt="Top band: the four clocks clock_gettime can read as boxes: CLOCK_REALTIME (dashed, wall time, settable, can step backward), CLOCK_MONOTONIC (amber, since a boot epoch, never steps, steady_clock/Instant), CLOCK_BOOTTIME (monotonic plus suspend time), and PROCESS_CPUTIME_ID (this process's on-CPU time). Bottom band: while a peer is silent and ntpd corrects the wall clock, a dashed REALTIME box shows a wall-clock deadline rewinding so a dead peer looks alive, beside an amber MONOTONIC box where elapsed is always non-negative and the timeout fires on real silence; an amber arrow from CLOCK_MONOTONIC points to it labeled chatterd reads this."
-   caption="Figure 24.1: the clock taxonomy and the monotonic-vs-wall bug: a wall-clock deadline slips when the clock is stepped; a CLOCK_MONOTONIC deadline does not" %}
+   caption="Figure 24.1: the clock taxonomy and the monotonic-vs-wall-clock hazard: a wall-clock deadline slips when the clock is stepped; a CLOCK_MONOTONIC deadline does not" %}
 
 > **Tools used**: `strace`, `python3` (host); `cyclictest` (systems-target
 > VM, exercised in Part 8). Everything host-side is checked by
@@ -85,7 +85,7 @@ useful for profiling, useless for wall deadlines.
 The rule that follows is absolute: **any duration or deadline must be measured
 on a monotonic clock.** A heartbeat timeout is a duration ("no traffic for
 3 seconds"), so it reads `CLOCK_MONOTONIC`, never `CLOCK_REALTIME`. Figure 24.1
-is the bug you avoid by obeying this. Suppose you computed a deadline as
+is the failure mode you avoid by obeying this. Suppose you computed a deadline as
 `wall_now() + 3s` and stored it. Halfway through, `ntpd` decides the clock is
 0.5 s fast and steps it *back*. Now `wall_now()` reads earlier than when you
 started; your deadline recedes into the future; a peer that died stays "alive"
@@ -100,7 +100,7 @@ so `time.Since` cannot be fooled by a wall-clock step.
 
 Reading the clock happens constantly (on every loop iteration `chatterd`
 recomputes how long until the deadline), so it had better be cheap. It is, and
-the reason is chapter 4's vDSO. `CLOCK_MONOTONIC` and `CLOCK_REALTIME` reads do
+the reason is the vDSO. `CLOCK_MONOTONIC` and `CLOCK_REALTIME` reads do
 not trap into the kernel: the kernel maps a shared page (the vDSO) into every
 process, updates a timekeeping structure there on each tick, and the libc
 `clock_gettime` wrapper reads it in userspace with no `syscall` instruction.
@@ -227,8 +227,8 @@ timer wrapped in a file descriptor: `timerfd_create(CLOCK_MONOTONIC, …)` makes
 one, `timerfd_settime` arms it (an `it_value` with no `it_interval` is a
 one-shot; both set makes it periodic), and it becomes *readable* when it
 expires: a `read` returns a `uint64` count of expirations. That last property
-is why it belongs in this chapter: a timer that is an fd drops straight into the
-`poll`/`epoll` loop chapter 9 built, no signal handler required.
+is why it belongs in this chapter: a timer that is an fd drops straight into an existing
+`poll`/`epoll` event loop, no signal handler required.
 
 The session loop is where the deadline lives. In the C++ `run_session`, every
 iteration computes how long to block from the monotonic deadline, and hands
@@ -252,7 +252,7 @@ MSG, or PING, all count as traffic. The `poll` array holds three fds: the
 socket. When `poll` returns 0, the timeout elapsed with nothing to read (the
 peer went silent for `timeout_ms`) and the session returns `TimedOut`. When
 the heartbeat fd fires, the loop reads its 8-byte tick and sends a `PING`. This
-is the same one-loop-three-sources shape as chapter 9's `fwatch`, now serving
+is the same one-loop-three-sources shape as the `epoll`-based `fwatch` event loop, now serving
 liveness instead of file events. The three languages express the deadline
 differently: C++ subtracts two `time_point`s, Rust does the identical
 arithmetic on `Instant`, and Go resets a `time.Timer` and `select`s on its
@@ -311,7 +311,7 @@ error returns in Go, `Result` in Rust, all printing the same `usage:` block.
 The C++ and Rust sessions are single-threaded: one `poll` loop multiplexes the
 socket, the heartbeat timerfd, and the shutdown signalfd, so there is no shared
 state to lock: the timer and the deadline are just two more fds and one
-`time_point`. Go inverts it, exactly as chapter 9 did: a per-connection reader
+`time_point`. Go inverts it, exactly as its event-loop examples did: a per-connection reader
 goroutine turns the socket into a `chan frame`, and the session is a `select`
 over four cases: `ticker.C` (heartbeat), `deadline.C` (liveness), the frame
 channel, and `ctx.Done()` (shutdown from `signal.NotifyContext`). The subtlety
@@ -344,7 +344,7 @@ All three languages agree to within noise: Go printed `actual=1066us` /
 `1005us`, Rust `1055us` / `1002us`. The number to sit with is the overshoot: a
 1 ms sleep took ~1056 µs, ~56 µs long. That gap is not the clock's resolution
 (1 ns); it is the *scheduler's wake-up latency*, the time between the timer
-expiring and your thread actually getting a CPU. On a general-purpose kernel
+expiring and your thread getting a CPU. On a general-purpose kernel
 this is tens of microseconds and variable; the timerfd path is a touch tighter
 (~1013 µs) because it wakes straight out of `read` rather than through
 `nanosleep`'s return. Now the heartbeat scenario, driven by hand: a listener
@@ -431,7 +431,7 @@ Every claim in the chapter is on those lines. `timerfd_settime` arms the
 heartbeat with a 300 ms interval. The `sendto(4, "CH\1\1\0\1B", 7, …)` is the
 7-byte JOIN frame, `43 48 01 01 00 01 42`, the canonical header (`CH`,
 version 1, type 1 = JOIN) plus the name `B`, matching the wire format byte
-for byte, the same header chapters 21–23 used; only the TYPE byte and the
+for byte, the same header the chat protocol already used; only the TYPE byte and the
 engine around it differ by chatterd version. When fd 5 (the timerfd) fires,
 the loop reads its 8-byte tick (`\1\0\0\0\0\0\0\0`, one expiration) and
 sends the 6-byte PING `CH\1\5\0\0` (`43 48 01 05 00 00`). And

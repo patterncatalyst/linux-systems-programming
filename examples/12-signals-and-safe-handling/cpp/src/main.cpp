@@ -1,4 +1,4 @@
-// pmon v1 — a mini process supervisor (chapter 12: signals and safe handling).
+// pmon v1: a mini process supervisor (chapter 12: signals and safe handling).
 //
 //   pmon run -- CMD [ARGS...]
 //   pmon supervise [--max-restarts N] [--backoff-ms B] -- CMD [ARGS...]
@@ -7,7 +7,7 @@
 // all. SIGTERM/SIGINT/SIGHUP/SIGCHLD are blocked with sigprocmask(2) and
 // converted into ordinary file-descriptor reads via signalfd(2), consumed
 // from a plain poll(2) loop. No code ever runs in signal context, so nothing
-// has to be async-signal-safe — except the tiny window in the forked child
+// has to be async-signal-safe: except the tiny window in the forked child
 // between fork() and execvp(), which restores an empty signal mask (a
 // blocked, inherited SIGTERM would survive exec and make the supervised
 // child unkillable).

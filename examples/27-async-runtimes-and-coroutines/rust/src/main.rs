@@ -1,9 +1,9 @@
-// chatterd v4 (Rust) — a peer-to-peer chat daemon.
+// chatterd v4 (Rust): a peer-to-peer chat daemon.
 //
 // The connection-handling engine is selectable:
 //   * thread : one std thread per client (the ch21 baseline; std::net + a
 //              signal-hook stop flag).
-//   * async  : tokio — an async fn per connection on a tokio::net::TcpListener,
+//   * async  : tokio, an async fn per connection on a tokio::net::TcpListener,
 //              spawned as tasks, broadcasting over per-client mpsc channels.
 //
 // Both engines speak the SAME length-prefixed frame protocol and are
@@ -18,7 +18,7 @@
 //   frame is MSG (payload = message text). For a MSG with text T from the
 //   client whose nick is N, the server sends every OTHER client a DELIVER
 //   frame whose payload is N + 0x00 (NUL) + T. This chapter's engines use
-//   only JOIN/MSG/DELIVER — WELCOME and PING are other versions' additions to
+//   only JOIN/MSG/DELIVER; WELCOME and PING are other versions' additions to
 //   the same frame and are simply never sent here.
 //
 // Usage:
@@ -35,7 +35,7 @@ use std::thread;
 use std::time::Duration;
 
 // ---------------------------------------------------------------------------
-// Frame helpers — canonical chatterd chat frame (see file header).
+// Frame helpers: canonical chatterd chat frame (see file header).
 // ---------------------------------------------------------------------------
 
 const HEADER_LEN: usize = 6;
@@ -69,7 +69,7 @@ fn read_frame_conn(s: &mut TcpStream) -> io::Result<(u8, String)> {
 }
 
 // ==========================================================================
-// thread engine — one std thread per client.
+// thread engine: one std thread per client.
 // ==========================================================================
 
 type ThreadClients = Arc<Mutex<HashMap<u64, Arc<Mutex<TcpStream>>>>>;
@@ -191,7 +191,7 @@ fn run_thread(host: &str, port: u16) -> io::Result<()> {
 }
 
 // ==========================================================================
-// async engine — tokio.
+// async engine: tokio.
 // ==========================================================================
 
 mod async_engine {
@@ -307,7 +307,7 @@ mod async_engine {
 }
 
 // ==========================================================================
-// loadtest client — drives the broadcast assertion.
+// loadtest client: drives the broadcast assertion.
 // ==========================================================================
 
 fn run_loadtest(host: &str, port: u16, nclients: usize) -> io::Result<i32> {

@@ -34,13 +34,13 @@ systems programming. A successful `write(2)` return code says only that your
 bytes reached kernel memory; whether they survive a power loss a second later
 depends on a sync call you have to ask for explicitly, and getting that
 choice wrong is how real databases lose real data after passing every test
-that never pulled the power cord. This chapter turns that gap from folklore
-into a measured quantity: 21 ms to "write" 64 MiB, 138 ms to write it
+that never pulled the power cord. That gap is a measured quantity here:
+21 ms to "write" 64 MiB, 138 ms to write it
 durably, watched directly in `/proc/meminfo` and `/proc/<pid>/io` rather than
 taken on faith.
 
-It also closes the loop Chapter 7 opened. That chapter gave you a precise
-model of what a file descriptor is; this one gives you a precise model of
+It also closes a loop: the fd model gave you a precise picture of what a
+file descriptor is; this chapter gives you a precise model of
 what happens to the bytes you push through it, which is the other half of
 "I wrote a file" that most introductions skip. The durability tools
 introduced here, `fsync`/`fdatasync` semantics, the atomic-rename pattern,
@@ -48,8 +48,8 @@ introduced here, `fsync`/`fdatasync` semantics, the atomic-rename pattern,
 chapters (event loops, and eventually `fwatch`'s own durability story) build
 on next.
 
-Chapter 7 ended with a file descriptor safely wrapped in RAII and a byte
-successfully written through the VFS. This chapter is about the uncomfortable
+You already have a file descriptor safely wrapped in RAII and a byte
+successfully written through the VFS. The uncomfortable
 question that follows: written *where*? A successful `write(2)` puts your
 bytes in kernel memory (the **page cache**) and nothing more; if the power
 fails a second later, they are gone, and no error will ever tell you so. The
@@ -81,7 +81,7 @@ intuition suggests: the kernel has copied your bytes into page-cache pages
 belonging to the file, marked those pages **dirty**, and made the data
 visible to every subsequent `read(2)` from any process. That is all.
 Durability is explicitly not included (the manpage says so), and the return
-value is really just confirming a memcpy into kernel memory. That is why
+value is just confirming a memcpy into kernel memory. That is why
 `iobench --mode buffered` reports 3,013 MiB/s on this host's NVMe drive: the
 timed loop never touches the device. You are benchmarking `memcpy` plus
 bookkeeping.
@@ -138,7 +138,7 @@ makes each `write(2)` DMA straight from your user buffer to the device:
 no copy into the page cache, no dirty pages, no writeback. The price is a
 contract: buffer address, file offset, and transfer length must all be
 aligned to the device's logical block size (4,096 bytes covers current
-hardware), and a filesystem may simply refuse the flag at `open(2)` with
+hardware), and a filesystem may refuse the flag at `open(2)` with
 `EINVAL`, which `iobench` treats as a documented outcome (exit 4), because
 it varies by filesystem.
 
@@ -157,7 +157,7 @@ torn half, you use **atomic rename**: write the new content to a temporary
 file in the *same directory*, `fsync` the temp file, `rename(2)` it over the
 target (rename within a filesystem is atomic), then `fsync` the *directory*
 fd so the rename itself (a directory entry, i.e. metadata living in the
-directory, as chapter 7's inode walk showed) is on disk too. Skip step 2 and
+directory, as the inode walk earlier showed) is on disk too. Skip step 2 and
 a crash can leave you a correctly named empty file; skip step 4 and the old
 name can come back after reboot. `iobench` does not do this: a
 benchmark should overwrite in place, but every "save settings" feature you
@@ -359,7 +359,7 @@ throughput division: on tmpfs a tiny run can round to 0 ms.
 
 ### Errors, three ways
 
-Chapter 5's policy gets its first workout against a syscall that fails in
+The error-handling policy gets its first workout against a syscall that fails in
 interesting ways. The key move in all three languages is *classify before
 you generalize*: the open error is inspected for the one value with a
 documented meaning (`EINVAL` in direct mode → message + exit 4) before being
@@ -382,8 +382,8 @@ and begin writing them back *concurrently with the loop*; in the cross-check
 below, a 2 GiB write peaks at only ~1.1 GiB dirty because writeback was
 draining the pool while the program filled it. The final `fdatasync` is
 therefore a *rendezvous*, not the whole transfer: it waits for whatever
-writeback has not already covered. Language runtimes add one more wrinkle
-from chapter 6: a blocking `fdatasync` parks the calling OS thread, so in Go
+writeback has not already covered. Language runtimes add one more wrinkle,
+already familiar from concurrency three ways: a blocking `fdatasync` parks the calling OS thread, so in Go
 the runtime hands the P to another thread and other goroutines keep running,
 one reason "just fsync in a goroutine" feels free until you count threads.
 And timing uses `steady_clock` / `time.Now` monotonic readings /
@@ -414,11 +414,11 @@ Read the buffered pair together: 21 ms to "write" 64 MiB, then 17 ms of
 MiB/s headline was never a device number. Syncing every 8 blocks (512 KiB)
 drops throughput 6.5× to 462.8 MiB/s because the device's flush latency now
 sits inside the loop 128 times. `O_DIRECT` lands between them at 785.2 MiB/s:
-every byte really moved to the device inside the timed region, with no
+every byte moved to the device inside the timed region, with no
 copy and no cache. Go and Rust agree with the C++ numbers (buffered 3,283.9
 and 3,483.6 MiB/s with `fsync_ms=17` and `14` on the same runs); the page
 cache does not care which language dirtied it. After any run,
-`stat -c %s bench.bin` reports exactly 67108864: same bytes, very different
+`stat -c %s bench.bin` reports exactly 67108864: same bytes, different
 guarantees.
 
 ## Cross-check: watching the bytes move
@@ -479,7 +479,7 @@ hit/miss counts while iobench runs) and <code>biolatency</code> (the block
 I/O latency histogram that separates fsync-every's many small flushes from
 direct mode's steady stream) would show the kernel side of these runs.
 They need root and a kernel with BPF tooling, so they are not run on this
-host; chapter 30 (Debugging part) exercises them on the lab VM.</p>
+host; the eBPF observation toolkit exercises them on the lab VM.</p>
 
 ## What you learned
 

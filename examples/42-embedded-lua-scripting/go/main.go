@@ -1,5 +1,5 @@
 // pmon: a tiny process supervisor whose restart/backoff policy is not
-// compiled in -- it is a Lua script (policy.lua), loaded into a sandboxed
+// compiled in; it is a Lua script (policy.lua), loaded into a sandboxed
 // gopher-lua state and re-loaded on demand with a real SIGHUP. See the
 // chapter for why this beats a JSON config: the policy can compute (Lua
 // closures, exponential backoff, crash-loop detection) instead of merely
@@ -38,7 +38,7 @@ type event struct {
 }
 
 // decision is what the policy's on_exit returned: what to do about the
-// child, when, and why. reason is Lua's string, verbatim -- the host never
+// child, when, and why. reason is Lua's string, verbatim; the host never
 // constructs decision text itself.
 type decision struct {
 	action  string
@@ -85,7 +85,7 @@ func parsePolicyFlag(args []string) (string, error) {
 // die is the terminal-error path for `run`: print the fully wrapped error
 // chain and exit 1. Every error reaching here was built with fmt.Errorf's
 // %w, so the chain (CLI step -> Lua-load step -> Lua's own message) survives
-// intact -- this is "errors, three ways" step one: wrapped errors.
+// intact; this is "errors, three ways" step one: wrapped errors.
 func die(err error) {
 	fmt.Fprintln(os.Stderr, "pmon:", err)
 	os.Exit(1)
@@ -104,7 +104,7 @@ func luaErr(err error) error {
 }
 
 // newSandbox builds a fresh Lua state with only base/string/table/math
-// opened -- no os, io, package, debug, coroutine -- and the loader globals
+// opened (no os, io, package, debug, coroutine), and the loader globals
 // that could pull in more code or touch the filesystem removed. Every
 // (re)load, at startup and again on each SIGHUP, gets its own state built
 // from scratch: a misbehaving policy can never leave residue for the next
@@ -132,7 +132,7 @@ func newSandbox() *lua.LState {
 
 	// The unopened libraries (os, io, package, debug, coroutine) are left as
 	// plain nils by SkipOpenLibs, which gopher-lua's VM reports generically
-	// ("attempt to index a non-table object(nil) with key 'execute'") -- it
+	// ("attempt to index a non-table object(nil) with key 'execute'"); it
 	// never names the global the way PUC-Rio Lua does. Trade a nil for a
 	// guard table whose __index raises a message that names the blocked
 	// global explicitly: same sandboxing (the real library is still never
@@ -167,7 +167,7 @@ func newSandbox() *lua.LState {
 }
 
 // loadPolicy compiles and executes the policy chunk under the sandbox (a
-// protected load -- a syntax error becomes a returned error, never a panic),
+// protected load; a syntax error becomes a returned error, never a panic),
 // then calls on_load() if the policy defines one, also protected.
 func loadPolicy(L *lua.LState, path string) error {
 	if err := L.DoFile(path); err != nil {
@@ -260,7 +260,7 @@ func runPhase(L *lua.LState, events []event) error {
 // systems-programming content of this chapter (same pattern as ch12): pmon
 // is a long-running process that picks up a new policy without restarting.
 // signal.Notify + a blocking receive on a buffered channel is Go's idiomatic
-// async-signal-safe equivalent of signalfd+poll -- the actual OS-level
+// async-signal-safe equivalent of signalfd+poll; the actual OS-level
 // signal handling happens in the runtime's signal thread, never in
 // user Go code, so there is nothing unsafe to do inside a handler here.
 func cmdRun(policyPath string) error {
@@ -298,8 +298,8 @@ func cmdRun(policyPath string) error {
 }
 
 // cmdCheck loads one policy under the sandbox and probes on_exit once. Any
-// failure -- a syntax error at load, an on_load error, or a sandbox
-// violation reached from on_exit -- is reported the same way: the operator
+// failure (a syntax error at load, an on_load error, or a sandbox
+// violation reached from on_exit) is reported the same way: the operator
 // deciding whether to trust this file doesn't need to know which step
 // failed, only that it did.
 func cmdCheck(policyPath string) int {

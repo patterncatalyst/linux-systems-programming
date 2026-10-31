@@ -1,13 +1,13 @@
-// capstone -- the reference program for ch56, closing Part 14.
+// capstone: the reference program for ch56, closing Part 14.
 //
 // ONE workload (workload.hpp), SIX models, TWO uniform instruments.
 //
 // Nothing here re-derives ch50-ch55. Each arm is the smallest correct way to
 // run the shared workload in its model, because the novelty of this chapter is
-// not any model -- it is that all of them are finally measured the same way:
+// not any model: it is that all of them are finally measured the same way:
 //
-//   instrument 1  distinct_tids, from gettid()          -- ch50's, ch49's terms
-//   instrument 2  futex calls, from outside the process -- ch51's, via strace
+//   instrument 1  distinct_tids, from gettid(): ch50's, ch49's terms
+//   instrument 2  futex calls, from outside the process: ch51's, via strace
 //
 // Two further axes (bytes per paused computation, and the shape cancellation
 // arrives in) are ASSEMBLED in the `table` arm from numbers earlier chapters
@@ -108,7 +108,7 @@ void arm_std_thread() {
                 }
             });
         }
-    }  // jthread joins in its destructor -- ch51's whole point
+    }  // jthread joins in its destructor: ch51's whole point
     report_arm("std-thread", acc);
 }
 
@@ -202,7 +202,7 @@ void arm_coroutine() {
 
 // ── 5. Boost.Fiber (ch54) ────────────────────────────────────────────────
 //
-// Also eight in flight on one thread, and also no mutex -- but suspension is
+// Also eight in flight on one thread, and also no mutex, but suspension is
 // a stack switch rather than a state-machine transition, which is what ch54
 // priced at 131072 bytes apiece.
 

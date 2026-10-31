@@ -49,6 +49,6 @@
 <text x="805.0" y="216.5" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">kernel installs new slot</text>
 <text x="805.0" y="216.5" font-size="11" fill="#b8650a" text-anchor="middle">kernel installs new slot</text>
 <text x="40" y="30" font-size="12" fill="#1d1d1d" text-anchor="start" font-weight="700">SCM_RIGHTS: the fd number does not travel: a reference to the open file description does</text>
-<text x="40" y="225" font-size="11" fill="#555555" text-anchor="start">ch07&#x27;s three layers: per-process slot (cloexec bit lives here) → shared description (pos, flags) → inode</text>
+<text x="40" y="225" font-size="11" fill="#555555" text-anchor="start">The three layers: per-process slot (cloexec bit lives here) → shared description (pos, flags) → inode</text>
 <text x="640" y="480" font-size="11" fill="#b8650a" text-anchor="start">numbers from the chapter&#x27;s held-open run</text>
 </svg>

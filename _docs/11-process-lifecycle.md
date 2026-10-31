@@ -10,7 +10,7 @@ duration: "45 minutes"
 
 By the end of this chapter you can:
 
-- Trace a process from `fork(2)` through `execve(2)` to `wait4(2)`/`waitid(2)`, and explain what copy-on-write actually copies.
+- Trace a process from `fork(2)` through `execve(2)` to `wait4(2)`/`waitid(2)`, and explain what copy-on-write copies.
 - Build a `O_CLOEXEC` self-pipe that lets a parent distinguish "exec failed" from "the program ran and exited."
 - Observe a zombie process live in `ps` and `/proc/<pid>/stat`, and explain why a parent must reap it before its pid can be reused.
 - Distinguish exit codes from termination signals (`WIFEXITED`/`WEXITSTATUS` versus `WIFSIGNALED`/`WTERMSIG`) and apply the shell's `128+n` convention.
@@ -21,7 +21,7 @@ By the end of this chapter you can:
 
 Fork, exec, and wait are the three syscalls underneath every process a Linux system runs, from a shell pipeline to a container runtime launching an entry point. Getting the gap between fork and exec right, and reaping promptly, is the difference between a supervisor that works and one that silently leaks zombies or orphans until `pid_max` runs out.
 
-This chapter opens `pmon`, the process monitor that carries through the rest of this part: signal handling in Chapter 12, pidfd-based supervision in Chapter 13, and privilege dropping in Chapter 14 all build directly on the spawn-and-reap discipline established here.
+This chapter opens `pmon`, the process monitor that carries through the rest of this part: safe signal handling, pidfd-based supervision, and privilege dropping all build directly on the spawn-and-reap discipline established here.
 
 This chapter opens the book's third part with a new long-running artifact:
 `pmon`, a process monitor that will grow signal forwarding, pidfd-based
@@ -33,9 +33,9 @@ it**. Between a child's last instruction and the parent's `wait`, the kernel
 holds the corpse (exit status, resource usage, a pid that cannot be reused)
 as a *zombie*, and in this chapter you will create one, watch it
 in `ps`, read its `/proc` entry field by field, and then reap it. Along the
-way we take apart what `fork(2)` really copies (almost nothing, thanks to
+way we take apart what `fork(2)` copies (almost nothing, thanks to
 copy-on-write), why exec failure needs a back channel, and what Go's
-`os/exec` and Rust's `Command` are actually doing under their tidy APIs: the
+`os/exec` and Rust's `Command` are doing under their tidy APIs: the
 answer, straight from `strace`, involves three different flavors of `clone`.
 
 The code is in `examples/11-process-lifecycle/`. `./demo.sh` there builds all
@@ -87,8 +87,8 @@ parent until the exec, which is fork with the copy amortized to zero.
 One hole remains in the two-step model: if `execvp` itself fails (the
 command does not exist), the failure happens *in the child*, after fork, and
 the parent has no direct way to distinguish "exec failed" from "the program
-ran and exited". pmon closes the hole with a **self-pipe**, and chapter 7's
-`O_CLOEXEC` discipline is what makes it work. Both pipe ends are opened
+ran and exited". pmon closes the hole with a **self-pipe**, and the
+`O_CLOEXEC` discipline from RAII-wrapped fds is what makes it work. Both pipe ends are opened
 close-on-exec, from `examples/11-process-lifecycle/cpp/src/main.cpp`:
 
 ```cpp
@@ -111,13 +111,13 @@ struct ExecPipe {
 If exec succeeds, the kernel closes the child's write end atomically at exec
 time and the parent's `read` returns 0 (EOF, no child code required). If exec
 fails, the child writes the raw `errno` into the pipe and `_exit(127)`s. The
-parent reads either nothing or four bytes that name the exact failure. This
-trick is not pedagogy: the cross-check shows Go and Rust doing precisely the
+parent reads either nothing or four bytes that name the exact failure. The
+cross-check shows Go and Rust doing precisely the
 same dance inside their standard libraries.
 
 ## Zombies, orphans, and the duty to reap
 
-When a process exits, the kernel cannot simply delete it: the parent may not
+When a process exits, the kernel cannot delete it: the parent may not
 have asked yet how it died, and the pid must not be recycled while an answer
 is owed. So the address space, fds, and threads are freed immediately, but
 the task record (pid, exit status, rusage) stays as a **zombie** (`Z` in
@@ -325,7 +325,7 @@ Walk the C++ tab first, because everything else is a compressed version of
 it. `steady_clock::now()` is taken *before* the fork so wall time covers the
 child's whole life, and steady (not system) time so an NTP step cannot make a
 child appear to run backwards. `fork` splits the world; the child branch
-resets its copy of the read end (chapter 7's move-only `Fd` makes "close
+resets its copy of the read end (the move-only `Fd` makes "close
 exactly once" a type property, and `ExecPipe` is just two of them), calls
 `execvp` (the `p` variant walks `PATH` like a shell) and, only if exec
 *returned*, ships `errno` up the pipe and dies with `_exit(127)`. `_exit`,
@@ -386,8 +386,8 @@ The two `SAFETY` comments are the whole cost of dropping below
 `std::process`: a zeroed `rusage` is a valid out-parameter, and the two
 `&mut`s are exclusive for the duration of the call. `nix` decodes the raw
 status into a typed `WaitStatus`, giving the `match` in `monitor` the same
-two-armed shape as `WIFEXITED`/`WIFSIGNALED`. Note the deliberate asymmetry
-with C++: `RUSAGE_CHILDREN` aggregates every reaped child, `wait4` meters
+two-armed shape as `WIFEXITED`/`WIFSIGNALED`. The asymmetry
+with C++ is deliberate: `RUSAGE_CHILDREN` aggregates every reaped child, `wait4` meters
 one; identical numbers here, different interfaces, and the distinction will
 matter the moment pmon supervises more than one process.
 
@@ -448,7 +448,7 @@ so `os/exec` confines the child to a tiny fixed path of raw syscalls, and
 the strace shows the runtime spawning its scheduler threads
 (`CLONE_THREAD` clones) before the one process-creating
 `clone(CLONE_VM|CLONE_PIDFD|CLONE_VFORK|SIGCHLD)`. That `CLONE_PIDFD` flag
-is this part's chapter 13 arriving early: Go receives a *pidfd* for the
+is pidfd-based process management arriving early: Go receives a *pidfd* for the
 child and waits via `waitid(P_PIDFD, ...)`, immune to pid-reuse races: it
 identifies the child by fd, not by number. Rust's `CLONE_CLEAR_SIGHAND`
 (via `posix_spawn`) solves a different race: the child starts with default

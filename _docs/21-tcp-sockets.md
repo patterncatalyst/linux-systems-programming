@@ -22,8 +22,8 @@ By the end of this chapter you can:
 - Build `chatterd` v0, a thread-per-connection TCP chat room, in C++, Go,
   and Rust with an RAII/move-only socket that owns every fd
 - Identify the two failure modes of thread-per-connection service
-  (per-connection memory cost, lock-held-across-I/O blocking) that chapter
-  22 addresses
+  (per-connection memory cost, lock-held-across-I/O blocking) that an
+  epoll event loop with a thread pool fixes
 - Verify a live server with `ss -tlnp`/`-tnp` and read the wire bytes at the
   `read`/`write` syscall boundary with `strace`
 
@@ -33,7 +33,7 @@ A TCP server looks like a pipe with an address until the first production
 incident proves otherwise: a restart that cannot rebind its own port, a
 message that arrives split across two `read` calls, or a slow client that
 freezes every other connection behind a shared lock. Each of those is a
-direct consequence of what TCP actually promises, ordered bytes with no
+direct consequence of what TCP promises: ordered bytes with no
 message boundaries, not what a quick read-write test suggested.
 
 This chapter builds `chatterd` v0 from the four raw syscalls that make a
@@ -56,7 +56,8 @@ on it: that a byte stream has no message boundaries, so *you* must add them.
 
 The code is in `examples/21-tcp-sockets/`. `./demo.sh` there builds all three
 implementations; its `README.md` fixes the CLI, the exit codes, and the wire
-frame that chapters 22–24 and 27 grow but never replace.
+frame that later event-loop, peer-discovery, deadline, and async-runtime work
+grows but never replaces.
 
 {% include excalidraw.html
    file="21-server-lifecycle"
@@ -102,8 +103,8 @@ Result<Socket> listen_tcp(const std::string& host, std::uint16_t port) {
 
 `socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0)` asks for an IPv4
 (`AF_INET`) reliable byte stream (`SOCK_STREAM`, TCP), and folds close-on-exec
-into the creating call the same way chapter 7 insisted every fd source must:
-an `accept4` a moment later has the same discipline, because a listener that
+into the creating call, the discipline every fd-creating call must follow:
+an `accept4` a moment later carries the same flag, because a listener that
 leaks into a forked child is a port you can never rebind. The returned fd is
 not yet an address: `bind` gives it one. `sockaddr_in` is the IPv4 address
 struct, and its two fields carry one trap: `sin_port` and
@@ -116,8 +117,8 @@ raw. Skip `htons` on a little-endian x86 box and you bind port 9000 as
 real IPv4 literal, so a hostname or garbage gets the `not an IPv4 address`
 error instead of a mysterious `bind` failure. Turning a *name* like
 `chat.example.com` into a `sockaddr` is a different job: `getaddrinfo(3)`,
-which also picks IPv4-vs-IPv6 for you. This example stays numeric
-and leaves resolution to chapter 23.
+which also picks IPv4-vs-IPv6 for you. This example stays numeric;
+name resolution is a peer-discovery concern.
 
 `bind` attaches the address; `listen(fd, 128)` flips the socket from active
 to **passive** (it will never `connect` out, only accept in) and sizes the
@@ -155,8 +156,9 @@ about how they are grouped into `read` calls. A protocol that assumed "one
 real network the first time a segment split.
 
 The fix is **length-prefix framing**, wrapped in a small fixed header, and it
-is fixed for the whole book: chapters 22, 24, and 27 add message *types* to
-this exact 6-byte header, never a new one. Every message, both directions,
+is fixed for the whole book: the event-loop server, deadline handling, and
+async-runtime work ahead all add message *types* to this exact 6-byte header,
+never a new one. Every message, both directions,
 opens with a 2-byte magic `0x43 0x48` (ASCII `"CH"`), a 1-byte version
 (`0x01`), a 1-byte `type`, then a 2-byte **big-endian** payload length
 (`0..65535`), and finally exactly that many payload bytes.
@@ -172,7 +174,8 @@ chat `text` alone, nothing else; the server relays every MSG as a **DELIVER**
 frame whose payload is `name` `0x00` `text`, the *only* frame that still
 needs a NUL, because it is the only one carrying two fields to a reader who
 never sent them itself. `WELCOME` and `PING` are declared and reserved for
-chapters 22 and 24 but never sent or read here. The length prefix means the
+the event-loop server and deadline handling ahead but never sent or read
+here. The length prefix means the
 reader never scans for a delimiter: it reads exactly the 6 header bytes,
 learns the type and size from them, reads exactly that many payload bytes,
 and is done. There is no separate "reject an oversized frame" check the way
@@ -262,8 +265,8 @@ keeps calling `read` until `n` bytes have accumulated, retrying `EINTR` and
 returning false on EOF; Go and Rust get it from the standard library
 (`io.ReadFull`, `read_exact`). This loop is the whole point: a single
 `read` returning fewer bytes than asked is not an error, it is Tuesday, and
-the reader that treats a short read as a complete message is the bug the
-length prefix exists to prevent. The 6-byte header is read whole, then
+treating a short read as a complete message is exactly what the length
+prefix prevents. The 6-byte header is read whole, then
 checked before anything in it is trusted: `hdr[0]`/`hdr[1]` must be `'C'`/`'H'`
 and `hdr[2]` must be the version this build speaks (`0x01`), or the frame is
 rejected outright: a stray non-chatterd byte stream, or a future version this
@@ -277,7 +280,7 @@ remember. None of the three distinguishes a bad magic/version from a short
 read with a diagnostic in this chapter: a truncated header, a wrong magic,
 and a truncated payload all end the connection the same quiet way a clean EOF
 does: `read_frame` returns `std::nullopt`/an `error`/(mostly) `Ok(None)`, and
-the caller simply stops reading that connection. Rust's return type is the
+the caller stops reading that connection. Rust's return type is the
 one place the distinction survives structurally (`Ok(None)` is EOF,
 `Err(...)` is a bad magic/version via `bail!`), but `serve_client`'s
 `_ => break` arm folds both back into the same outcome anyway.
@@ -300,7 +303,7 @@ its fd in the destructor and nowhere else; there is not a single naked
 parameter dies and the connection closes; when `cmd_serve` returns, the
 listener `Socket` dies last and the port frees. Ownership *is* lifetime, so
 "who closes this fd, and when" is answered by scope rather than by vigilance,
-the same lesson chapter 7 drew for files, now true for a server
+the same RAII discipline that governs files, now true for a server
 that opens and closes a socket per client.
 
 ## Errors, three ways
@@ -339,7 +342,7 @@ next caller.
 in `read_frame` per client, plus the listener thread in `accept`. It is the
 easiest server model to reason about: each connection is a straight-line
 blocking program, and the only shared state is the `Hub` behind a mutex, and
-it is exactly the model that stops scaling, which is why chapter 22 exists.
+it is exactly the model that stops scaling once connection counts climb.
 Two cracks are already visible. First, **cost per connection**: a thread is a
 megabyte or two of stack plus a scheduler entry, so ten thousand idle chat
 clients is gigabytes of RAM and a scheduler run queue that thrashes: the
@@ -351,8 +354,8 @@ lock. Go sidesteps it structurally: each client owns a 64-deep buffered
 channel and a writer goroutine, and `broadcast` does a non-blocking
 `select { case c.out <- frame: case <-c.done: }`, so a wedged client is
 skipped rather than allowed to block the room. That contrast, a mutex held
-across I/O versus a bounded queue per consumer, is the seam chapter 22 opens
-up when it moves the server onto one epoll loop and a thread pool. For now, the
+across I/O versus a bounded queue per consumer, is the seam that opens up
+when the server moves onto one epoll loop and a thread pool. For now, the
 three shutdown strategies all reach the same observable end: C++ interrupts
 `poll` with SIGINT and lets each `std::jthread`'s `stop_callback` shut its
 socket down; Go closes the listener out from under `Accept` via a cancelled
@@ -486,11 +489,11 @@ the same 6-byte magic/version/type/length header that would show up in a
   that two-phase read and the `43 48 01 03 00 0f` (DELIVER, length 15) header
   on the wire.
 - The RAII `Socket` owns every fd by scope, so there is no naked `close`; and
-  thread-per-connection is the simple model that chapter 22 must leave behind:
-  a thread and a stack per client, plus a broadcast that holds the roster
-  lock across I/O and stalls behind one slow reader.
+  thread-per-connection is the simple model an event-loop server leaves
+  behind: a thread and a stack per client, plus a broadcast that holds the
+  roster lock across I/O and stalls behind one slow reader.
 
-Next, **scaling the server**: chapter 22 takes the same `chatterd` frame off
+Next, **scaling the server** takes the same `chatterd` frame off
 threads and onto a single epoll loop with nonblocking sockets, so ten
 thousand idle clients cost fds instead of stacks.
 

@@ -1,11 +1,11 @@
--- policy-evil.lua -- a policy that tries to break out of the sandbox.
+-- policy-evil.lua: a policy that tries to break out of the sandbox.
 --
 -- The host loads every policy inside a sandbox: os, io, package and debug are
 -- never opened, so `os` is not available to the script. This policy tries to
 -- shell out anyway. Reaching for `os.execute` raises a Lua error (the exact
--- wording differs per host -- PUC-Lua names the nil global, gopher-lua's guard
+-- wording differs per host: PUC-Lua names the nil global, gopher-lua's guard
 -- table names the blocked field), which the host catches through its protected
--- call and reports as a rejected policy -- the supervisor keeps running, the
+-- call and reports as a rejected policy: the supervisor keeps running, the
 -- malicious policy never takes effect. `pmon check --policy policy-evil.lua`
 -- shows the rejection.
 

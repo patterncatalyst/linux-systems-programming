@@ -5,11 +5,11 @@
 -- own the readiness model and NOTHING here repeats it. This example is about
 -- the concepts Asio has that a hand-written loop does not.
 --
--- NOTHING HERE IS TIMED (see ch39) and nothing binds a port -- the I/O cases
+-- NOTHING HERE IS TIMED (see ch39) and nothing binds a port: the I/O cases
 -- use an AF_UNIX socketpair, so the example is local, offline, unprivileged.
 --
 -- Hard-gated (A-F):
---   A. Every case computes the same digest, 0x481984990deee5ff -- ch46-ch54.
+--   A. Every case computes the same digest, 0x481984990deee5ff, ch46-ch54.
 --   B. Work guard: a fresh io_context::run() returns after ZERO handlers,
 --      because run() returns on "no outstanding work" rather than on
 --      completion. With an executor_work_guard held it runs the posted
@@ -20,7 +20,7 @@
 --        * straight to the io_context -> handlers demonstrably overlap
 --      Note carefully what is and is not asserted on the unguarded side. The
 --      counter there is a data race, which is UB, and the number of lost
---      updates is not reproducible -- a run that loses nothing is legal. So
+--      updates is not reproducible: a run that loses nothing is legal. So
 --      the gate asserts OVERLAP, which is measured with atomics and is well
 --      defined, and merely REPORTS the counter. (ch49's rule: never gate on
 --      the output of undefined behavior.)
@@ -34,7 +34,7 @@
 --      four. Deterministic counts, and the same readv/writev machinery Part 5
 --      covered. The gate counts sendmsg+sendto+writev and ignores plain
 --      write(2), which is this program's own stdout.
---   F. Topologies: who actually runs the handlers, by gettid() -- ch50's
+--   F. Topologies: who actually runs the handlers, by gettid(), ch50's
 --      instrument and ch49's vocabulary applied to an I/O runtime. One thread
 --      on one context reports exactly 1 tid; the three multi-threaded shapes
 --      report more than 1.

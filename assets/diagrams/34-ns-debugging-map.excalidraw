@@ -1090,13 +1090,13 @@
    "updated": 1,
    "link": null,
    "locked": false,
-   "text": "Both paths independently confirm the same PID 1 identity -- podman exec from inside the container runtime, nsenter from the bare host.",
+   "text": "Both paths independently confirm the same PID 1 identity: podman exec from inside the container runtime, nsenter from the bare host.",
    "fontSize": 13,
    "fontFamily": 1,
    "textAlign": "left",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "Both paths independently confirm the same PID 1 identity -- podman exec from inside the container runtime, nsenter from the bare host.",
+   "originalText": "Both paths independently confirm the same PID 1 identity: podman exec from inside the container runtime, nsenter from the bare host.",
    "lineHeight": 1.25,
    "baseline": 13
   }

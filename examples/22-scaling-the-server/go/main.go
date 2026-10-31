@@ -1,7 +1,7 @@
-// chatterd v1 — a peer-to-peer chat daemon growing chapter by chapter.
+// chatterd v1: a peer-to-peer chat daemon growing chapter by chapter.
 //
 // ch21 introduced the length-prefixed frame protocol and a threaded server;
-// ch22 — "scaling the server" — is about how a server holds thousands of
+// ch22, "scaling the server", is about how a server holds thousands of
 // connections. The C++ and Rust versions offer two engines: a thread-per-
 // connection "threaded" engine and a single-thread "epoll" engine with
 // explicit nonblocking read/write state machines.
@@ -9,7 +9,7 @@
 // Go exposes the SAME "--engine threaded|epoll" flag, but BOTH engines are the
 // same code: one goroutine per connection reading, one writing, and a central
 // hub goroutine that fans messages out over channels. There is no hand-rolled
-// epoll here on purpose — the Go runtime's network poller already multiplexes
+// epoll here on purpose: the Go runtime's network poller already multiplexes
 // every socket through epoll_wait(2) under the hood and parks a goroutine
 // (not an OS thread) on each blocked Read/Write. The "epoll" the other
 // languages write by hand, Go's netpoller runs for us; the engine flag only
@@ -130,7 +130,7 @@ func writeAll(conn net.Conn, data []byte) error {
 }
 
 // ---------------------------------------------------------------------------
-// Server — one hub goroutine fans out to one goroutine-pair per connection.
+// Server: one hub goroutine fans out to one goroutine-pair per connection.
 // ---------------------------------------------------------------------------
 
 type client struct {
@@ -343,7 +343,7 @@ func cmdListen(port int, nick string, count int) error {
 	return nil
 }
 
-// errQuiet flags a nonzero exit without printing a "chatctl: ..." line — the
+// errQuiet flags a nonzero exit without printing a "chatctl: ..." line; the
 // flood counts are already on stdout for the caller to inspect.
 var errQuiet = errors.New("flood incomplete")
 
@@ -383,7 +383,7 @@ func cmdFlood(port, n int, text string) error {
 					return
 				}
 			}
-			// Exactly one broadcast is expected — conn0's message reaches all.
+			// Exactly one broadcast is expected: conn0's message reaches all.
 			for {
 				typ, _, err := fr.next()
 				if err != nil {

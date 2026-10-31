@@ -1,4 +1,4 @@
-// toolbelt — three focused profiling targets, one binary per language, each
+// toolbelt: three focused profiling targets, one binary per language, each
 // exercised by that language's native profiler (chapter 31: per-language
 // toolbelts).
 //
@@ -6,20 +6,20 @@
 //
 // hot:   counts primes in [2, n) by trial division. hotSpin is the only
 //
-//	function that does real work — it dominates a CPU profile.
+//	function that does real work; it dominates a CPU profile.
 //
 // alloc: builds a 1000-key string index by round-robin overwrite from n
 //
 //	iterations of freshly allocated strings. allocChurn is the only
-//	allocation site — it dominates an allocation profile.
+//	allocation site; it dominates an allocation profile.
 //
 // Output: "app: mode=<hot|alloc> n=<n> result=<r> ms=<t>" on success.
 //
 // --cpuprofile/--memprofile/--trace are Go-only: unlike perf (which attaches
 // to any binary from the outside), Go's runtime/pprof and runtime/trace are
 // libraries the program calls into, so writing a profile or a trace is part
-// of this binary's own behavior. C++ and Rust have no equivalent flags —
-// their profiling is done externally with perf — which is why the usage
+// of this binary's own behavior. C++ and Rust have no equivalent flags;
+// their profiling is done externally with perf, which is why the usage
 // banner differs per language even though the core <hot|alloc> [--n N]
 // contract is identical.
 package main

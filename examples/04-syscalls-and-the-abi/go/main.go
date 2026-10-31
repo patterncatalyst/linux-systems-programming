@@ -1,5 +1,5 @@
-// sysprobe: a labeled syscall specimen — openat+write+close of an unlinked
-// temp file, a 10 ms nanosleep, and 16 bytes of getrandom — built to be
+// sysprobe: a labeled syscall specimen (openat+write+close of an unlinked
+// temp file, a 10 ms nanosleep, and 16 bytes of getrandom), built to be
 // watched under strace(1). Prints "step=<name> ok" per step, then a summary.
 package main
 

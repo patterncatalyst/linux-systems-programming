@@ -1,11 +1,11 @@
-# 22-scaling-the-server — chatterd v1
+# 22-scaling-the-server: chatterd v1
 
-chatterd is a peer-to-peer chat daemon we grow across chapters 21–24 and 27.
-ch21 introduced the length-prefixed frame protocol and a thread-per-connection
-server. ch22 is about **how a server holds many connections at once**: it keeps
-the threaded engine and adds a single-threaded **epoll** engine — one thread,
-nonblocking accept, and a per-connection read/write state machine with an
-outbound queue and real backpressure.
+chatterd is a peer-to-peer chat daemon that grows across several chapters in
+this book. The previous chapter introduced the length-prefixed frame protocol
+and a thread-per-connection server. Holding many connections at once is the
+focus here: the daemon keeps the threaded engine and adds a single-threaded
+**epoll** engine: one thread, nonblocking accept, and a per-connection
+read/write state machine with an outbound queue and real backpressure.
 
 The daemon and its client are the same binary (`app`): `serve` is the daemon,
 `send` / `listen` / `flood` are the client (`chatctl`) modes.
@@ -31,15 +31,15 @@ chatterd: stopped engine=epoll messages=2 peak_conns=50
 Every MSG is delivered to **every** connected client, including the sender, so
 a client confirms its message was accepted by seeing its own line echoed.
 
-## What the chapter is really about
+## Threaded vs. epoll
 
 Two ways to service N connections from one process:
 
-- **`--engine threaded`** — one OS thread per connection blocks in `recv()`; a
+- **`--engine threaded`**: one OS thread per connection blocks in `recv()`; a
   shared registry (mutex + per-socket write mutex) fans each message out. Simple
   to reason about, one kernel thread per client. The accept loop `poll(2)`s the
   listening socket alongside a `signalfd`, so a signal breaks it out cleanly.
-- **`--engine epoll`** — one thread owns an `epoll` set over the listener, a
+- **`--engine epoll`**: one thread owns an `epoll` set over the listener, a
   `signalfd`, and every client socket. Accept is nonblocking (`accept4` in a
   loop until `EAGAIN`); each connection is a state machine with an **inbound
   buffer** (frames are reassembled across reads) and an **outbound queue**.
@@ -58,7 +58,7 @@ that the threaded engine does the same, and that both shut down cleanly with a
 
 Go exposes the same `--engine threaded|epoll` flag, but **both** engines are
 the same idiomatic code: one goroutine per connection reading, one writing, and
-a hub goroutine fanning out over channels. There is no hand-rolled epoll — the
+a hub goroutine fanning out over channels. There is no hand-rolled epoll: the
 Go runtime's **network poller** already multiplexes every socket through
 `epoll_wait(2)` and parks a *goroutine* (not an OS thread) on each blocked
 Read/Write. The epoll the other two languages write by hand, Go's netpoller runs
@@ -67,8 +67,9 @@ identical across all three.
 
 ## Wire format
 
-One frame protocol, introduced in ch21 and reused unchanged by every later
-chatterd version and every language. All multi-byte fields are **big-endian**.
+One frame protocol, introduced earlier in the series and reused unchanged by
+every later chatterd version and every language. All multi-byte fields are
+**big-endian**.
 
 ```
  byte:  0     1     2       3      4     5     6 ............. 6+LEN-1
@@ -92,22 +93,22 @@ Header is always 6 bytes; total frame length is `6 + LENGTH`.
 | 0x02 | MSG     | client → server | message text, UTF-8 |
 | 0x03 | DELIVER | server → client | `nick + 0x00 (NUL) + text` |
 | 0x04 | WELCOME | server → client | empty (sent once, on accept) |
-| 0x05 | PING    | — | reserved (introduced in ch24; unused here) |
+| 0x05 | PING    | n/a | reserved (introduced later; unused here) |
 
-This is the same frame every chatterd chapter and language speaks: a v0
-(ch21) client can chat through a v1 (this chapter's) or v3/v4 server and back
-because JOIN/MSG/DELIVER never change shape — later chapters only add types
-(WELCOME here, PING in ch24), never touch the 6-byte header or repurpose an
-existing type.
+This is the same frame every chatterd version and language speaks: a v0
+client can chat through a v1 (this chapter's) or v3/v4 server and back
+because JOIN/MSG/DELIVER never change shape; later versions only add types
+(WELCOME here, PING added later), never touch the 6-byte header or
+repurpose an existing type.
 
 `DELIVER` carries the originating nickname, then a single NUL (`0x00`) byte,
-then the message text — split the payload on its first NUL to recover the two
+then the message text: split the payload on its first NUL to recover the two
 fields (a nickname is never allowed to contain a NUL). WELCOME is sent the
-instant the server accepts a connection — receiving it is proof the connection
+instant the server accepts a connection; receiving it is proof the connection
 is registered in the server's fan-out set, which is how `flood` knows all N
 peers are present before it triggers the broadcast.
 
-Example — `alice` sends `hi` (`msg`), and the server delivers it:
+Example: `alice` sends `hi` (`msg`), and the server delivers it:
 
 ```
 client -> server   43 48 01 01 00 05  61 6c 69 63 65               JOIN  "alice"
@@ -144,7 +145,7 @@ Same CLI, stdout/stderr shapes, exit codes, and wire protocol, so one
 | | epoll engine | threaded engine | shutdown |
 |---|---|---|---|
 | **C++23** | hand-rolled `epoll_create1`/`epoll_ctl`/`epoll_wait`; per-conn `EConn` with `inbuf`/`outbuf`, `EPOLLOUT` toggled on backpressure; RAII `Fd` owns every socket, `std::expected` for setup | `std::jthread` per connection, shared `Registry` (mutex + per-socket write mutex), `std::atomic` counters | `signalfd` in the loop / poll set; `SHUT_RDWR` wakes reader threads, jthreads join |
-| **Go 1.26** | netpoller (see note) — goroutine per conn + hub goroutine, channel fan-out with blocking sends for backpressure | *same code* as epoll; the flag only changes the printed label | `signal.Notify`, close listener, `quit`/`done` channels, atomics read after the hub drains |
+| **Go 1.26** | netpoller (see note): goroutine per conn + hub goroutine, channel fan-out with blocking sends for backpressure | *same code* as epoll; the flag only changes the printed label | `signal.Notify`, close listener, `quit`/`done` channels, atomics read after the hub drains |
 | **Rust 2024** | `mio` `Poll`/`Token`/`Interest`; per-conn `EConn` with `inbuf`/`outbuf`, reregister `READABLE\|WRITABLE` on backpressure; `signalfd` registered via `SourceFd`; `OwnedFd`-backed `mio::net` sockets | `std::thread` per connection, `Arc<ConnRegistry>` (mutex map + per-socket `Mutex<TcpStream>` write clone), atomics | `nix::poll` over listener + `signalfd`; `TcpStream::shutdown` wakes readers, threads join |
 
 Build/run: `./demo.sh [cpp|go|rust] build` and `./demo.sh <lang> run <args>`.

@@ -28,7 +28,7 @@ By the end of this chapter you can:
 ## Why this matters
 
 Most bugs involving file descriptors come from treating "the fd" as a single
-thing when it is really three: a slot in your process, a shared kernel
+thing when it is three: a slot in your process, a shared kernel
 object, and the file itself. Conflating them is how a `dup`'d descriptor
 surprises you by sharing an offset, how a privileged fd leaks across `exec`,
 or how a deleted file keeps its storage alive because something still holds
@@ -145,7 +145,7 @@ you already hold open. Once `fwatch` holds fd 3 on the root of the tree,
 renaming that tree out from under it changes nothing: the fd pins the inode,
 not the name. `AT_SYMLINK_NOFOLLOW` completes the discipline for the stat
 side: classify the entry itself, never what a symlink points at. (`AT_FDCWD`,
-which `scan` passes for the very first open, is the pseudo-dirfd meaning
+which `scan` passes for the first open, is the pseudo-dirfd meaning
 "resolve relative to the current working directory", the only path-based
 resolution in the whole program.)
 
@@ -506,7 +506,7 @@ first arguments: only the root open uses `AT_FDCWD`; every later `openat` and
 `newfstatat` anchors on fd 3, 4, or 5: the dirfd chain, exactly as Figure
 7.1 draws it, with every open carrying `O_CLOEXEC|O_NOFOLLOW|O_DIRECTORY`.
 The kernel also reports unsorted entry order (`gone.txt` before `a.txt`);
-the sorted output really does come from the map. The Rust binary shows one
+the sorted output comes from the map. The Rust binary shows one
 extra `openat(3, ".", …) = 4` per level: `Dir::read_from` acquiring its own
 cursor handle, just as its comment says.
 
@@ -546,7 +546,7 @@ different tool, all agreeing.
 > **On the lab VM** <span class="status status--unverified">unverified</span>:
 > the eBPF view of this chapter is watching `openat` flags fleet-wide with
 > `opensnoop`/`bpftrace` instead of per-process `strace`; bcc-tools are not
-> runnable on this host without privileges, and chapter 30 (Debugging part)
+> runnable on this host without privileges, and the eBPF observation toolkit
 > exercises exactly that on the `systems-target` VM.
 
 ## What you learned
@@ -568,7 +568,7 @@ different tool, all agreeing.
   one printer that formats identical text.
 
 Next, **page cache and durability**: what the kernel does with the bytes you
-write, why `fwatch`'s one-second mtimes can lie, and what `fsync` actually
+write, why `fwatch`'s one-second mtimes can lie, and what `fsync`
 promises.
 
 ---

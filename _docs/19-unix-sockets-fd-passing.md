@@ -28,20 +28,20 @@ By the end of this chapter you can:
 ## Why this matters
 
 A process that wants to be found and trusted by a stranger needs more than
-a shared pipe: it needs an address, a way to check who is really calling,
+a shared pipe: it needs an address, a way to verify who is calling,
 and sometimes a way to hand over an already-open resource instead of
 re-deriving it. UNIX domain sockets are the one primitive on the system
 built for exactly that, and `SCM_RIGHTS` gets used constantly without
-anyone being clear on what actually crosses the wire.
+anyone being clear on what crosses the wire.
 
 This chapter builds `pmon` v5's control plane on `SO_PEERCRED` for
 kernel-vouched identity and `SCM_RIGHTS` for descriptor passing, then
 proves with `/proc` on both processes at once that an open file
 description, not a number, is what moved.
 
-Chapter 18 gave `pmon` a log pipeline built from pipes and FIFOs (fast,
-kernel-buffered, and strictly byte-shaped): a pipe moves data, and only
-between processes that inherited its ends. Version 5 needs something pipes
+The pipes-and-FIFOs log pipeline gave `pmon` fast, kernel-buffered,
+strictly byte-shaped delivery: a pipe moves data, and only between
+processes that inherited its ends. Version 5 needs something pipes
 cannot do: a stranger (a `pmctl` process started minutes later, from
 another terminal) must find the running supervisor, prove who it is, ask
 questions, and get answers. That is a *control plane*, and the Linux
@@ -51,9 +51,9 @@ two abilities no network socket has. It can tell the server exactly which
 uid and pid is calling (`SO_PEERCRED`), and it can carry *file descriptors*
 in its messages (`SCM_RIGHTS`). The second one is the headline: `pmctl
 logfd` never opens the log file; the supervisor hands it an already-open
-descriptor, and the chapter closes the loop on chapter 7's three-layer model
-by proving, with `/proc` on both processes at once, exactly which layer
-crossed the socket.
+descriptor, closing the loop on the three-layer fd model (fd table, open
+file description, inode) by proving, with `/proc` on both processes at
+once, exactly which layer crossed the socket.
 
 The code is in `examples/19-unix-sockets-fd-passing/`. `./demo.sh` there
 builds all three implementations; its `README.md` specifies the CLI, the
@@ -110,8 +110,8 @@ u_str LISTEN 0  8  /tmp/p19.t9j0/ctl.sock 16411867  * 0
 u_str LISTEN 0  1              @pmon-demo 16406037  * 0
 ```
 
-The `@` prefix is `ss`'s spelling of that leading NUL. pmon deliberately
-uses the filesystem kind: the path *is* the discovery mechanism and the
+The `@` prefix is `ss`'s spelling of that leading NUL. pmon uses the
+filesystem kind: the path *is* the discovery mechanism and the
 permission check, and `stop` unlinking it is a clean "no longer accepting"
 signal. The classic trap is capacity, not permissions: `sun_path` is 108
 bytes, so a control socket under a deep CI workspace path fails to bind at
@@ -146,16 +146,18 @@ languages. pmon only logs the identity; the one-line change to *enforce*
 (compare `cred.uid` against `getuid()` and hang up) is the pattern every
 socket-activated daemon on your machine uses. Two sharp edges: the pid is
 the connector's pid at connect time; the peer may have exited or the pid
-been reused by the time you act on it (chapter 13's pidfd argument, again),
+been reused by the time you act on it (the same argument for pidfd over a
+raw pid, again),
 and stronger per-message guarantees exist via `SCM_CREDENTIALS` if you need
 them.
 
-## What actually crosses the socket
+## What crosses the socket
 
 `SCM_RIGHTS` is routinely described as "sending a file descriptor", and that
 phrase hides the mechanism. The number does not travel: fd 3 in the sender
 arrived as fd 4 in the receiver on the traced run below. What the kernel
-does is precise in chapter 7's terms: it takes the sender's fd-table slot,
+does is precise in terms of the fd-table/open-file-description/inode
+layering: it takes the sender's fd-table slot,
 follows it to the **open file description**, allocates a *new slot in the
 receiver's fd table* (lowest free, as always), and points it at that same
 description. The result is exactly what `dup(2)` produces (shared offset,
@@ -166,7 +168,7 @@ system-wide.
 {% include excalidraw.html
    file="19-scm-rights-transfer"
    alt="Two fd-table bands over a shared kernel band: sender slot 3 with close-on-exec set at open, and receiver slot 4 labeled new lowest free with close-on-exec set by MSG_CMSG_CLOEXEC, both pointing at one dark open-file-description box holding pos 47 and flags 02102002, which points down to inode 95934 for pmon.log; sendmsg with cmsg_data 3 names the sender slot, an amber dashed arrow shows the kernel installing the new receiver slot, and recvmsg reports cmsg_data 4."
-   caption="Figure 19.2: SCM_RIGHTS in chapter 7's three layers: two per-process slots, one open file description, one inode; pos, flags, inode, and both fd numbers are from the held-open run below" %}
+   caption="Figure 19.2: SCM_RIGHTS across the three fd layers: two per-process slots, one open file description, one inode; pos, flags, inode, and both fd numbers are from the held-open run below" %}
 
 That layer choice has practical consequences pmon is built around. The log
 is opened `O_RDWR | O_APPEND`, not `O_WRONLY`: flags live on the
@@ -179,7 +181,8 @@ but the discipline costs nothing and the point generalizes.)
 
 ## How the code works
 
-The supervision half is chapter 11–13 machinery matured: `spawn_child`
+The supervision half is process-lifecycle, signal, and pidfd machinery
+matured: `spawn_child`
 forks/execs the command with `setpgid(0,0)` so `stop` can `SIGTERM` the
 whole group, `dup2`s the log fd over stdout and stderr, and a reaper
 (`std::jthread`, goroutine, or `std::thread`) `wait`s, backs off 300 ms, and
@@ -188,7 +191,7 @@ a mutex (C++/Rust condvar, Go channels). What is new is the socket plumbing.
 `listen_ctl` is the canonical four-step: `unlink` the stale path,
 `socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0)`, `bind` a `sockaddr_un`
 (after the 108-byte check), `listen`. The accept loop takes each connection
-with `accept4(…, SOCK_CLOEXEC)` (chapter 7's rule that the cloexec bit must
+with `accept4(…, SOCK_CLOEXEC)` (the rule that the cloexec bit must
 be set atomically applies to *every* fd source, and `accept` is one),
 logs `SO_PEERCRED`, reads one line, and dispatches: `status` formats the
 shared state, `stop` tears down, `logfd` calls the interesting function.
@@ -308,7 +311,7 @@ fn recv_log_fd(conn: &UnixStream) -> Result<OwnedFd> {
 Three details deserve emphasis. First, `MSG_CMSG_CLOEXEC`: the received fd
 is installed by the kernel, not by any `open` you control, so this flag is
 the only atomic way to give it the cloexec bit; the recvmsg-then-`fcntl`
-window is chapter 7's fork/exec race all over again. Note the layering in
+window is the same fork/exec cloexec race all over again. Note the layering in
 Figure 19.2: both slots end up cloexec, but each got the bit *its own way*,
 because close-on-exec is per-slot, never shared. Second, ownership: the
 C++ code moves the raw int into the RAII `Fd` immediately, and Rust wraps
@@ -342,7 +345,7 @@ next caller. `EINTR` is retried at every blocking call in the C++
 (`read_command`, `write_all`, `waitpid`), which the runtimes of Go and Rust
 handle beneath their standard libraries. And the address-length failure is
 caught before the syscall in all three, because a 108-byte truncation by
-`strncpy` (the traditional C bug) would *bind to the wrong path* rather
+`strncpy` would *bind to the wrong path* rather
 than fail.
 
 ## Concurrency lens
@@ -354,7 +357,7 @@ past its backoff and inside `spawn_child`. All three implementations
 re-check `stopping` *after* the spawn returns and, if the flag flipped,
 undo (SIGTERM and reap the child they just created) before signaling
 `child_done`. Without that re-check, `stop` leaks exactly one freshly
-respawned process, a bug that only bites when the child dies within 300 ms
+respawned process when the child dies within 300 ms
 of a stop. The languages phrase the wait differently: C++ and Rust block
 on a condvar predicate, Go closes a `stopCh` the reaper `select`s against
 the backoff timer, but the state machine is identical, which is what makes
@@ -367,7 +370,8 @@ description, which the kernel makes an atomic append. One Go footnote:
 `listener.SetUnlinkOnClose(false)` keeps Go's helpfulness from unlinking
 the socket before the stop path does it explicitly, and
 `int(logFile.Fd())` in the `logfd` case is again a loan against the
-`*os.File` staying live, exactly as dissected in chapter 7.
+`*os.File` staying live, exactly as the fd-table/open-file-description
+layering dissected above predicts.
 
 ## Build, run, observe
 
@@ -441,7 +445,7 @@ pread64(4, "", 4096, 47) = 0
 (Fields trimmed; the full lines are in the trace files.) The sender named
 fd **3**; the receiver got fd **4**: the number is per-process, so it did
 not travel. `cmsg_len=20` and `msg_controllen=24` are `CMSG_LEN(4)` and
-`CMSG_SPACE(4)` from `send_fd`, live. And the very next syscalls show
+`CMSG_SPACE(4)` from `send_fd`, live. And the next syscalls show
 `pmctl` reading all 47 bytes of log *through fd 4* at explicit offsets,
 no `openat` anywhere in the trace.
 
@@ -468,7 +472,8 @@ ino:	95934
 95934 47 /tmp/p19.t9j0/pmon.log
 ```
 
-Field for field equal, and each field pins a layer of the chapter 7 model.
+Field for field equal, and each field pins a layer of the fd-table/
+open-file-description/inode model.
 `ino: 95934` on both fds matches `stat` on the path: one inode. `pos: 47`
 on both: one *offset*, which only makes sense if there is one open file
 description; 47 is the file's size because every `O_APPEND` write advanced

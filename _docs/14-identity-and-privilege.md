@@ -18,7 +18,7 @@ By the end of this chapter you can:
 
 ## Why this matters
 
-Most daemons start as root because they need a privileged resource (a port below 1024, a protected path) and must stop being root the moment they no longer do. Getting that transition wrong in either direction, leaving root behind by accident or stripping the one capability the service needed, is a recurring real-world vulnerability class, not a theoretical one.
+Most daemons start as root because they need a privileged resource (a port below 1024, a protected path) and must stop being root the moment they no longer do. Getting that transition wrong in either direction, leaving root behind by accident or stripping the one capability the service needed, is a recurring vulnerability class in deployed services.
 
 This chapter gives pmon the final piece of its supervision story: dropping privilege correctly while carrying exactly one capability across an identity change and an `execve`, proven with a paired positive and negative run rather than a single claim. It closes out Part 3's process-and-identity arc before Part 4 turns to virtual memory.
 
@@ -43,7 +43,7 @@ positive/negative verification.
 
 {% include excalidraw.html
    file="14-credential-sets-caps"
-   alt="Two bands. The top band shows the three uids: real, effective, saved, each moving 0 to 65534, with a note that setresuid moves all three at once and the saved uid is the way back that the drop destroys for good. The bottom band shows pmon's kept-cap path as six boxes: pmon as root with full permitted and effective sets, prctl PR_SET_KEEPCAPS, setresuid to 65534 with permitted kept, capset pinning 0x400 into permitted inheritable and effective, prctl AMBIENT_RAISE putting 0x400 into ambient, and execve into bindprobe bound to port 80 at uid 65534. A dashed negative-control row underneath skips the prctl and capset steps: setresuid scrubs permitted to zero and execve reaches bindprobe with every set zero and bind denied, exit 3. Notes carry the real /proc status values: the kept-cap child reads 0000000000000400 in CapInh CapPrm CapEff CapAmb with CapBnd 000001ffffffffff."
+   alt="Two bands. The top band shows the three uids: real, effective, saved, each moving 0 to 65534: setresuid moves all three at once and the saved uid is the way back that the drop destroys for good. The bottom band shows pmon's kept-cap path as six boxes: pmon as root with full permitted and effective sets, prctl PR_SET_KEEPCAPS, setresuid to 65534 with permitted kept, capset pinning 0x400 into permitted inheritable and effective, prctl AMBIENT_RAISE putting 0x400 into ambient, and execve into bindprobe bound to port 80 at uid 65534. A dashed negative-control row underneath skips the prctl and capset steps: setresuid scrubs permitted to zero and execve reaches bindprobe with every set zero and bind denied, exit 3. Notes carry the real /proc status values: the kept-cap child reads 0000000000000400 in CapInh CapPrm CapEff CapAmb with CapBnd 000001ffffffffff."
    caption="Figure 14.1: the three-uid state machine and the five capability sets across pmon's drop; every hex value comes from /proc/&lt;pid&gt;/status on systems-target, read during the cross-check below" %}
 
 > **Tools used**: `ssh`/`scp` and the Python runner
@@ -128,7 +128,7 @@ confirmed below). Each *process* carries five sets, visible as the `Cap*`
 lines of `/proc/<pid>/status`:
 
 - **Permitted**, the ceiling: capabilities the process may use or raise.
-- **Effective**, the subset the kernel actually consults in checks.
+- **Effective**, the subset the kernel consults in checks.
 - **Inheritable**, offered across `execve`, but only into binaries whose
   *file* inheritable set accepts them.
 - **Bounding**, a mask over what `execve` can ever grant. On the guest it
@@ -433,8 +433,8 @@ A few fragile points: `--keep-cap` accepts only
 and generalizing to caps ≥ 32 means touching word 1; the staged binary
 must live somewhere the dropped user can read (`/tmp`, not `/home/fedora`);
 and `pmon` does not call `setsid` or close inherited fds; real daemons
-layer those on, and chapter 7's `O_CLOEXEC` discipline is half of why they
-can skip the fd audit.
+layer those on, and `O_CLOEXEC` discipline on every open descriptor is half
+of why they can skip the fd audit.
 
 ## Errors, three ways
 
@@ -466,8 +466,7 @@ lockstep. But `pmon`'s C++ and Rust builds bypass glibc for `capset`
 because a privilege drop must cover every task, and `execve` replaces the
 whole process anyway. Go cannot make that promise: the runtime spawns
 threads before `main`, and a raw in-process dance would leave sibling
-threads still root, a real vulnerability class, not a theoretical one.
-That is exactly why the Go build pushes the entire sequence into the
+threads still root. That is exactly why the Go build pushes the entire sequence into the
 fork/exec child. The general rule: change identity either before threads
 exist or in a fresh child, never "around" a running thread pool.
 
@@ -597,8 +596,8 @@ drop starts from.
 > stream with symbolic names, but it failed to compile against kernel
 > 6.19 on this guest; Part 8 works through that toolchain properly.)
 
-One deliberate non-observation: you cannot follow the drop with `strace`
-from outside, because ptrace attachment is severed at a privilege
+One thing you cannot observe this way: you cannot follow the drop with
+`strace` from outside, because ptrace attachment is severed at a privilege
 transition. The port bind *is* the observation surface here, and there is
 no dashboard panel by design; this example emits no telemetry.
 

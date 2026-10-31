@@ -1,4 +1,4 @@
-// senders.cpp -- the seventh arm, and the one ch49 promised conditionally.
+// senders.cpp: the seventh arm, and the one ch49 promised conditionally.
 //
 // ch49 measured that GCC's standard library has no P2300 (__cpp_lib_senders
 // undefined, <execution> still the C++17 parallel-algorithms header) and said
@@ -8,8 +8,8 @@
 // everywhere it is reported.
 //
 // It runs the identical workload from workload.hpp, folding into one shared
-// accumulator under a mutex. That is deliberately NOT idiomatic sender code --
-// the idiom would compose per-task values and never share state -- but a
+// accumulator under a mutex. That is deliberately NOT idiomatic sender code
+// (the idiom would compose per-task values and never share state), but a
 // different workload would make the comparison meaningless, and being able to
 // say why is worth more here than being idiomatic.
 
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 
     // One sender per task, each describing the same work as a VALUE, then all
     // of them started at once and waited on. stdexec::on places the work on the
-    // pool's scheduler -- "what work, on what execution resource", which is the
+    // pool's scheduler: "what work, on what execution resource", which is the
     // concurrency/parallelism split of ch49 expressed in the type system.
     auto fold_one = [&](int task) {
         return stdexec::on(sched, stdexec::just(task) | stdexec::then([&](int t) {

@@ -1,8 +1,8 @@
-// chatterd v4 (C++23) — a peer-to-peer chat daemon.
+// chatterd v4 (C++23): a peer-to-peer chat daemon.
 //
 // The connection-handling engine is selectable:
 //   * thread : one std::jthread per client (the ch21 baseline).
-//   * async  : a single-threaded C++20 coroutine reactor over epoll — each
+//   * async  : a single-threaded C++20 coroutine reactor over epoll: each
 //              connection is a coroutine that `co_await`s socket readability.
 //              The task/awaitable machinery is hand-rolled here; no external
 //              async library is used.
@@ -21,7 +21,7 @@
 //   frame is MSG (payload = message text). For a MSG with text T from the
 //   client whose nick is N, the server sends every OTHER client a DELIVER
 //   frame whose payload is N + 0x00 (NUL) + T. This chapter's engines use
-//   only JOIN/MSG/DELIVER — WELCOME and PING are other versions' additions to
+//   only JOIN/MSG/DELIVER: WELCOME and PING are other versions' additions to
 //   the same frame and are simply never sent here.
 
 #include <array>
@@ -85,7 +85,7 @@ void install_signals() {
 }
 
 // --------------------------------------------------------------------------
-// RAII owner for a file descriptor — closes on scope exit, move-only.
+// RAII owner for a file descriptor: closes on scope exit, move-only.
 // --------------------------------------------------------------------------
 class Fd {
 public:
@@ -117,7 +117,7 @@ private:
 };
 
 // --------------------------------------------------------------------------
-// Frame helpers — canonical chatterd chat frame (see file header).
+// Frame helpers: canonical chatterd chat frame (see file header).
 // --------------------------------------------------------------------------
 constexpr int kMaxBody = 65535;
 constexpr std::size_t kHeaderLen = 6;
@@ -287,7 +287,7 @@ std::expected<Fd, std::string> connect_to(const std::string& host, std::uint16_t
 }
 
 // ==========================================================================
-// thread engine — one jthread per client.
+// thread engine: one jthread per client.
 // ==========================================================================
 void serve_client_blocking(Server& server, Fd conn) {
     int fd = conn.get();
@@ -360,7 +360,7 @@ std::expected<void, std::string> run_thread(const std::string& host, std::uint16
 }
 
 // ==========================================================================
-// async engine — hand-rolled coroutine reactor over epoll.
+// async engine: hand-rolled coroutine reactor over epoll.
 // ==========================================================================
 
 // A fire-and-forget coroutine: starts eagerly, destroys its own frame when it
@@ -607,7 +607,7 @@ std::expected<void, std::string> run_async(const std::string& host, std::uint16_
 }
 
 // ==========================================================================
-// loadtest client — drives the broadcast assertion.
+// loadtest client: drives the broadcast assertion.
 // ==========================================================================
 int run_loadtest(const std::string& host, std::uint16_t port, int nclients) {
     std::vector<Fd> receivers;

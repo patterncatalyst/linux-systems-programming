@@ -1,4 +1,4 @@
-// benchlab (C++23) — proper benchmarking of the chatterd frame codec (ch21).
+// benchlab (C++23): proper benchmarking of the chatterd frame codec (ch21).
 //
 // Usage:
 //   app --op encode|decode|roundtrip --iters N [--warmup W]   # the real thing
@@ -7,13 +7,13 @@
 // The "real thing" times each iteration individually with a monotonic clock,
 // discards a warmup phase, and reports min/median/p99/max plus a
 // coordinated-omission-corrected p99 (see co_correct below). `--lie` times a
-// single unwarmed call with wall-clock and reports one number — exactly the
+// single unwarmed call with wall-clock and reports one number: exactly the
 // benchmark the rest of this example exists to discredit.
 //
 // Wire format (canonical chatterd chat frame, introduced ch21):
 //   [ magic 0x43 0x48 ][ version 0x01 ][ type u8 ][ length u16 be ][ payload ]
-// This file re-implements only encode_frame/decode_frame — the codec under
-// test — not the daemon; see ch21/22/27 for the networked version.
+// This file re-implements only encode_frame/decode_frame (the codec under
+// test), not the daemon; see ch21/22/27 for the networked version.
 
 #include <algorithm>
 #include <cerrno>
@@ -29,7 +29,7 @@
 namespace {
 
 // ---------------------------------------------------------------------------
-// Frame codec under test — canonical chatterd chat frame (see file header).
+// Frame codec under test: canonical chatterd chat frame (see file header).
 // ---------------------------------------------------------------------------
 constexpr std::size_t kHeaderLen = 6;
 constexpr std::uint8_t kMagic0 = 0x43;
@@ -56,7 +56,7 @@ std::string encode_frame(std::uint8_t type, std::string_view body) {
     return out;
 }
 
-// Decodes exactly one frame that fills `buf` completely — no partial-read
+// Decodes exactly one frame that fills `buf` completely, no partial-read
 // reassembly here, that lives in the networked chatterd (ch21/22/27); this
 // harness only measures the codec's per-call cost.
 [[nodiscard]] std::expected<DecodedFrame, std::string> decode_frame(std::string_view buf) {
@@ -114,7 +114,7 @@ std::string_view op_name(Op op) {
 
 // One iteration of the requested op against the fixed workload. Returns a
 // small scalar derived from the result so the caller can fold it into a
-// checksum — this is what keeps the optimizer from proving the call's result
+// checksum: this is what keeps the optimizer from proving the call's result
 // is unused and deleting it.
 std::uint64_t run_once(Op op, const std::string& body, const std::string& prebuilt_frame) {
     switch (op) {
@@ -156,7 +156,7 @@ std::int64_t percentile(const std::vector<std::int64_t>& sorted, double p) {
 }
 
 // Coordinated-omission correction (HdrHistogram's recordValueWithExpectedInterval):
-// this harness is a closed loop — iteration N+1 never starts until N returns —
+// this harness is a closed loop (iteration N+1 never starts until N returns),
 // so a stall (a page fault, a context switch, a scheduling hiccup) is
 // recorded as a single slow sample. A fixed-rate caller would instead have
 // had many requests queue up behind that stall, each experiencing a similar

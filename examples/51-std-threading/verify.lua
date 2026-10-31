@@ -12,11 +12,11 @@
 --
 -- Hard-gated (A-F), all local, unprivileged, offline:
 --   A. Every non-hanging subcommand computes the same digest,
---      0x481984990deee5ff -- ch46's C++, ch47's Go, ch48's Rust, ch49's conc,
+--      0x481984990deee5ff, ch46's C++, ch47's Go, ch48's Rust, ch49's conc,
 --      ch50's pthreads.
 --   B. THE HEADLINE. `baseline` (no mutex) and `uncontended` (200,000
 --      lock/unlock pairs) issue the SAME small number of futex calls, while
---      `contended` -- the identical 200,000 pairs, split across 8 threads --
+--      `contended` (the identical 200,000 pairs, split across 8 threads)
 --      issues hundreds. An uncontended std::mutex costs no syscalls at all;
 --      what costs is contention. The gate compares uncontended to baseline
 --      rather than asserting zero, because a program that has linked
@@ -25,14 +25,14 @@
 --      barrier, semaphore, and atomic-wait each issue >= 1 futex call. They
 --      are one mechanism wearing five type names.
 --   D. deadlock-safe: std::scoped_lock acquires two mutexes in OPPOSING
---      orders on two threads and completes anyway -- the deadlock-avoidance
+--      orders on two threads and completes anyway: the deadlock-avoidance
 --      property std::lock_guard cannot give you.
 --   E. deadlock-naive: the same program with lock_guard hangs. Asserted as a
 --      timeout (exit 124 from timeout(1)) AND, while it hangs, every task in
 --      /proc/<pid>/task/*/wchan parked in a futex wait. The abstraction's
 --      failure mode, named by the kernel.
 --   F. stoptoken: the worker returns normally after request_stop(). No
---      PTHREAD_CANCELED, no forced unwind -- the ch50 contrast.
+--      PTHREAD_CANCELED, no forced unwind: the ch50 contrast.
 --
 -- Gated-if-present (G): clang++ parity on the digest.
 --

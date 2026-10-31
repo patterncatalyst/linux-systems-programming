@@ -8,9 +8,9 @@
 --      checksum proving the codec actually ran (not skipped/optimized away)
 --   2. the same fixed workload run twice produces the same checksum both
 --      times (the codec's output is deterministic even though the ns
---      timings are not) — the "repeatable-order" contract
+--      timings are not): the "repeatable-order" contract
 --   3. --lie runs, exits 0, and its output contains no percentile table at
---      all — that absence is the whole point of the contrast
+--      all: that absence is the whole point of the contrast
 --   4. error shapes: no flags, an unknown --op, and --warmup >= --iters all
 --      exit 2 with a usage line
 --
@@ -112,7 +112,7 @@ for _, op in ipairs({ "encode", "decode", "roundtrip" }) do
 end
 
 -- ---------------------------------------------------------------------------
--- 3. --lie: runs, exits 0, and — the entire point — never emits a percentile
+-- 3. --lie: runs, exits 0, and (the entire point) never emits a percentile
 --    table, only a single untrusted wall-clock sample.
 -- ---------------------------------------------------------------------------
 

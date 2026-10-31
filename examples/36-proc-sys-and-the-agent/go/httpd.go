@@ -1,4 +1,4 @@
-// sysagent: the /metrics HTTP endpoint, using net/http (Go's stdlib server —
+// sysagent: the /metrics HTTP endpoint, using net/http (Go's stdlib server;
 // the C++ and Rust versions hand-roll the same tiny surface on raw sockets).
 package main
 
@@ -45,15 +45,15 @@ func Serve(port, intervalMs int) int {
 
 	fmt.Printf("sysagent: listening on 0.0.0.0:%d\n", port)
 
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	select {
-	case <-sigCh:
+	case <-ctx.Done():
 		fmt.Println("sysagent: shutting down")
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_ = srv.Shutdown(ctx)
+		_ = srv.Shutdown(shutdownCtx)
 		return 0
 	case err := <-serveErr:
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {

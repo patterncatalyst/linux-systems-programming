@@ -1,4 +1,4 @@
-// pmon.go — the book's recurring process supervisor (ch11-14, 18-19, 32,
+// pmon.go: the book's recurring process supervisor (ch11-14, 18-19, 32,
 // 34), grown here into the capstone's fleet init: it drops the capability
 // bounding set once, then fork/execs (self-re-exec, same technique ch34's
 // container entrypoint uses) chatterd, sysagent, and fwatch as children,
@@ -70,7 +70,6 @@ func pmonRun(node, sandboxDir, peer, peerNode string, chatterdPort int, healthIn
 	var wg sync.WaitGroup
 
 	for _, spec := range specs {
-		spec := spec
 		cs := states[spec.name]
 		wg.Add(1)
 		go func() {

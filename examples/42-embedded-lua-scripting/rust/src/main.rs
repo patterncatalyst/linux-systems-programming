@@ -1,11 +1,11 @@
-// pmon -- a restart/backoff supervisor whose policy lives in Lua, not in this
+// pmon: a restart/backoff supervisor whose policy lives in Lua, not in this
 // binary. `policy.lua` (and its SIGHUP-swapped sibling `policy-v2.lua`) is
 // loaded into a *sandboxed* mlua state: only base/string/table/math are
 // opened, and the loader globals that could read files or eval new code from
 // inside the sandbox (`load`, `loadfile`, `dofile`, `require`,
 // `collectgarbage`, `loadstring`) are removed after the fact. `os`, `io`,
 // `package` and `debug` are simply never opened, so a policy that reaches for
-// `os.execute` hits a nil global -- see `run_check` and `policy-evil.lua`.
+// `os.execute` hits a nil global: see `run_check` and `policy-evil.lua`.
 //
 // Errors, three ways: CLI parse failures `bail!` out of `parse_args`;
 // fallible host-side operations return `anyhow::Result` composed with
@@ -26,7 +26,7 @@ use anyhow::{Context, Result, bail};
 use mlua::{Function, Lua, LuaOptions, StdLib, Table, Value};
 
 /// Wall-clock milliseconds since the UNIX epoch, exposed to policies as
-/// `host.now_ms()`. "Monotonic-ish" is all the contract asks for -- policies
+/// `host.now_ms()`. "Monotonic-ish" is all the contract asks for: policies
 /// only use it for human-readable timestamps, never for scheduling.
 fn now_ms() -> i64 {
     SystemTime::now()
@@ -88,7 +88,7 @@ fn load_policy(lua: &Lua, path: &str) -> mlua::Result<()> {
 /// One supervised-child exit event, exactly as the shared scenario spec
 /// describes it. `signal` is never set in this chapter's scenario (every
 /// event here is an exit-code death), so the `info` table simply never gets
-/// a `signal` field -- matching "a nil field is absent from the table".
+/// a `signal` field, matching "a nil field is absent from the table".
 struct ExitEvent {
     name: &'static str,
     exit_code: i64,
@@ -111,7 +111,7 @@ fn info_table(lua: &Lua, ev: &ExitEvent) -> mlua::Result<Table> {
 
 /// Call `on_exit(info)` under a protected call and print the resulting
 /// decision. The `reason` text is entirely Lua's (built with
-/// `string.format` in policy.lua) -- this only formats the wrapping
+/// `string.format` in policy.lua); this only formats the wrapping
 /// `pmon: decision ...` line around whatever the policy returned.
 fn decide(lua: &Lua, ev: &ExitEvent) -> mlua::Result<()> {
     let info = info_table(lua, ev)?;
@@ -199,7 +199,7 @@ fn phase2(lua: &Lua) -> mlua::Result<()> {
 /// installs an async-signal-safe handler that only flips an `AtomicBool` (no
 /// allocation, no Lua call, no I/O inside the signal handler itself), and
 /// this thread polls that flag instead of doing any real work inside signal
-/// context -- the same discipline ch12 uses for signalfd/self-pipe. The flag
+/// context: the same discipline ch12 uses for signalfd/self-pipe. The flag
 /// is registered *before* we announce readiness, so a SIGHUP that lands the
 /// instant after the "awaiting" line prints is never missed.
 fn cmd_run(policy_path: &str) -> Result<()> {
@@ -247,7 +247,7 @@ fn cmd_run(policy_path: &str) -> Result<()> {
 /// Load `policy_path` under the sandbox and run one probe `on_exit` call.
 /// Returns the policy's declared version on success; the `mlua::Error` on
 /// failure already carries the Lua-side message (a syntax error's location,
-/// or -- for `policy-evil.lua` -- "attempt to index a nil value (global
+/// or (for `policy-evil.lua`) "attempt to index a nil value (global
 /// 'os')", which is how the sandbox rejection gets reported without the host
 /// knowing anything about what the policy tried to do).
 fn run_check(policy_path: &str) -> mlua::Result<String> {

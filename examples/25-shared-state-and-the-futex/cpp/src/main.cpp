@@ -1,4 +1,4 @@
-// workq — a bounded MPMC job queue and worker pool (C++23).
+// workq: a bounded MPMC job queue and worker pool (C++23).
 //
 // P producers push N items total into a bounded blocking queue; C consumers
 // pop items and fold each item's payload into a running checksum. The correct
@@ -8,8 +8,8 @@
 // ThreadSanitizer (build/tsan) has a real data race to report.
 //
 // The item set {0..N-1} is fixed for a given (seed, N), each item's payload is
-// a pure function of its index, and the checksum folds them with XOR — which is
-// commutative — so the correct run's checksum is deterministic regardless of P,
+// a pure function of its index, and the checksum folds them with XOR, which is
+// commutative, so the correct run's checksum is deterministic regardless of P,
 // C, or the order consumers happen to drain the queue.
 
 #include <atomic>

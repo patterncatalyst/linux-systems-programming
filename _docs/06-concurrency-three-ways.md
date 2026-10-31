@@ -42,28 +42,27 @@ instead of rhetorical: the same four-worker pool, three times, with
 `/proc/<pid>/task` proving that underneath the vocabulary it is always
 `clone(2)` threads parked on `futex(2)`.
 
-This chapter is also where the book's two permanent threads meet: Chapter 5's
-error policy has to survive concurrent execution, and the cancellation drain
+This chapter is also where the book's two permanent threads meet: the
+error-handling policy has to survive concurrent execution, and the cancellation drain
 built here, stop accepting, finish what you hold, report what completed, is
 the pattern every later concurrent example reuses, from the signal handling
-in Part 7 to the event loops in Chapter 27. Understanding *why* each language
+in Part 7 to async runtimes and coroutines. Understanding *why* each language
 reaches for its own idiom here, rather than just copying the syntax, is what
 makes those later chapters readable at a glance instead of a fresh puzzle
 each time.
 
-Chapter 5 pinned down the first of this book's two permanent threads: how each
+The error-handling policy pinned down the first of this book's two permanent threads: how each
 language turns an `errno` into something a caller can act on. This chapter
 pins down the second, how each language *shares work*, and it does it the
 only way that is fair: one program, `parhash`, written three times with each
 language's native concurrency toolkit, required to produce **byte-identical
 stdout**. Underneath, all three are the same thing: kernel threads created
-with `clone(2)`, parked and woken with `futex(2)`, so what you are really
+with `clone(2)`, parked and woken with `futex(2)`, so what you are
 comparing is vocabulary: what C++ hands you as parts, what Go's runtime takes
 away from you, and what Rust's compiler refuses to let you get wrong. One
 scope note up front: everything here is *thread* concurrency. Async (C++
-coroutines, tokio, and what the Go scheduler looks like from below) is
-deferred to Chapter 27, after you have seen the event loops that
-motivate it.
+coroutines, tokio, and what the Go scheduler looks like from below) comes
+later, after you have seen the event loops that motivate it.
 
 The code is in `examples/06-concurrency-three-ways/`. `./demo.sh` builds and
 runs all three implementations; its `README.md` covers the shared contract and
@@ -108,7 +107,8 @@ are multiplexed by the runtime onto a small set of kernel threads (M), each of
 which needs a *processor* slot (P, capped by `GOMAXPROCS`, 16 on this host) to
 run Go code; when a goroutine blocks in a syscall its M can hand the P to
 another thread, and idle Ps steal runnable Gs from busy ones. That is the
-entire mental model this book needs until Chapter 27. What you program against
+entire mental model this book needs until it turns to async runtimes and
+coroutines. What you program against
 is not the scheduler but the idiom on top: goroutines communicate over
 channels, `select` races multiple channel operations, and cancellation is a
 `context.Context` whose `Done()` channel closes: one convention so universal
@@ -291,11 +291,11 @@ iterator ends precisely when the last worker (holding the last sender) exits.
 Cancellation is the bluntest of the three: `signal_hook::flag::register`
 points SIGINT at a shared `AtomicBool`, and walker and workers poll it with
 `Ordering::Relaxed`: a plain flag needs no ordering guarantees, a point
-Chapter 26 returns to properly.
+taken up again under atomics and lock-free programming.
 
 ### Errors, three ways
 
-The per-file hash function carries this book's Chapter 5 policy into
+The per-file hash function carries this book's error-handling policy into
 concurrent code. C++'s `hash_file` returns
 `std::expected<std::uint64_t, std::error_code>` and is the only one of the
 three that must handle `EINTR` by hand: its raw `::read` loop retries on
@@ -318,7 +318,7 @@ between you and the kernel. The Rust model costs you a negotiation with the
 compiler up front and repays it by making the forgotten-mutex bug
 unrepresentable. From here on, each example states which model it leans on and
 why; when the answer becomes "none of these: the problem wants an event
-loop," that is Chapter 27's cue.
+loop," that is the cue to reach for async runtimes and coroutines.
 
 ## Build, run, observe
 
@@ -415,8 +415,8 @@ program sorts at the end instead of trusting the walk.
 > bcc-tools would let you watch the drain from the kernel's side:
 > `offcputime` showing the idle workers parked in futex waits, `exitsnoop`
 > catching the thread exits as they cascade. Those tools are not runnable on
-> this host without root; Chapter 30 (Debugging part) builds that toolkit on
-> the `systems-target` VM and points it at these exact binaries.
+> this host without root; the eBPF observation toolkit, built on
+> the `systems-target` VM, points it at these exact binaries.
 
 One asymmetry here: Go ran every check under its race detector,
 but the C++ pool ran with no equivalent referee (this example's CMake presets
@@ -424,8 +424,8 @@ stop at `asan`, and no ThreadSanitizer build was exercised here).
 <span class="status status--unverified">unverified</span>: the host carries
 the `libtsan` runtime (`scripts/check-host.sh` checks for it) and a TSan probe
 links and runs, but running *this* worker pool under TSan, and what its
-reports look like with the mutex removed, is Chapter 29's
-job.
+reports look like with the mutex removed, is left to valgrind, sanitizers,
+and miri.
 
 ## What you learned
 

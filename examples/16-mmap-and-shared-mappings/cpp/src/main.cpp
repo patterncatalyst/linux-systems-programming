@@ -1,4 +1,4 @@
-// shmkv v0 — a tiny mmap-backed key/value store (C++23).
+// shmkv v0: a tiny mmap-backed key/value store (C++23).
 //
 // On-disk format, byte-exact and shared with the Go and Rust implementations:
 //
@@ -235,7 +235,7 @@ class Store {
 };
 
 [[nodiscard]] Result<std::uint32_t> parse_slots(std::string_view text) {
-    // Digits only, in range [1, u32 max] — identical rules in all three
+    // Digits only, in range [1, u32 max]: identical rules in all three
     // languages so the CLIs reject exactly the same inputs.
     if (text.empty() || text.size() > 10 ||
         !std::ranges::all_of(text, [](char c) { return c >= '0' && c <= '9'; })) {
@@ -296,7 +296,7 @@ class Store {
     std::ranges::sort(pairs); // bytewise by key, matching Go/Rust
     for (const auto& [k, v] : pairs) std::println("{}={}", k, v);
     // Flush before the stderr summary: stdout is fully buffered on a pipe,
-    // and Go/Rust emit the pairs first — keep the interleaving identical.
+    // and Go/Rust emit the pairs first: keep the interleaving identical.
     std::fflush(stdout);
     std::println(stderr, "shmkv: {}/{} slots used", pairs.size(), store->slot_count());
     return {};

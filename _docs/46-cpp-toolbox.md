@@ -2,18 +2,19 @@
 title: "The C++ toolbox: CMake presets, Conan lockfiles, and GCC-vs-clang parity"
 order: 46
 part: "Appendices: Tooling"
-description: "cpp-toolbox is one C++23 binary and the full toolchain wrapped around it -- seven CMakePresets.json configurations sharing one _base, a committed Conan 2 lockfile for an isolated fmt sub-target, and a GCC-vs-clang parity gate on toolbox report -- read by clang-tidy, clang-format, and a custom gdb Python pretty-printer, with ccache and mold demonstrated but absent on the reference host. Verified on the Fedora 44 host: verify.lua PASS 20/FAIL 0, GCC and clang release builds byte-identical (digest=0x481984990deee5ff, diff empty), UBSan catching a seeded signed-integer overflow at toolbox.cpp:43, and gdb rendering Digest(0x481984990deee5ff) through toolbox-printers.py."
+description: "cpp-toolbox is one C++23 binary and the full toolchain wrapped around it (seven CMakePresets.json configurations sharing one _base, a committed Conan 2 lockfile for an isolated fmt sub-target, and a GCC-vs-clang parity gate on toolbox report) read by clang-tidy, clang-format, and a custom gdb Python pretty-printer, with ccache and mold demonstrated but absent on the reference host. Verified on the Fedora 44 host: verify.lua PASS 20/FAIL 0, GCC and clang release builds byte-identical (digest=0x481984990deee5ff, diff empty), UBSan catching a seeded signed-integer overflow at toolbox.cpp:43, and gdb rendering Digest(0x481984990deee5ff) through toolbox-printers.py."
 duration: "50 minutes"
 ---
 
-Chapter 45 opened this part with three suites that watch a whole fleet from
-outside (Cockpit's console, SystemTap's kernel modules, PCP's pull-based
-metrics), and none of them cared what language produced the process they
-were watching. This chapter turns all the way around: one language, one
-small program, and every tool that touches it before it ever runs. Chapter
-31 already gave C++ one paragraph of toolbelt each (`perf`, `clang-tidy`,
-GCC's `-fanalyzer`) on the way to covering Go and Rust too. This chapter
-reopens exactly that toolchain and does not move on. `toolbox` is a single
+The linux-analysis-suites chapter opened this part with three suites that
+watch a whole fleet from outside (Cockpit's console, SystemTap's kernel
+modules, PCP's pull-based metrics), and none of them cared what language
+produced the process they were watching. This chapter turns all the way
+around: one language, one small program, and every tool that touches it
+before it ever runs. The per-language toolbelts chapter already gave C++
+one paragraph of toolbelt each (`perf`, `clang-tidy`, GCC's `-fanalyzer`) on
+the way to covering Go and Rust too. This chapter reopens exactly that
+toolchain and does not move on. `toolbox` is a single
 C++23 binary, engineered so that every tool pointed at it (two compilers,
 a build-system generator, a package manager, a static analyzer, a
 formatter, a debugger that needs help understanding a custom type) has
@@ -31,7 +32,7 @@ whether they agree.
 
 {% include excalidraw.html
    file="46-cmake-preset-graph"
-   alt="A tree diagram. At the top, a hidden _base configure preset (generator Ninja, binaryDir sourceDir/build/presetName) fans out to six visible presets: release (RelWithDebInfo, GCC), debug (Debug, GCC), asan (Debug + -fsanitize=address,undefined), and ubsan (Debug + -fsanitize=undefined -fno-sanitize-recover=undefined) sit in one column; release-clang and debug-clang sit beside them, each drawn inheriting from release/debug respectively with an arrow labeled inherits plus a CMAKE_CXX_COMPILER=clang++ override. Each of the six feeds its own build/<presetName> directory box below it. A seventh preset, conan, also inherits _base but is drawn held apart in a dashed box labeled isolated -- only reachable when TOOLBOX_ENABLE_CONAN=ON, needed by no other preset, so the default build never touches Conan. A caption note names which preset the parity gate uses (release vs release-clang), which the UBSan gate uses (ubsan), and which gdb uses (debug)."
+   alt="A tree diagram. At the top, a hidden _base configure preset (generator Ninja, binaryDir sourceDir/build/presetName) fans out to six visible presets: release (RelWithDebInfo, GCC), debug (Debug, GCC), asan (Debug + -fsanitize=address,undefined), and ubsan (Debug + -fsanitize=undefined -fno-sanitize-recover=undefined) sit in one column; release-clang and debug-clang sit beside them, each drawn inheriting from release/debug respectively with an arrow labeled inherits plus a CMAKE_CXX_COMPILER=clang++ override. Each of the six feeds its own build/<presetName> directory box below it. A seventh preset, conan, also inherits _base but is drawn held apart in a dashed box labeled isolated: only reachable when TOOLBOX_ENABLE_CONAN=ON, needed by no other preset, so the default build never touches Conan. A caption note names which preset the parity gate uses (release vs release-clang), which the UBSan gate uses (ubsan), and which gdb uses (debug)."
    caption="Figure 46.1: the CMakePresets inheritance graph, one _base config fanning out to release/debug/asan/ubsan and their clang twins, each into build/${presetName}, with the Conan sub-target preset held apart so the default build needs no Conan" %}
 
 > **Tools used**: `cmake` and `ninja` (host; both are hard requirements in
@@ -51,9 +52,9 @@ whether they agree.
 Because the C++ toolchain is itself the subject, `examples/46-cpp-toolbox/`
 ships `langs: [cpp]` only: a Go or Rust build would have nothing new to
 say about a `CMakePresets.json` file or a `.clang-tidy` config. Every code
-block below is a plain fenced `cpp`/`console`/`json` block, the way Chapter
-44's Go runtime chapter presented Go alone; there is no language-tab
-include to reach for when there is only one language in the room.
+block below is a plain fenced `cpp`/`console`/`json` block, the way the Go
+runtime chapter presented Go alone; there is no language-tab include to
+reach for when there is only one language in the room.
 
 ## CMake presets in depth
 
@@ -403,7 +404,7 @@ about code written to please one compiler over another.
 
 {% include excalidraw.html
    file="46-toolbox-pipeline"
-   alt="One source box, toolbox.cpp plus digest and smell translation units, splits into two build arrows -- one through GCC, one through clang -- each landing in its own build/<preset> binary. Both binaries feed into a report command box, and their outputs converge on an amber diff box marked empty, the byte-identical parity gate, digest=0x481984990deee5ff. Below the source box, a static-analysis arm branches off into clang-tidy (flagging performance-unnecessary-value-param in smell.cpp) and clang-format --dry-run --Werror (clean on tracked sources, nonzero on a misformatted fixture). A separate runtime arm branches into the ubsan build, which traps the seeded signed-integer overflow with an abort icon, and the debug build, which feeds gdb plus a Python pretty-printer producing Digest(0x481984990deee5ff). Two dashed accelerator boxes, ccache and mold, sit off to the side labeled shown, not verified on this host."
+   alt="One source box, toolbox.cpp plus digest and smell translation units, splits into two build arrows (one through GCC, one through clang) each landing in its own build/<preset> binary. Both binaries feed into a report command box, and their outputs converge on an amber diff box marked empty, the byte-identical parity gate, digest=0x481984990deee5ff. Below the source box, a static-analysis arm branches off into clang-tidy (flagging performance-unnecessary-value-param in smell.cpp) and clang-format --dry-run --Werror (clean on tracked sources, nonzero on a misformatted fixture). A separate runtime arm branches into the ubsan build, which traps the seeded signed-integer overflow with an abort icon, and the debug build, which feeds gdb plus a Python pretty-printer producing Digest(0x481984990deee5ff). Two dashed accelerator boxes, ccache and mold, sit off to the side labeled shown, not verified on this host."
    caption="Figure 46.2: the toolbox pipeline, one source built by two compilers into byte-identical output (the parity gate), with static tools (clang-tidy, clang-format) and runtime tools (UBSan, gdb pretty-printers) around it, and ccache/mold as optional accelerators" %}
 
 ## Errors, three ways
@@ -465,7 +466,7 @@ FormatStyle: file
 ```
 
 The third is the UBSan runtime abort already introduced above, this time
-as the pinned gate `verify.lua` actually runs:
+as the pinned gate `verify.lua` runs:
 
 ```lua
 local ubsan_run = checks.run("./cpp/build/ubsan/toolbox defect overflow")
@@ -483,9 +484,9 @@ a reason grounded in how that particular tool works.
 
 ## Concurrency lens: the build graph's own parallelism
 
-Every earlier concurrency lens in this book (Chapter 25's threads,
-Chapter 44's GMP scheduler) asked how a *running program* multiplexes
-work. This chapter's build has no threads of its own to watch, but the
+Every earlier concurrency lens in this book, from a futex-synchronized
+thread pool to the Go runtime's GMP scheduler, asked how a *running
+program* multiplexes work. This chapter's build has no threads of its own to watch, but the
 tool building it does: Ninja's default job count is bounded by the host's
 CPU count, and every one of `toolbox`'s translation units that has no
 dependency on another can compile in parallel: `cmake --build --preset
@@ -503,8 +504,9 @@ The link step itself is where a second, differently-parallel tool would
 matter more directly: `mold`, "a Modern Linker," parallelizes symbol
 resolution and section layout internally, the way a traditional
 single-threaded linker (`ld.bfd`) never does. This book's own earlier
-concurrency lenses (Chapter 44's M:N scheduler, Chapter 25's thread pool)
-are about overlapping *independent* units of work, and `mold`'s internal
+concurrency lenses, the Go runtime's M:N scheduler and a futex-synchronized
+thread pool, are about overlapping *independent* units of work, and
+`mold`'s internal
 design is the identical idea applied to the one step Ninja itself cannot
 parallelize away, because a link has to see every object file at once.
 `mold` is demonstrated, not verified, in "lint, format, sanitize,
@@ -625,7 +627,7 @@ re-invoking the compiler on an unchanged translation unit: the second
 build of an unchanged tree turning into a cache lookup instead of a
 recompile is the effect a real run would show. `mold` swaps in as the
 linker with `"CMAKE_EXE_LINKER_FLAGS": "-fuse-ld=mold"`, and a binary it
-actually linked would carry its own name in the `.comment` ELF section,
+linked would carry its own name in the `.comment` ELF section,
 checkable with `readelf -p .comment build/release/toolbox | grep mold`
 with no debugger needed at all. Both recipes are shown here exactly as
 they would be run; neither produced output on this host, and the status
@@ -720,21 +722,21 @@ needed.
 Three earlier chapters already covered pieces of this ground, and this
 chapter does not re-teach any of them:
 
-- **Chapter 31** ("Per-Language Toolbelts") gave C++ one column of a
+- **Per-Language Toolbelts** gave C++ one column of a
   three-language *profiling* comparison (`perf`, `clang-tidy`,
   `-fanalyzer`) next to Go's `pprof` and Rust's `cargo flamegraph`. This
   chapter is the opposite shape: one language, covered in depth, and it
   never profiles anything.
-- **Chapter 28** ("gdb and Remote Debugging") is where `gdb`'s core
+- **gdb and Remote Debugging** is where `gdb`'s core
   mechanics live: reading a core file, `gdbserver`/`target remote`,
   `rust-gdb`'s type-aware rendering. This chapter assumes all of that and
   adds exactly one new idea: a pretty-printer *you write* for *your own*
   type, not one that ships with libstdc++.
-- **Chapter 29** ("valgrind, Sanitizers, and Miri") built the full five-bug
+- **valgrind, Sanitizers, and Miri** built the full five-bug
   ASan/UBSan/TSan/valgrind/miri catch-or-miss matrix. This chapter uses
   exactly one corner of that matrix (UBSan on a signed-integer overflow)
   and spends its real depth budget on CMake presets and Conan lockfiles
-  instead, ground Chapter 29 never touches.
+  instead, ground that chapter never touches.
 
 What is new here (preset inheritance mechanics, a committed
 Conan 2 lockfile, cross-compiler byte parity, a hand-written gdb Python

@@ -1,5 +1,5 @@
 -- Verify the capstone fleet (41-capstone-fleet) for LSP_LANG. This lane is
--- mode:vm-peer, but -- following the convention example 23 established -- the
+-- mode:vm-peer, but (following the convention example 23 established) the
 -- verify itself is a LOCAL assertion run entirely on loopback: the whole fleet
 -- (pmon supervising chatterd + sysagent + fwatch), the cross-node chatterd
 -- bridge (two nodes on 127.0.0.1 with distinct ports), and the OTLP export to
@@ -11,13 +11,13 @@
 -- Asserts observable behavior, identical in shape across cpp/go/rust:
 --   1. usage/error shapes: no args, `chatterd` / `fwatch` with no subcommand,
 --      `chatterd send` missing --nick/--text, `sysagent saturate` missing
---      --resource -- all exit 2 with the usage banner.
+--      --resource, all exit 2 with the usage banner.
 --   2. sysagent --once: exit 0, the `sysagent: node=.. cpu_pct=.. mem_pct=..
 --      load1=.. ts=..` line, and the `otel disabled` line when no endpoint set.
 --   3. fwatch snapshot DIR lists the directory; fwatch watch DIR reports
 --      `event: create|modify|delete PATH` lines then `(timeout)`; fwatch watch
 --      --sandbox installs a Landlock ruleset (`fwatch: landlock ABI=N enforced
---      dir=..`) -- the kernel-level sandbox proof, not the program's own claim.
+--      dir=..`), the kernel-level sandbox proof, not the program's own claim.
 --   4. chatterd: a message sent to one node is `received from=NICK text=..` by
 --      a local listener; and across the BRIDGE (node A --peer-> node B), a
 --      message sent on A is delivered to a listener on B as
@@ -88,7 +88,7 @@ local build = checks.run("./demo.sh " .. lang .. " build")
 checks.expect_exit(build, 0, lang .. ": demo.sh build exits 0")
 
 -- ---------------------------------------------------------------------------
--- 1. usage / error shapes -- exit 2, usage banner.
+-- 1. usage / error shapes: exit 2, usage banner.
 -- ---------------------------------------------------------------------------
 local function expect_usage(args, label)
   local r = sh("@BIN@ " .. args)

@@ -1,45 +1,45 @@
 -- Verify loadmix (37-use-method-60s-analysis) for LSP_LANG. A vm-mode
 -- example: driven directly against systems-target via plain scp/ssh to
--- /tmp/lsp37-<lang>/app, never `demo.sh <lang> run` under TARGET --
+-- /tmp/lsp37-<lang>/app, never `demo.sh <lang> run` under TARGET:
 -- deploy-to-vm.sh's `ssh -t` injects CRLF that breaks Lua patterns, and its
 -- fixed /home/fedora/app path can be poisoned by a stale binary left over
 -- from an unrelated example (this happened once during golden capture).
--- Every remote invocation below uses the full absolute remote_bin path --
+-- Every remote invocation below uses the full absolute remote_bin path:
 -- never a leading `cd` that a later `;`-separated command could silently
 -- fail to inherit.
 --
 -- Asserts observable behavior, identical in shape across cpp/go/rust:
---   1. build, then stage to /tmp/lsp37-<lang>/app -- both must exit 0.
+--   1. build, then stage to /tmp/lsp37-<lang>/app, both must exit 0.
 --   2. error shapes: no args / bad --resource / --seconds 0 / bad analyze
 --      flag all exit 2 with the two-line usage on stderr.
 --   3. saturate cpu/io/net (and mem) at a short --seconds: exit 0, the
 --      start/done line shapes, the documented worker-count formula against
---      the guest's real nproc, ops>0 (mem excepted -- the golden capture
+--      the guest's real nproc, ops>0 (mem excepted, the golden capture
 --      found ops legitimately 0 at a short duration, since allocation alone
 --      can consume the whole budget), and the elapsed wall time actually
---      tracks --seconds for cpu/io/net -- this is exactly what would have
+--      tracks --seconds for cpu/io/net: this is exactly what would have
 --      caught the pre-fix saturator bug where sat_* exited in milliseconds
 --      regardless of the requested duration. mem gets a generous (x5)
 --      ceiling instead of a tight window, since it can legitimately
 --      *overrun* --seconds by several seconds under real swap pressure
 --      (the inner touch loop only checks the stop flag between passes, per
 --      the golden-capture calibration notes).
---   4. idle `analyze --seconds N`: the exact skeleton -- 1 start line, 5
+--   4. idle `analyze --seconds N`: the exact skeleton, 1 start line, 5
 --      tool lines, 8 metric lines (each %d+%.%d%d), 12 signal lines in
 --      cpu/mem/io/net x Utilization/Saturation/Errors order, 1 verdict
 --      line, and "analyze: done" as the last line of the app's own output.
 --   5. load attribution: a background `--resource cpu` saturator makes a
 --      concurrent `analyze` see busy_pct and run_queue rise, Utilization
---      fire, and the verdict land on cpu -- retried up to 3 attempts
+--      fire, and the verdict land on cpu, retried up to 3 attempts
 --      against a generous margin (calibrated from 3 real captures showing
 --      busy_pct 1.34->100.00 and run_queue 3.00->7.00-8.00, both clearing
 --      the gate by a large margin).
 --   6. wall-clock sanity: `analyze --seconds N` finishes in close to N
---      seconds, not 5N -- proving the five interval samplers
+--      seconds, not 5N, proving the five interval samplers
 --      (vmstat/mpstat/iostat/sar/pidstat) run concurrently, not serially.
 --
 -- Never compares formatted decimals across languages (C++, Go, and Rust
--- disagree on halfway rounding) -- only shapes (%d+%.%d%d) and numeric
+-- disagree on halfway rounding), only shapes (%d+%.%d%d) and numeric
 -- ranges/ratios are asserted.
 --
 -- Invoked from the example directory with LSP_LANG, TARGET, and REPO_ROOT
@@ -89,7 +89,7 @@ end
 
 -- Boolean assertion via the checks.lua pattern-match API: match "ok" against
 -- "ok" when true, or force a mismatch (with the real detail in the label)
--- when false -- same helper as example 39's verify.lua.
+-- when false, same helper as example 39's verify.lua.
 local function expect_true(cond, label, detail)
   if cond then
     checks.expect_match("ok", "ok", label)
@@ -104,7 +104,7 @@ local remote_dir = "/tmp/lsp37-" .. lang
 local remote_bin = remote_dir .. "/app"
 
 -- ---------------------------------------------------------------------------
--- 1. build, then stage to /tmp/lsp37-<lang>/app -- named "app" so /proc comm
+-- 1. build, then stage to /tmp/lsp37-<lang>/app, named "app" so /proc comm
 --    is "app", the book-wide rule.
 -- ---------------------------------------------------------------------------
 
@@ -126,7 +126,7 @@ local nproc_r = ssh_run("nproc")
 local nproc = tonumber(nproc_r.out:match("%d+")) or 1
 
 -- ---------------------------------------------------------------------------
--- 2. error shapes -- exit 2, usage on stderr.
+-- 2. error shapes: exit 2, usage on stderr.
 -- ---------------------------------------------------------------------------
 
 local function expect_usage(args, label)
@@ -141,7 +141,7 @@ expect_usage("--resource cpu --seconds 0", "--resource cpu --seconds 0")
 expect_usage("analyze --bogus", "analyze --bogus")
 
 -- ---------------------------------------------------------------------------
--- 3. saturate mode -- cpu/io/net (tight elapsed window) plus mem (generous
+-- 3. saturate mode: cpu/io/net (tight elapsed window) plus mem (generous
 --    ceiling, no ops>0 requirement), per the golden-capture calibration.
 -- ---------------------------------------------------------------------------
 
@@ -234,7 +234,7 @@ do
 
   local elapsed_ms = tonumber(r.out:match("SAT_ELAPSED_MS=(%d+)"))
   -- mem can OVERRUN --seconds by several seconds under real swap pressure
-  -- (a 12.6s actual for an 8s request was observed) -- a generous x5
+  -- (a 12.6s actual for an 8s request was observed), a generous x5
   -- ceiling, not the tight cpu/io/net window.
   expect_true(elapsed_ms ~= nil and elapsed_ms <= mem_secs * 5000,
     lang .. ": mem finishes within a generous ceiling (secondsx5), tolerating the known swap overrun",
@@ -284,7 +284,7 @@ for _, m in ipairs({
 end
 
 -- All 12 signal lines, in cpu/mem/io/net x Utilization/Saturation/Errors
--- order -- one pattern enforces both presence and order via lazy ".-" gaps.
+-- order, one pattern enforces both presence and order via lazy ".-" gaps.
 local signal_order = {}
 for _, res in ipairs({ "cpu", "mem", "io", "net" }) do
   table.insert(signal_order,
@@ -313,7 +313,7 @@ expect_true(an_elapsed_ms ~= nil and an_elapsed_ms < analyze_secs * 5000,
 -- ---------------------------------------------------------------------------
 -- 5. load attribution: a background --resource cpu saturator makes a
 --    concurrent analyze attribute the load to cpu. Retried up to 3 attempts
---    (per the plan's own hedge, mirroring example 36's cpu-busy check) --
+--    (per the plan's own hedge, mirroring example 36's cpu-busy check):
 --    the golden capture cleared this gate by a large margin every time
 --    (busy_pct 100.00 vs. 60 threshold; run_queue 7-8 vs. nproc+2=4), so a
 --    noisy guest should still pass, not produce a false red.

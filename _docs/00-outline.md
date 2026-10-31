@@ -13,7 +13,7 @@ switchable code tabs, and every example doubles as a standalone demo.
 
 {% include excalidraw.html
    file="00-course-map"
-   alt="Course map: four journey stages - Foundations, Core systems, Operating context, and Mastery - shown as bands containing the fourteen parts with their chapter ranges, and the six artifacts fwatch, shmkv, chatterd, pmon, bugfarm, and sysagent along the bottom, each with an arrow to the part where it grows."
+   alt="Course map: four stages, Foundations, Core systems, Operating context, and Mastery, shown as bands containing the fourteen parts with their chapter ranges, and the six artifacts fwatch, shmkv, chatterd, pmon, bugfarm, and sysagent along the bottom, each with an arrow to the part where it grows."
    caption="Figure 0.1: the course at a glance." %}
 
 Two threads run through the whole book and never stop:
@@ -63,8 +63,8 @@ artifacts that grow chapter by chapter:
 
 Examples run **locally** on your Fedora 44 machine unless they need root, kernel
 observation, or a second host; those run in the disposable KVM lab
-(`systems-target`, and `systems-peer` for two-host networking) that Chapter 2
-provisions. Observability chapters use a local Podman LGTM stack (Grafana,
+(`systems-target`, and `systems-peer` for two-host networking) that the lab
+setup provisions. Observability chapters use a local Podman LGTM stack (Grafana,
 Loki, Tempo, Mimir) plus Performance Co-Pilot from its container image. Nothing
 experimental ever runs un-snapshotted on your workstation.
 

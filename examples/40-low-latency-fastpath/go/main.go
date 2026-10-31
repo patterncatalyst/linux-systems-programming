@@ -1,4 +1,4 @@
-// chatterd-fastpath — a stripped, pinned, allocation-free derivative of the
+// chatterd-fastpath: a stripped, pinned, allocation-free derivative of the
 // chatterd echo/pub-sub hot path (chapter 21) built purely to answer one
 // question: what does a low-latency network hot path actually cost, and what
 // does removing that cost look like at the syscall level?
@@ -20,8 +20,8 @@
 //
 // WHERE THE GO PORT DIVERGES FROM THE C++ ONE, AND WHY:
 //
-// The C++ version installs a SIGINT handler with sa_flags = 0 — deliberately
-// NOT SA_RESTART — so a blocking read(2) or poll(2) already in progress fails
+// The C++ version installs a SIGINT handler with sa_flags = 0, deliberately
+// NOT SA_RESTART, so a blocking read(2) or poll(2) already in progress fails
 // with EINTR and the loop notices the stop flag. That technique is not
 // available here. The Go runtime installs its own signal handlers with
 // SA_RESTART, and a "blocking" read on a net.Conn does not sit in a syscall
@@ -30,7 +30,7 @@
 //
 // So Go reaches the same observable behavior by a different mechanism: a
 // signal.Notify goroutine sets the stop flag and then CLOSES the listener and
-// the live connection. Closing is what unblocks a parked netpoller read —
+// the live connection. Closing is what unblocks a parked netpoller read;
 // the same shutdown(2)-driven wakeup that chapter 21's chatterd uses via
 // stop_callback, and the Go-idiomatic answer to "interrupt a blocked I/O
 // wait". The accept loop additionally carries a 200ms deadline, mirroring the
@@ -38,7 +38,7 @@
 // accept already in flight.
 //
 // The second divergence is pinning. sched_setaffinity(2) acts on a THREAD,
-// and a goroutine is not a thread — it migrates between Ms at the scheduler's
+// and a goroutine is not a thread; it migrates between Ms at the scheduler's
 // discretion. Pinning here therefore needs runtime.LockOSThread to nail the
 // hot loop to one M, plus GOMAXPROCS(1) so the runtime does not keep other
 // worker threads on other CPUs. See pinToCPU for why the affinity call is
@@ -179,7 +179,7 @@ func installSignalHandlers(s *stopper) {
 // port's sysconf(_SC_NPROCESSORS_ONLN). runtime.NumCPU() is deliberately NOT
 // used: it returns the size of this process's CPU affinity MASK, so under the
 // bench driver's `taskset -c 1` it would report 1 and reject a pin to CPU 1 as
-// "out of range" — the classic case of a count that lies about its container,
+// "out of range", the classic case of a count that lies about its container,
 // hit here via taskset rather than a cgroup. Reading the kernel's own online
 // list sidesteps the mask. Falls back to runtime.NumCPU() only if the sysfs
 // node is unreadable.
@@ -213,14 +213,14 @@ func onlineCPUs() int {
 	return count
 }
 
-// pinToCPU restricts this process to a single CPU, and — critically — makes
+// pinToCPU restricts this process to a single CPU, and, critically, makes
 // that restriction visible in /proc/<pid>/status, which is where verify.lua
 // reads Cpus_allowed_list to prove the pinning happened at the kernel level
 // rather than trusting the line we print.
 //
 // The affinity call is made twice on purpose. sched_setaffinity(0, ...) acts
 // on the CALLING thread, which after LockOSThread is the one running the hot
-// loop — that call is what makes the pinning real. But /proc/<pid>/status
+// loop; that call is what makes the pinning real. But /proc/<pid>/status
 // reports the mask of the THREAD GROUP LEADER (the thread whose tid == pid),
 // and the main goroutine is not guaranteed to be running on it. Passing
 // os.Getpid() explicitly targets the leader, so the observable proof matches
@@ -308,7 +308,7 @@ func setNoDelay(c net.Conn) {
 }
 
 // readFullBusy spins a non-blocking recv(2) with no other syscall in the loop
-// — no sched_yield, no nanosleep — which is the entire point of "busy-poll".
+// with no sched_yield and no nanosleep, which is the entire point of "busy-poll".
 func readFullBusy(fd int, buf []byte, s *stopper) bool {
 	off := 0
 	for off < len(buf) {

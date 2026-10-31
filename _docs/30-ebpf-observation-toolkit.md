@@ -20,14 +20,14 @@ By the end of this chapter you can:
 - Attach a `uprobe`/`uretprobe` pair to time a userspace function's
   entry-to-return latency and read the resulting histogram.
 - Use `bpftool prog show`/`map show` to independently confirm what the kernel
-  actually has loaded, cross-checking what `bpftrace` itself reports.
+  has loaded, cross-checking what `bpftrace` itself reports.
 - Demangle Itanium (C++) and Rust v0 mangled symbol names with `c++filt` to
   find the exact string a uprobe must attach to.
 - Explain why Go's register-based ABIInternal breaks the System-V-assuming
   `arg0`/`argN` shorthand, and verify the mismatch by reading `RDI` against
   `RAX` on a live uprobe.
 - Compare this eBPF-based observation path against SystemTap's kernel-module
-  and dyninst backends for the same kind of probe.
+  and dyninst backends for the same probe.
 
 ## Why this matters
 
@@ -44,14 +44,14 @@ It also surfaces a real trap worth knowing before you hit it live: tools that
 read function arguments by position assume the System V calling convention,
 and Go's compiler does not follow it. A uprobe can report a plausible-looking
 wrong number instead of an error, and the only defense is knowing which
-register a given language and function actually use, confirmed here by
+register a given language and function use, confirmed here by
 reading `RDI` next to `RAX` on the same call.
 
-Chapter 28 read a crash gdb already knew about; Chapter 29 caught bugs a
-compile-time instrumentation pass or a binary-translating emulator watched
-for. Both chapters needed something extra glued onto the target: debug
-info gdb could walk, or a sanitizer/valgrind rebuild. This chapter needs
-neither. `app work --seconds N` is an ordinary, unmodified binary (no
+A debugger session reads a crash it already knows about; sanitizers and
+valgrind catch bugs a compile-time instrumentation pass or a
+binary-translating emulator watched for. Both approaches need something
+extra glued onto the target: debug info gdb can walk, or a
+sanitizer/valgrind rebuild. This chapter needs neither. `app work --seconds N` is an ordinary, unmodified binary (no
 special build, no `-fsanitize`, not even a debugger attached), and the
 standard eBPF observation stack (bcc-tools, bpftrace, bpftool) watches it
 entirely from outside, live, on the `systems-target` lab VM this book has
@@ -74,7 +74,7 @@ the full contract and a real run's tail.
 
 {% include excalidraw.html
    file="30-ebpf-tooling-stack"
-   alt="Three stacked bands. The top kernel band holds five small boxes -- kprobe/kretprobe on kernel functions, uprobe/uretprobe on userspace functions, tracepoint as the stable kernel ABI, perf_event as timer/PMU sampling, and BTF/CO-RE for struct layout without headers. Amber arrows descend from three of these into the middle eBPF-tooling band, which holds bcc-tools (execsnoop/opensnoop/biolatency/offcputime/funccount/profile), bpftrace (one-liners and scripts, probe:target /filter/ action), bpftool (prog show/map show), and c++filt (demangle the exact symbol you attach to), with a note that libbpf loads a small verified BPF program per probe that the kernel runs in-kernel on each hit. Below that, a third band holds SystemTap as the sibling technology: its classic kernel-module backend needing matching kernel-devel, beside stap --runtime=dyninst, which patches the target binary directly in userspace with no kernel module. A fourth band at the bottom shows the three target binaries -- C++'s busy_hash under the SysV ABI with a correct arg0, Rust's cmd_work also correct under the SysV ABI once c++filt demangles its v0-mangled name, and Go's cmdWork in a dark box reading arg0/RDI wrong at 1, RAX right at 9, with a dashed amber arrow from it up to the eBPF-tooling band labeled arg0 mismatch. A footer note says every amber box ran live against systems-target this session; SystemTap's kernel-module path failed on a real kernel-devel/running-kernel mismatch, and the dyninst backend attached without erroring."
+   alt="Three stacked bands. The top kernel band holds five small boxes: kprobe/kretprobe on kernel functions, uprobe/uretprobe on userspace functions, tracepoint as the stable kernel ABI, perf_event as timer/PMU sampling, and BTF/CO-RE for struct layout without headers. Amber arrows descend from three of these into the middle eBPF-tooling band, which holds bcc-tools (execsnoop/opensnoop/biolatency/offcputime/funccount/profile), bpftrace (one-liners and scripts, probe:target /filter/ action), bpftool (prog show/map show), and c++filt (demangle the exact symbol you attach to); libbpf loads a small verified BPF program per probe that the kernel runs in-kernel on each hit. Below that, a third band holds SystemTap as the sibling technology: its classic kernel-module backend needing matching kernel-devel, beside stap --runtime=dyninst, which patches the target binary directly in userspace with no kernel module. A fourth band at the bottom shows the three target binaries: C++'s busy_hash under the SysV ABI with a correct arg0, Rust's cmd_work also correct under the SysV ABI once c++filt demangles its v0-mangled name, and Go's cmdWork in a dark box reading arg0/RDI wrong at 1, RAX right at 9, with a dashed amber arrow from it up to the eBPF-tooling band labeled arg0 mismatch. A footer note says every amber box ran live against systems-target this session; SystemTap's kernel-module path failed on a real kernel-devel/running-kernel mismatch, and the dyninst backend attached without erroring."
    caption="Figure 30.1: the eBPF observation stack this chapter exercises live: kernel probe primitives at the bottom, bcc-tools/bpftrace/bpftool/c++filt above them, SystemTap as the sibling technology beside them, and the one real register-ABI mismatch that only shows up on the Go binary" %}
 
 > **Tools used**: bcc-tools `execsnoop`, `opensnoop`, `funccount`,
@@ -88,9 +88,10 @@ the full contract and a real run's tail.
 
 ## Watching from outside: the third way to observe a program
 
-Chapter 29 drew a line between two ways of catching a bug: **translate the
-binary** (valgrind, no rebuild, a software-emulated CPU) or **instrument the
-source** (sanitizers, a required rebuild, near-native overhead). eBPF-based
+Binary translation and compile-time instrumentation are two ways of catching
+a bug: **translate the binary** (valgrind, no rebuild, a software-emulated
+CPU) or **instrument the source** (sanitizers, a required rebuild,
+near-native overhead). eBPF-based
 observation is a third way, and it needs neither: point a probe at a running
 kernel function, a running userspace function, or a stable tracepoint, and
 the **kernel itself** runs a small, verified BPF program on every hit,
@@ -183,9 +184,9 @@ Tracing block device I/O... Hit Ctrl-C to end.
 ```
 
 That histogram came from five `dd ... conv=fsync` writes to `/var/tmp`
-completing in the low hundreds of microseconds, a real, measured
-distribution, not a synthetic example. `profile`, the sixth named tool, is
-where this tour hit a real wall worth reporting rather than hiding:
+completing in the low hundreds of microseconds: a measured distribution
+from the lab VM's root filesystem. `profile`, the sixth named tool, hit a
+real wall:
 
 ```console
 [vm]$ sudo /usr/share/bcc/tools/profile -F 49 -p 15912 3
@@ -204,8 +205,8 @@ snippet references a `struct ns_common` field the installed headers no
 longer have under that name. bpftrace's own `profile:hz:N` probe type
 sidesteps the header dependency and attached cleanly, but on this exact
 workload it reported **zero samples** at both 49Hz and 99Hz over several
-seconds, not a bug, but the real result of an on-CPU sampler pointed at
-a process that spends over 99% of its time asleep in `nanosleep`.
+seconds: the expected result of an on-CPU sampler pointed at a process
+that spends over 99% of its time asleep in `nanosleep`.
 `offcputime` and `profile` are answering two different questions (where did
 the *waiting* time go, versus where did the *running* time go), and a
 workload this sleep-dominated has an answer for exactly one of them.
@@ -280,7 +281,7 @@ this host, a real, measured latency distribution for a function this
 book's example code keeps simple, produced with five lines of
 bpftrace and no rebuild of `app` at all.
 
-## bpftool: naming what is actually loaded
+## bpftool: naming what is loaded
 
 **bpftool** is the inspection half of the story: it reads back what the
 kernel currently has loaded, independent of whichever tool put it there.
@@ -298,7 +299,7 @@ Two things are worth reading closely here. First, `bpftrace` compiled the
 attach point's name straight into the BPF program's own name
 (`uprobe__tmp_lsp30_cpp_app_busy_hash_1`); `bpftool` is reading that name
 back from the kernel, not from bpftrace's own bookkeeping, so this is an
-independent confirmation the probe really loaded. Second, the kernel
+independent confirmation the probe loaded. Second, the kernel
 classifies this program's `type` as plain **`kprobe`** even though we asked
 bpftrace for a `uprobe`: uprobes and kprobes share the same underlying BPF
 program type at the kernel ABI level; the distinction between "kernel
@@ -319,7 +320,7 @@ process:
 `pids bpftrace(16154)` is the cross-check: this map is held open by the
 exact bpftrace process running our script, not a leftover from some
 earlier session; `bpftool` and `bpftrace` are two independent programs
-agreeing on what is actually resident in the kernel right now.
+agreeing on what is resident in the kernel right now.
 
 ## SystemTap: the sibling technology
 
@@ -337,7 +338,7 @@ Incorrect version or missing kernel-devel package, use: dnf install kernel-devel
 ```
 
 The installed `kernel-devel` on this image is built for `7.1.3-201.fc44`,
-one version off the actually-running `6.19.10-300.fc44`, exactly the
+one version off the `6.19.10-300.fc44` kernel that is running, exactly the
 class of drift bpftrace and bcc's BTF-backed tools were built to avoid.
 SystemTap also ships a userspace-only **dyninst** backend
 (`--runtime=dyninst`), which patches the target process's own code directly
@@ -360,8 +361,9 @@ path used everywhere else in this chapter (which needed no matching
 for a userspace-patching approach this session did not get a positive
 result from in the time available. SystemTap has real strengths bpftrace
 does not (a proper scripting language and years of production hardening
-among them), and Chapter 45 covers it in depth; this callout is only the
-comparison this chapter's own live evidence supports.
+among them); the broader catalog of Linux analysis suites covers it in depth.
+This callout is only the comparison this chapter's own live evidence
+supports.
 
 ## How the code works
 
@@ -392,8 +394,8 @@ Go's equivalent `result` struct has no such requirement (a single goroutine
 owns it end to end, handed to `main` once, complete, over a channel) and
 Rust's `Counters` is a plain `Default`-derived struct for the same reason:
 the concurrency shape, not the language, decides whether the counters need
-to be atomic. The comment on `busy_hash_val` documents this chapter's own
-`README.md`-recorded gotcha: the first version of this workload printed
+to be atomic. The comment on `busy_hash_val` documents a real compiler behavior recorded
+in this example's `README.md`: the first version of this workload printed
 `busy_calls` but never the accumulated hash, and GCC's interprocedural
 analysis proved the entire `busy_hash()` call chain had no observable
 effect and deleted it: `funccount` and the bpftrace uprobe both reported
@@ -518,7 +520,7 @@ ERROR: Unable to attach probe: uprobe:.../app:no_such_function. If this is expec
 
 `funccount`, by contrast, treats an unmatched pattern as an **empty result
 set**, not an error, asking it for the exact unqualified name `busy_hash`
-against the *Go* binary, which actually exports `main.busy_hash`:
+against the *Go* binary, which exports `main.busy_hash`:
 
 ```console
 [vm]$ sudo /usr/share/bcc/tools/funccount -p 1 -d 1 '/tmp/lsp30-go/app:busy_hash'
@@ -540,8 +542,8 @@ three without a per-language branch anywhere in `observe.sh`. Attaching to
 any *other* function in the same binaries is where each language's real
 symbol story, and one real ABI trap, shows up. `cmd_work`, the function
 that dispatches `--seconds` into the workload loop, carries no such
-protection in any language, so `nm` shows what each compiler really does
-with a name by default:
+protection in any language, so `nm` shows what each compiler does with a
+name by default:
 
 ```console
 [host]$ nm cpp/build/release/app | grep cmd_work
@@ -581,7 +583,7 @@ next section shows what it costs.
 
 {% include excalidraw.html
    file="30-uprobe-attachment"
-   alt="Three parallel columns, one per language, each four boxes tall. C++ column: nm reports the mangled symbol t _ZN12_GLOBAL__N_1L8cmd_workEi.isra.0; c++filt (auto Itanium ABI) demangles it to (anonymous namespace)::cmd_work(int); a uprobe attaches using the MANGLED string as the attach target; the probe fires with seconds_arg=5 for --seconds 5, and arg0==RDI is correct because C++ follows the plain SysV x86-64 ABI. Rust column: nm reports t _RNvCs6FzKXswKZCc_3app8cmd_work; c++filt auto-detects Rust v0 mangling and demangles it to app[hash]::cmd_work; a uprobe attaches using that same mangled string; the probe fires with seconds_arg=7 for --seconds 7, and arg0==RDI is again correct under the SysV ABI. Go column: nm reports T main.cmdWork, never mangled; no demangling step is needed since the package-qualified name is already the symbol; a uprobe attaches to the plain unmangled name main.cmdWork; the probe fires for --seconds 9 but RDI(arg0) reads 1, which is wrong, while RAX correctly reads 9 -- a dashed amber arrow connects this box back up to the tooling band above, labeled arg0 mismatch. A footer band spans all three columns explaining that Go's ABIInternal (1.17+) passes integer arguments in the order RAX, RBX, RCX, RDI, RSI, R8, R9, ... rather than the SysV order RDI, RSI, RDX, ... that bpftrace's arg0/arg1 assume, and that goroutine stacks also grow by copying, so a captured stack address can move out from under a probe that read it from the stack instead of a register."
+   alt="Three parallel columns, one per language, each four boxes tall. C++ column: nm reports the mangled symbol t _ZN12_GLOBAL__N_1L8cmd_workEi.isra.0; c++filt (auto Itanium ABI) demangles it to (anonymous namespace)::cmd_work(int); a uprobe attaches using the MANGLED string as the attach target; the probe fires with seconds_arg=5 for --seconds 5, and arg0==RDI is correct because C++ follows the plain SysV x86-64 ABI. Rust column: nm reports t _RNvCs6FzKXswKZCc_3app8cmd_work; c++filt auto-detects Rust v0 mangling and demangles it to app[hash]::cmd_work; a uprobe attaches using that same mangled string; the probe fires with seconds_arg=7 for --seconds 7, and arg0==RDI is again correct under the SysV ABI. Go column: nm reports T main.cmdWork, never mangled; no demangling step is needed since the package-qualified name is already the symbol; a uprobe attaches to the plain unmangled name main.cmdWork; the probe fires for --seconds 9 but RDI(arg0) reads 1, which is wrong, while RAX correctly reads 9; a dashed amber arrow connects this box back up to the tooling band above, labeled arg0 mismatch. A footer band spans all three columns explaining that Go's ABIInternal (1.17+) passes integer arguments in the order RAX, RBX, RCX, RDI, RSI, R8, R9, ... rather than the SysV order RDI, RSI, RDX, ... that bpftrace's arg0/arg1 assume, and that goroutine stacks also grow by copying, so a captured stack address can move out from under a probe that read it from the stack instead of a register."
    caption="Figure 30.2: the same uprobe-attach recipe (find the symbol, demangle it to read it, attach to the mangled string) across three binaries, ending in the one real, measured argument-register mismatch that shows up only on Go" %}
 
 Attaching directly to the mangled string on the C++ and Rust binaries, with
@@ -665,7 +667,7 @@ drives the same contract for all three languages against the live VM:
 
 No single tool in this chapter is trusted alone: every tool's count is
 checked against either another tool watching the same process, or against
-`bpftool` reading back what the kernel actually loaded. From the same
+`bpftool` reading back what the kernel loaded. From the same
 `observe.sh` run quoted above, `execsnoop` (fork/exec) and `bpftrace`'s
 uprobe (function calls) are two completely different probe types (a
 tracepoint-adjacent syscall tracer versus a userspace-symbol uprobe)
@@ -691,7 +693,7 @@ bpftrace itself reported: two separate programs reading the same kernel
 state and agreeing. The third is the mangled-symbol pair: `nm` and
 `c++filt` independently identify and translate `cmd_work`'s real linker
 name off the binary, and a live uprobe attached to that exact string is
-what actually fires and reports the right `--seconds` value back, proof
+what fires and reports the right `--seconds` value back, proof
 the demangled name and the attach target are the same symbol, not a
 coincidence of two unrelated strings.
 
@@ -705,7 +707,7 @@ coincidence of two unrelated strings.
   bpftrace's one-liners and scripts all ran this way against an unmodified
   binary on `systems-target`.
 - `bpftool prog show`/`map show` is the independent check on what the
-  kernel actually has loaded: it named bpftrace's own uprobe program by
+  kernel has loaded: it named bpftrace's own uprobe program by
   the exact attach-point string bpftrace compiled into it, confirmed from
   the kernel's bookkeeping, not bpftrace's.
 - A uprobe attaches to the ELF symbol table's literal string, mangled or
@@ -721,8 +723,7 @@ coincidence of two unrelated strings.
 
 Next, **per-language toolbelts**: `perf`, `pprof`, `delve`, and
 `cargo-flamegraph` each answer "where does the time go" their own native
-way, on the same kind of unmodified binary this chapter just watched from
-outside.
+way, on the same unmodified binary this chapter just watched from outside.
 
 ---
 

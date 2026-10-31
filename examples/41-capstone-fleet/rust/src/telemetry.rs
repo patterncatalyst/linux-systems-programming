@@ -1,7 +1,7 @@
-// telemetry.rs — OTel wiring shared by chatterd and sysagent. Both signals
+// telemetry.rs: OTel wiring shared by chatterd and sysagent. Both signals
 // (traces for chatterd deliveries, metrics for sysagent's /proc samples) are
 // exported over OTLP/HTTP. Endpoint comes from the standard
-// OTEL_EXPORTER_OTLP_ENDPOINT env var — this init deliberately never calls
+// OTEL_EXPORTER_OTLP_ENDPOINT env var: this init deliberately never calls
 // `.with_endpoint()`: opentelemetry-otlp 0.32's exporters only append the
 // per-signal "/v1/traces" / "/v1/metrics" suffix when they resolve the
 // endpoint themselves from OTEL_EXPORTER_OTLP_ENDPOINT (an explicit
@@ -14,7 +14,7 @@
 // export failures through its internal `otel_error!` tracing events, which
 // require a `tracing` subscriber to go anywhere. ex38 already established
 // that installing one (even a filtered one) risks corrupting the stdout/
-// stderr contract this capstone's verify.lua depends on line-for-line — so
+// stderr contract this capstone's verify.lua depends on line-for-line, so
 // none is installed here, and (unlike go/telemetry.go's exportErrors counter,
 // fed by otel.SetErrorHandler) this port has no live export-failure signal to
 // report; the "otel export_errors=" line below is therefore always 0, a
@@ -92,10 +92,10 @@ impl Telemetry {
 }
 
 /// Sets up trace+metric providers if OTEL_EXPORTER_OTLP_ENDPOINT is set;
-/// otherwise returns a disabled, no-op handle (the service still runs — OTel
+/// otherwise returns a disabled, no-op handle (the service still runs, OTel
 /// is additive, never a hard dependency of the fleet coming up). `service` is
 /// always one of this binary's own subcommand names ("chatterd"/"sysagent"),
-/// passed as a `&'static str` literal by every caller — the Meter/Tracer
+/// passed as a `&'static str` literal by every caller: the Meter/Tracer
 /// provider APIs require that lifetime.
 pub fn init(service: &'static str, node: &str) -> Telemetry {
     let endpoint = std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT").unwrap_or_default();
@@ -124,7 +124,7 @@ fn init_enabled(service: &'static str, node: &str, _endpoint: &str) -> Result<Te
         .with_attribute(KeyValue::new("node.name", node.to_string()))
         .build();
 
-    // Deliberately no `.with_endpoint(...)` — see the module doc comment:
+    // Deliberately no `.with_endpoint(...)` (see the module doc comment):
     // building with default options lets the exporter resolve
     // OTEL_EXPORTER_OTLP_ENDPOINT itself and append the per-signal path.
     let span_exporter = SpanExporter::builder()
@@ -205,7 +205,7 @@ impl SdkSpanHandle {
 }
 
 /// A shared, atomically-observed sample the sysagent metric callbacks read
-/// from — the Rust analogue of go/sysagent.go's mutex-guarded `latest
+/// from: the Rust analogue of go/sysagent.go's mutex-guarded `latest
 /// sample` plus RegisterCallback closure, and sysagent.cpp's GaugeState.
 #[derive(Default, Clone, Copy)]
 pub struct GaugeSample {
@@ -232,7 +232,7 @@ impl SysagentGauges {
 }
 
 /// Registers the three observable gauges (sysagent_cpu_pct, sysagent_mem_pct,
-/// sysagent_load1), each carrying a `node` attribute — the exact names and
+/// sysagent_load1), each carrying a `node` attribute: the exact names and
 /// label verify.lua queries through Grafana's Prometheus proxy. A no-op
 /// (empty) registration when telemetry is disabled.
 pub fn register_sysagent_gauges(tel: &Telemetry, node: &str) -> SysagentGauges {

@@ -19,15 +19,15 @@ By the end of this chapter you can:
 
 ## Why this matters
 
-A signal handler runs at an arbitrary instant inside arbitrary code, which makes it one of the easiest places in a Linux program to introduce a deadlock or a race that only shows up under load. The discipline this chapter teaches, converting signals into data and handling them in a plain loop, is what separates a supervisor that restarts cleanly from one that occasionally hangs on SIGTERM.
+A signal handler runs at an arbitrary instant inside arbitrary code, which makes it one of the easiest places in a Linux program to introduce a deadlock or a race that only shows up under load. The discipline here, converting signals into data and handling them in a plain loop, is what separates a supervisor that restarts cleanly from one that occasionally hangs on SIGTERM.
 
-This chapter turns pmon from a one-shot runner (Chapter 11) into an actual supervisor: restart on crash, clean shutdown, and configuration reload all ride the same signal-to-data conversion. Chapter 13 closes the one race this design still carries, a recycled pid receiving a forwarded signal meant for a dead child.
+Turning pmon from a one-shot runner into an actual supervisor needs restart on crash, clean shutdown, and configuration reload, all riding the same signal-to-data conversion. Pinning process identity to a file descriptor instead of a reused pid closes the one race this design still carries: a recycled pid receiving a forwarded signal meant for a dead child.
 
-Chapter 11 taught `pmon` to run one child and report how it died. Version 1
+`pmon` previously ran one child and reported how it died. Version 1
 makes it a real supervisor: restart a crashing child with a doubling backoff,
 shut down cleanly on SIGTERM or SIGINT, and replace the child on SIGHUP. That
-sounds like three `signal()` calls, and that is exactly the trap. The one new
-idea of this chapter is that a signal handler is close to lawless territory
+sounds like three `signal()` calls, and that is exactly the trap. The new
+idea here is that a signal handler is close to lawless territory
 where almost no code is safe to run, so well-built programs run *no* meaningful
 code there at all: they convert signals into ordinary data (a file descriptor
 read, a channel receive, a byte in a pipe) and consume that data in a plain
@@ -85,13 +85,13 @@ The **pending set** is where a generated-but-undelivered signal sits, and for
 standard signals it is literally one bit each: a second SIGCHLD arriving
 while one is already pending *coalesces* into the same bit. This is the core
 of SIGCHLD semantics: the signal means "one **or more** children changed
-state", never "exactly one". The robust consumer treats SIGCHLD as a doorbell
-and asks `waitpid(…, WNOHANG)` what actually happened; `pmon` has exactly one
+state", never "exactly one". A correct consumer treats SIGCHLD as a doorbell
+and asks `waitpid(…, WNOHANG)` what happened; `pmon` has exactly one
 child at a time, so a targeted `waitpid(child, …, WNOHANG)` is the whole
 answer; the general reap-until-empty loop arrives with pmon's later growth.
 Delivery itself happens only when a signal is pending *and* unblocked in some
-thread, at an arbitrary instant between two instructions, which is the
-problem the next section is about.
+thread, at an arbitrary instant between two instructions: the source of
+every handler hazard.
 
 ## Why handlers are a minefield
 
@@ -123,7 +123,7 @@ the handler does exactly one safe thing (`write` one byte to it), and the
 main loop, already blocked in `poll`, wakes up, drains the pipe, and handles
 the event as ordinary code. The pipe is the bridge from signal context to
 loop context, and `write(2)` is async-signal-safe. The Rust implementation
-is deliberately the historical exhibit, with the unsafe parts delegated to
+is the historical exhibit, with the unsafe parts delegated to
 `signal-hook`: each signal is registered twice, a flag and a doorbell, from
 `examples/12-signals-and-safe-handling/rust/src/main.rs`:
 
@@ -469,22 +469,22 @@ processes; supervision semantics belong to `supervise` only.
 
 ## Errors, three ways
 
-The contract is unchanged from chapter 11: `pmon: error: …` on stderr and
+The contract is unchanged from pmon v0: `pmon: error: …` on stderr and
 exit 1 for runtime failures, usage on exit 2, but signals sharpen the
-`EINTR` policy from chapter 4 into three distinct spellings. C++ retries
+`EINTR` policy from the syscall ABI into three distinct spellings. C++ retries
 `poll` on `EINTR` explicitly, and `reap_blocking` loops `waitpid` the same
 way; under `supervise` the mask makes those interruptions nearly impossible,
 but `run` reaps with the default mask, so the loop still matters there.
 Rust matches `Errno::EINTR` as a value in both `poll` and `waitpid`; its
-handlers really do interrupt syscalls, as the cross-check will show, and
+handlers do interrupt syscalls, as the cross-check shows, and
 additionally tolerates `Errno::ECHILD` ("no child to reap") as a stale
 doorbell rather than an error. Go never sees `EINTR` at all: the runtime
 installs every handler with `SA_RESTART` and retries interrupted waits
 inside `cmd.Wait`, so user code only ever receives the final verdict.
-One deliberate acceptance shows up in all three `stop_child`s: `ESRCH` from
-`kill` means the child is already gone mid-shutdown: a race you expect,
-handled at the call site, while everything else carries context up to one
-printer, exactly the chapter-5 policy.
+One accepted race shows up in all three `stop_child`s: `ESRCH` from
+`kill` means the child is already gone mid-shutdown, handled at the call
+site, while everything else carries context up to one printer, exactly
+the shared error-reporting policy.
 
 ## Concurrency lens
 
@@ -515,7 +515,7 @@ per-thread, and signalfd only sees signals *blocked* in every thread that
 might otherwise take delivery. The C++ code blocks the mask before any
 thread could exist, so the invariant holds trivially; in a threaded program
 you must block-then-spawn so children inherit the mask. Rust's mechanism is
-the only one where user-adjacent code truly runs in signal context, and its
+the only one where user-adjacent code runs in signal context, and its
 concurrency budget is exactly one atomic store plus one non-blocking `write`:
 a full doorbell drops the byte harmlessly, because bytes, like pending
 bits, are allowed to coalesce.
@@ -601,7 +601,7 @@ session's supervisor pid 2617196 issued exactly **114 `rt_sigaction`
 calls**: 58 probes reading old dispositions plus 56 installs of the runtime
 handler (`sa_handler=0x484d40`, `sa_mask=~[]`,
 `SA_ONSTACK|SA_RESTART|SA_SIGINFO`) covering SIGHUP through `SIGRT_32`, the
-identical 114-call storm chapter 4 counted for a program that never touched
+identical 114-call storm already counted for a program that never touched
 `os/signal`, because it is runtime initialization, not `signal.Notify`. Zero
 `signalfd4`, zero `poll`/`ppoll` (the runtime waits in `futex` and its
 netpoller). Rust sits between: 13 `rt_sigaction`, probe+install pairs for
@@ -661,11 +661,11 @@ stack-overflow guard the strace already showed. Three processes, one hex
 format, and each design legible straight from the kernel's ledger.
 
 > **On the lab VM** <span class="status status--unverified">unverified</span>:
-> the kernel-side view of this chapter is `bpftrace` on
+> the kernel-side view here is `bpftrace` on
 > `tracepoint:signal:signal_generate` and `signal_deliver`, watching the
 > pending-set handoff fleet-wide instead of per-process: which pid raised
 > each SIGCHLD, where each SIGURG landed. That needs root and a disposable
-> kernel, so it is not run here; chapter 30 (Debugging part) exercises
+> kernel, so it is not run here; the eBPF observation toolkit exercises
 > exactly this on `systems-target`.
 
 ## What you learned
@@ -710,4 +710,4 @@ and <code>ERESTART_RESTARTBLOCK</code> on <code>poll</code>; and the
 <code>SigCgt 0</code>, <code>SigCgt fffffffd7fc1feff</code>,
 <code>SigCgt 14443</code>) were read from live supervisors and decoded with
 the Python shown. The "On the lab VM" bpftrace callout is unverified as
-marked and deferred to chapter 30.</p>
+marked and deferred to the eBPF observation toolkit.</p>

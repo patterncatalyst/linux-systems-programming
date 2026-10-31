@@ -4,7 +4,7 @@
 // `mod`-declares it, so `cargo build`, `cargo test`, and `cargo clippy`
 // never see it, and `cargo fmt --check` (which walks the module tree from
 // the crate roots) leaves it alone. Only an explicit, per-file
-// `rustfmt --edition 2024 --check fixtures/misformatted.rs` reads it -- and
+// `rustfmt --edition 2024 --check fixtures/misformatted.rs` reads it, and
 // must exit nonzero, printing a diff.
 //
 // Do not "fix" the formatting below. The wrong spacing, the 4-into-2 indent,

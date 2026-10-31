@@ -2,7 +2,7 @@
 title: "Embedding Lua as a policy engine: one policy.lua, three host runtimes"
 order: 42
 part: "Deep Dives"
-description: "lua-policy moves pmon's restart/backoff decision out of the compiled binary and into a single sandboxed policy.lua, embedded three structurally different ways -- C++23 via sol2, Go via gopher-lua (Lua 5.1), Rust via mlua (Lua 5.4) -- and reloaded live on a real SIGHUP with no process restart. Verified on the Fedora 44 host: byte-identical decisions across all three languages (diff-confirmed), PASS 19/FAIL 0 per language, and three distinct sandbox-rejection diagnostics for the same malicious policy."
+description: "lua-policy moves pmon's restart/backoff decision out of the compiled binary and into a single sandboxed policy.lua, embedded three structurally different ways (C++23 via sol2, Go via gopher-lua (Lua 5.1), Rust via mlua (Lua 5.4)) and reloaded live on a real SIGHUP with no process restart. Verified on the Fedora 44 host: byte-identical decisions across all three languages (diff-confirmed), PASS 19/FAIL 0 per language, and three distinct sandbox-rejection diagnostics for the same malicious policy."
 duration: "45 minutes"
 ---
 
@@ -20,13 +20,13 @@ By the end of this chapter you can:
 
 ## Why this matters
 
-A restart policy baked into compiled C++, Go, or Rust means a tuning change costs a rebuild and a redeploy. Moving that decision into one sandboxed `policy.lua` instead means `pmon` can change its crash-looping threshold or its backoff curve on a live `SIGHUP`, with the same process and the same PID throughout, which is the capability an operator actually wants during an incident.
+A restart policy baked into compiled C++, Go, or Rust means a tuning change costs a rebuild and a redeploy. Moving that decision into one sandboxed `policy.lua` instead means `pmon` can change its crash-looping threshold or its backoff curve on a live `SIGHUP`, with the same process and the same PID throughout, which is the capability an operator wants during an incident.
 
-The harder question this chapter answers is whether "the same policy" really means the same behavior once it is embedded three structurally different ways. Proving sol2, gopher-lua, and mlua reach byte-identical restart decisions from one unmodified file, across a Lua 5.1/5.4 version gap, is what makes "one policy.lua, three host runtimes" more than a slogan.
+The harder question this chapter answers is whether "the same policy" means the same behavior once it is embedded three structurally different ways. Proving sol2, gopher-lua, and mlua reach byte-identical restart decisions from one unmodified file, across a Lua 5.1/5.4 version gap, is what makes "one policy.lua, three host runtimes" more than a slogan.
 
-Chapter 12 taught `pmon` to treat a signal as data instead of an
+Earlier in the book, `pmon` learned to treat a signal as data instead of an
 interruption: block `SIGCHLD` process-wide, then read it off a `signalfd` on
-the next turn of an ordinary `poll` loop. Chapter 41's final-project fleet leaned
+the next turn of an ordinary `poll` loop. The fleet final project leaned
 on the same discipline for `SIGTERM`/`SIGINT`. This chapter reaches for a
 different signal (`SIGHUP`, "please re-read your configuration") to
 reload something `pmon` has never had before: a restart policy that is not
@@ -45,7 +45,7 @@ decisions from it, live reload included.
 
 {% include excalidraw.html
    file="42-host-script-boundary"
-   alt="Three stacked host-runtime boxes on the left -- C++23/sol2 against PUC-Rio Lua 5.4, Go/gopher-lua against Lua 5.1, Rust/mlua against a vendored PUC-Rio Lua 5.4 -- each with a bidirectional arrow into a center box labeled policy.lua, one file, marked on_exit(info) going in and decision{action,delay_ms,reason} coming back. The policy.lua box sits inside a shaded sandbox-boundary band with a ghost box reading blocked: os, io, package, debug (never opened); nilled: load/loadfile/dofile/require/collectgarbage/loadstring. A host table box on the right connects to policy.lua with a bidirectional arrow labeled host.log / host.now_ms. A caption note reads Lua 5.1 (gopher-lua) vs Lua 5.4 (sol2, mlua) forces the shared subset -- one policy.lua drives all three."
+   alt="Three stacked host-runtime boxes on the left: C++23/sol2 against PUC-Rio Lua 5.4, Go/gopher-lua against Lua 5.1, Rust/mlua against a vendored PUC-Rio Lua 5.4, each with a bidirectional arrow into a center box labeled policy.lua, one file, marked on_exit(info) going in and decision{action,delay_ms,reason} coming back. The policy.lua box sits inside a shaded sandbox-boundary band with a ghost box reading blocked: os, io, package, debug (never opened); nilled: load/loadfile/dofile/require/collectgarbage/loadstring. A host table box on the right connects to policy.lua with a bidirectional arrow labeled host.log / host.now_ms. A caption note reads Lua 5.1 (gopher-lua) vs Lua 5.4 (sol2, mlua) forces the shared subset: one policy.lua drives all three."
    caption="Figure 42.1: the host↔script boundary: three differently-built sandboxed Lua states, one shared policy.lua, and the host table it calls back into" %}
 
 > **Tools used**: `lua` (host, drives `verify.lua` and is the PUC-Rio 5.4
@@ -498,7 +498,7 @@ error and keep serving whatever policy was already loaded; a
 ## Concurrency lens
 
 Every host consumes the *same* `SIGHUP` through three different primitives:
-the same divergence Chapter 41 mapped for `SIGTERM`, reached here through a
+the same divergence the fleet final project mapped for `SIGTERM`, reached here through a
 reload path with one new wrinkle: after the signal lands, **every** binding
 discards the whole interpreter and builds a brand-new one.
 
@@ -574,7 +574,7 @@ void wait_for_sighup(int sigfd) {
         .context("reloading policy")?;
 ```
 
-C++ reuses ch12/ch13's pattern outright: `SIGHUP` is blocked process-wide
+C++ reuses the pattern established earlier in the book outright: `SIGHUP` is blocked process-wide
 with `sigprocmask` up front (in `make_sighup_fd`, not shown), then consumed
 as ordinary readability on a `signalfd` inside a `poll` loop; no signal
 handler runs at all. Go reaches for the idiomatic equivalent: `signal.Notify`
@@ -661,12 +661,12 @@ Each language's `verify.lua` reported `PASS 19 / FAIL 0`.
 
 {% include excalidraw.html
    file="42-sighup-reload-lifecycle"
-   alt="A horizontal sequence of six boxes inside a band labeled one pmon process -- PID never changes: load v1 (base=500ms max_restarts=8), phase-1 decisions (web: stop; worker: restart 500ms to 1000ms), awaiting SIGHUP (a dashed ghost box), reload (fresh Lua state rebuilt, on_load logs v1.1.0), phase-2 decisions (api: restart 100ms; worker: escalate after 2 restarts), and exit 0. Above the awaiting-SIGHUP box, a ghost box shows the operator action -- edit the policy file, then kill -HUP $(pgrep app) -- with an arrow into the flow. Below it, three sub-boxes show the three per-language consumption mechanisms: C++ signalfd + poll, Go signal.Notify(ch), Rust signal_hook flag (AtomicBool + 20ms poll). A bottom note reads: the process is NOT restarted -- only a fresh, sandboxed Lua state is built in place and the decision logic changes underneath it."
+   alt="A horizontal sequence of six boxes inside a band labeled one pmon process: PID never changes: load v1 (base=500ms max_restarts=8), phase-1 decisions (web: stop; worker: restart 500ms to 1000ms), awaiting SIGHUP (a dashed ghost box), reload (fresh Lua state rebuilt, on_load logs v1.1.0), phase-2 decisions (api: restart 100ms; worker: escalate after 2 restarts), and exit 0. Above the awaiting-SIGHUP box, a ghost box shows the operator action: edit the policy file, then kill -HUP $(pgrep app), with an arrow into the flow. Below it, three sub-boxes show the three per-language consumption mechanisms: C++ signalfd + poll, Go signal.Notify(ch), Rust signal_hook flag (AtomicBool + 20ms poll). A bottom note reads: the process is not restarted; only a fresh, sandboxed Lua state is built in place and the decision logic changes underneath it."
    caption="Figure 42.2: the SIGHUP reload lifecycle: v1's decisions, a real SIGHUP consumed three different ways, a fresh Lua state built in place, and v1.1.0's tighter decisions, same process throughout" %}
 
 ## Cross-check: one script, three interpreters, byte-identical decisions
 
-The claim this chapter makes is falsifiable and was actually falsified
+The claim this chapter makes is falsifiable and was tested
 against: `policy.lua`, unmodified, drives sol2/PUC-Lua 5.4, gopher-lua's
 pure-Go 5.1 VM, and mlua/PUC-Lua 5.4 to the *exact same sequence of restart
 decisions*, including the exact backoff numbers and the exact `reason`
@@ -708,8 +708,8 @@ not three green exit codes agreeing by coincidence.
   `pmon`'s PID and child-tracking state survive untouched; only the Lua
   state is thrown away and rebuilt from `policy-v2.lua`, so no closure or
   global from the old policy leaks into the new one.
-- **Three signals, one outcome, three primitives.** C++ reuses ch12's
-  `sigprocmask` + `signalfd` + `poll`; Go hands the signal to the runtime's
+- **Three signals, one outcome, three primitives.** C++ reuses the
+  `sigprocmask` + `signalfd` + `poll` pattern established earlier in the book; Go hands the signal to the runtime's
   own machinery via `signal.Notify` and blocks on a channel; Rust's
   `signal-hook` flips an `AtomicBool` from a minimal `sigaction` handler a
   separate thread polls every 20 ms, armed before the "awaiting" line prints

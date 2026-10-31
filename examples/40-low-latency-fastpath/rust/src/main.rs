@@ -1,4 +1,4 @@
-// chatterd-fastpath — a stripped, pinned, allocation-free derivative of the
+// chatterd-fastpath: a stripped, pinned, allocation-free derivative of the
 // chatterd echo/pub-sub hot path (chapter 21) built purely to answer one
 // question: what does a low-latency network hot path actually cost, and what
 // does removing that cost look like at the syscall level?
@@ -22,9 +22,9 @@
 //
 // This is the port that follows the C++ original most literally, and it can:
 // Rust's std makes real blocking syscalls (there is no M:N runtime parking
-// tasks off the syscall the way Go's netpoller does), so the C++ technique — a
+// tasks off the syscall the way Go's netpoller does), so the C++ technique (a
 // signal handler installed WITHOUT SA_RESTART, so a blocking read(2)/poll(2)
-// already in progress returns EINTR and the loop notices the stop flag — works
+// already in progress returns EINTR and the loop notices the stop flag) works
 // verbatim here. The Go port had to substitute a close-the-fd wakeup for
 // exactly this reason; Rust does not.
 //
@@ -32,12 +32,12 @@
 // retries it internally (cvt_r), and Read::read_exact treats
 // ErrorKind::Interrupted as "try again". Both would swallow the very signal
 // this example is about. So the servers are built on raw fds via nix, where
-// every EINTR is handled explicitly — which also makes OwnedFd the natural
+// every EINTR is handled explicitly, which also makes OwnedFd the natural
 // equivalent of the C++ RAII Socket: it closes its descriptor on drop, is
 // move-only, and needs no hand-written destructor.
 //
 // Pinning is simpler than in Go. sched_setaffinity(2) acts on a thread, and
-// this program is single-threaded — the main thread's tid equals the pid — so
+// this program is single-threaded (the main thread's tid equals the pid), so
 // one sched_setaffinity(0, ...) call both pins the hot loop and shows up in
 // /proc/<pid>/status, where verify.lua reads Cpus_allowed_list to prove the
 // pinning happened at the kernel level. No LockOSThread / GOMAXPROCS dance is
@@ -68,7 +68,7 @@ const TYPE_ECHO: u8 = 0x01;
 
 type Frame = [u8; FRAME_SIZE];
 
-// A fallible setup step carrying an already-formatted, user-facing message —
+// A fallible setup step carrying an already-formatted, user-facing message:
 // the Rust stand-in for the C++ port's std::expected<T, std::string>.
 type StepResult<T> = Result<T, String>;
 
@@ -93,13 +93,13 @@ fn frame_header_ok(f: &Frame) -> bool {
 }
 
 fn seq_of(f: &Frame) -> u64 {
-    u64::from_be_bytes(f[4..12].try_into().unwrap())
+    u64::from_be_bytes(f[4..12].try_into().expect("slice is exactly 8 bytes"))
 }
 
 // ---------------------------------------------------------------------------
 // Shutdown plumbing: a plain (non-SA_RESTART) signal handler so a blocking
 // read(2)/accept-wait poll(2) in progress is interrupted with EINTR rather
-// than transparently resumed — exactly the C++ port's technique.
+// than transparently resumed: exactly the C++ port's technique.
 // ---------------------------------------------------------------------------
 
 static STOP: AtomicBool = AtomicBool::new(false);
@@ -132,7 +132,7 @@ fn stop_requested() -> bool {
 
 fn pin_to_cpu(cpu: i32) -> StepResult<()> {
     // sysconf(_SC_NPROCESSORS_ONLN) reports CPUs online SYSTEM-WIDE and ignores
-    // this process's affinity mask — the same call the C++ port uses. That
+    // this process's affinity mask: the same call the C++ port uses. That
     // matters under the bench driver's `taskset -c 1`: a mask-aware count
     // (like Go's runtime.NumCPU) would report 1 and wrongly reject a pin to
     // CPU 1. sysconf sidesteps that.
@@ -145,14 +145,14 @@ fn pin_to_cpu(cpu: i32) -> StepResult<()> {
     set.set(cpu as usize)
         .map_err(|e| format!("sched_setaffinity({cpu}): {e}"))?;
     // Pid 0 == the calling thread, which is the main (and only) thread, whose
-    // tid == pid — so this is also what /proc/<pid>/status reports.
+    // tid == pid, so this is also what /proc/<pid>/status reports.
     sched_setaffinity(Pid::from_raw(0), &set)
         .map_err(|e| format!("sched_setaffinity({cpu}): {e}"))?;
     Ok(())
 }
 
 // ---------------------------------------------------------------------------
-// Sockets — OwnedFd is the RAII Socket: closes on drop, move-only.
+// Sockets: OwnedFd is the RAII Socket (closes on drop, move-only).
 // ---------------------------------------------------------------------------
 
 fn listen_tcp(port: u16) -> StepResult<OwnedFd> {
@@ -167,7 +167,8 @@ fn listen_tcp(port: u16) -> StepResult<OwnedFd> {
 
     let addr = SockaddrIn::new(0, 0, 0, 0, port); // 0.0.0.0:port
     bind(sock.as_raw_fd(), &addr).map_err(|e| format!("bind 0.0.0.0:{port}: {e}"))?;
-    listen(&sock, Backlog::new(16).unwrap()).map_err(|e| format!("listen: {e}"))?;
+    listen(&sock, Backlog::new(16).expect("16 is a valid backlog size"))
+        .map_err(|e| format!("listen: {e}"))?;
     Ok(sock)
 }
 
@@ -190,7 +191,7 @@ fn connect_tcp(host: &str, port: u16) -> StepResult<OwnedFd> {
 }
 
 // Blocking read of exactly n bytes; false on EOF, hard error, or a signal
-// landing (EINTR) — the caller decides whether that means "stop".
+// landing (EINTR): the caller decides whether that means "stop".
 fn read_full_blocking(fd: RawFd, buf: &mut [u8]) -> bool {
     let bfd = unsafe { BorrowedFd::borrow_raw(fd) };
     let mut off = 0;
@@ -205,8 +206,8 @@ fn read_full_blocking(fd: RawFd, buf: &mut [u8]) -> bool {
 }
 
 // Non-blocking spin read: the socket must already be O_NONBLOCK. Spins on
-// EAGAIN with no syscall other than recv(2) itself — no sched_yield, no
-// nanosleep — which is the entire point of "busy-poll".
+// EAGAIN with no syscall other than recv(2) itself: no sched_yield, no
+// nanosleep, which is the entire point of "busy-poll".
 fn read_full_busy(fd: RawFd, buf: &mut [u8]) -> bool {
     let mut off = 0;
     while off < buf.len() {
@@ -415,8 +416,8 @@ fn cmd_measure(host: &str, port: u16, n: u64, warmup: u64, tag: &str) -> i32 {
     let p90 = percentile_ns(&samples, 90.0);
     let p99 = percentile_ns(&samples, 99.0);
     let p999 = percentile_ns(&samples, 99.9);
-    let mn = *samples.first().unwrap();
-    let mx = *samples.last().unwrap();
+    let mn = *samples.first().expect("n > 0 guarantees at least one sample");
+    let mx = *samples.last().expect("n > 0 guarantees at least one sample");
     let sum: f64 = samples.iter().map(|&v| v as f64).sum();
     let mean = sum / samples.len() as f64;
 

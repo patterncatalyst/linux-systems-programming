@@ -9,8 +9,8 @@
 // mpstat, pidstat, iostat, free, sar, ss, top) exactly as a human running the
 // checklist would, parses their plain-text tables generically (by column
 // *name*, read from each tool's own header row, never a hardcoded position),
-// and for each of the four resources reports which USE signals — Utilization
-// and Saturation — fired against a fixed threshold. Errors is reported too,
+// and for each of the four resources reports which USE signals (Utilization
+// and Saturation) fired against a fixed threshold. Errors is reported too,
 // fixed false: this chapter induces load, not kernel-logged faults, so an
 // real checklist run finds none.
 //
@@ -79,7 +79,7 @@ std::vector<std::string> split_lines(const std::string& text) {
 
 // A parsed table row: column names (from a tool's own header line) zipped
 // with this row's values, so every parser below reads fields *by name*
-// rather than by a hardcoded position — robust to sysstat/procps column
+// rather than by a hardcoded position: robust to sysstat/procps column
 // reordering across versions.
 struct Row {
     std::vector<std::string> names;
@@ -113,7 +113,7 @@ Row make_row(const std::vector<std::string>& header_tokens, size_t header_skip,
 // that returns std::expected, per book convention.
 std::expected<std::string, std::error_code> run_capture(const std::string& cmd) {
     // Grouped in a subshell so a single trailing "2>&1" captures every stage
-    // of a pipeline (e.g. "dmesg | tail -n 5") — without the parens, 2>&1
+    // of a pipeline (e.g. "dmesg | tail -n 5"): without the parens, 2>&1
     // binds only to the pipeline's last stage and an earlier stage's stderr
     // (e.g. dmesg's own permission-denied message) leaks past the capture.
     std::string full = "( env LC_ALL=C LANG=C " + cmd + " ) 2>&1";
@@ -129,7 +129,7 @@ std::expected<std::string, std::error_code> run_capture(const std::string& cmd) 
 
 // Start `env LC_ALL=C LANG=C <argv...>` in the background, stdout+stderr
 // redirected to outfile; returns the child pid (or -1 on fork failure). Used
-// for the five interval samplers so they run *concurrently* — a 12s analyze
+// for the five interval samplers so they run *concurrently*: a 12s analyze
 // window costs ~12s wall-clock, not 5x that from running them one at a time.
 pid_t spawn_to_file(const std::vector<std::string>& argv, const std::string& outfile) {
     pid_t pid = ::fork();
@@ -167,7 +167,7 @@ std::string read_all(const std::string& path) {
 
 // ------------------------------------------------------- checklist parsers --
 // Each parser reads a header line's column names from the tool's own output
-// and zips subsequent data lines against that name list — see Row::get above.
+// and zips subsequent data lines against that name list: see Row::get above.
 
 struct VmstatResult {
     double run_queue_max = 0.0;
@@ -175,7 +175,7 @@ struct VmstatResult {
 };
 
 // vmstat has no aggregate "Average:" line (unlike mpstat/pidstat), and its
-// *first* sample is a since-boot average, not a live interval — both quirks
+// *first* sample is a since-boot average, not a live interval: both quirks
 // are handled here: we scan every data row after the header, skip row 0, and
 // take the max across the rest (the steady-state saturation signal, not
 // diluted by an average across the whole window).
@@ -208,7 +208,7 @@ struct MpstatResult {
 };
 
 // mpstat -P ALL's own "Average:" row over the whole window (excludes the
-// since-boot first report automatically — sysstat's job, not ours).
+// since-boot first report automatically: sysstat's job, not ours).
 MpstatResult parse_mpstat(const std::string& text) {
     MpstatResult res;
     std::vector<std::string> header, data;
@@ -249,7 +249,7 @@ struct IostatResult {
 };
 
 // iostat -xz has no Average line either, AND -z hides idle devices entirely
-// (they just don't appear in a quiet interval) — so we scan every per-second
+// (they just don't appear in a quiet interval), so we scan every per-second
 // block, skip block 0 (since-boot), skip loopback/removable/compressed
 // pseudo-devices, and take the max over the guest's real block device.
 IostatResult parse_iostat(const std::string& text) {
@@ -563,7 +563,7 @@ int cmd_analyze(int seconds) {
     std::println("analyze: metric resource=net name=pkts value={:.2f} unit=per_s", net_pkts);
 
     // signal thresholds: Utilization/Saturation pair per resource. cpu's
-    // saturation threshold scales with this guest's own core count — a run
+    // saturation threshold scales with this guest's own core count: a run
     // queue longer than (cpus + headroom) means threads are waiting for a
     // CPU, the textbook USE definition of saturation.
     struct Candidate {

@@ -1,19 +1,19 @@
-// workq — a bounded MPMC job queue and worker pool (Rust 2024).
+// workq: a bounded MPMC job queue and worker pool (Rust 2024).
 //
 // P producers push N items total into a bounded blocking queue built from a
-// Mutex<VecDeque> plus two Condvars — the futex-backed pair this chapter is
+// Mutex<VecDeque> plus two Condvars: the futex-backed pair this chapter is
 // about. C consumers pop items and fold each payload into a checksum.
 //
 // The correct path gives every consumer its own accumulator and combines them
 // after the scoped threads join; nothing shared is written without the lock.
 // --buggy is the deliberate counterexample: safe Rust will NOT let two threads
 // write one plain counter, so the buggy path reaches for `unsafe` and a raw
-// pointer to force the data race — and then prints the corrupted result that
+// pointer to force the data race, and then prints the corrupted result that
 // the borrow checker exists to prevent. (No sanitizer needed to see it fail;
 // run it a few times and consumed/checksum wander.)
 //
 // Payloads are a pure function of index folded with XOR, so the correct
-// checksum is deterministic for a given (seed, N) regardless of P and C — and
+// checksum is deterministic for a given (seed, N) regardless of P and C, and
 // byte-identical to the C++ and Go builds.
 
 use std::collections::VecDeque;
@@ -178,11 +178,9 @@ unsafe impl<T> Send for Racy<T> {}
 unsafe impl<T> Sync for Racy<T> {}
 
 fn produce(queue: &BoundedQueue, produced: &AtomicI64, cfg: &Config, p: i64) {
-    let mut i = p;
-    while i < cfg.items {
+    for i in (p..cfg.items).step_by(cfg.producers as usize) {
         queue.push(payload(cfg.seed, i as u64));
         produced.fetch_add(1, Ordering::Relaxed);
-        i += cfg.producers;
     }
 }
 

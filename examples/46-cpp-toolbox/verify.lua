@@ -1,5 +1,5 @@
--- Verify 46-cpp-toolbox (C++ only): the C++ toolchain itself is the subject
--- -- CMake presets, Conan lockfiles, GCC/clang parity, gdb pretty-printers,
+-- Verify 46-cpp-toolbox (C++ only): the C++ toolchain itself is the subject:
+-- CMake presets, Conan lockfiles, GCC/clang parity, gdb pretty-printers,
 -- clang-tidy/clang-format. Every assertion below checks a real, tool-produced
 -- effect, never merely a process exit code.
 --
@@ -15,9 +15,9 @@
 --      aggregate.
 --
 -- Gated-if-present (D-F): each tool's absence degrades to an informational
--- "SKIP:" print (not a checks.skip(), which would abort the whole script --
+-- "SKIP:" print (not a checks.skip(), which would abort the whole script);
 -- A-C must still run even if clang-tidy/clang-format/conan happen to be
--- missing). On the reference host all three are present, so these do run
+-- missing. On the reference host all three are present, so these do run
 -- and do count toward PASS/FAIL.
 --   D. clang-tidy, via the compile-commands DB, flags src/smell.cpp's
 --      deliberate performance-unnecessary-value-param smell.
@@ -27,7 +27,7 @@
 --      build + run produces the expected line.
 --
 -- ccache/mold: opportunistic presence check only, printed but never
--- asserted -- both are expected absent on the reference host.
+-- asserted: both are expected absent on the reference host.
 
 local script_dir = arg[0]:match("(.*/)") or "./"
 local repo_root = os.getenv("REPO_ROOT") or (script_dir .. "../..")

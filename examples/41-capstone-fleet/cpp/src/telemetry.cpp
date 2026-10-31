@@ -39,9 +39,9 @@ namespace internal_log = opentelemetry::sdk::common::internal_log;
 // Counts every Error-level internal SDK log line and prints it, the closest
 // opentelemetry-cpp equivalent of Go's otel.SetErrorHandler callback (which
 // both increments exportErrors and Fprintf's to stderr on every export
-// failure). LogLevel is pinned to Error below, so Info/Debug/Warning lines —
-// the ones that would otherwise corrupt the stdout contract, ch38's hard-won
-// lesson — never reach this handler at all.
+// failure). LogLevel is pinned to Error below, so Info/Debug/Warning lines
+// (the ones that would otherwise corrupt the stdout contract, ch38's
+// hard-won lesson) never reach this handler at all.
 class CountingLogHandler : public internal_log::LogHandler {
 public:
     explicit CountingLogHandler(std::string service) : service_(std::move(service)) {}

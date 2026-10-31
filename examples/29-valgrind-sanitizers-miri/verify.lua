@@ -1,23 +1,23 @@
 -- Verify bugfarm (chapter 29: valgrind, sanitizers, and miri).
 --
 -- "app <leak|uaf|uninit|overflow|race>" runs one seeded defect. This isn't
--- a normal program with an observable happy-path output -- the thing to
+-- a normal program with an observable happy-path output: the thing to
 -- observe is a DETECTING TOOL catching the defect, so most of this script
 -- builds an instrumented variant and runs the tool directly against the
 -- binary (not through demo.sh, which only knows the plain build).
 --
 -- Per language, what's actually expressible differs on purpose:
---   cpp  -- all five: valgrind (leak, uninit), ASan (uaf, overflow),
+--   cpp  : all five: valgrind (leak, uninit), ASan (uaf, overflow),
 --           TSan (race).
---   go   -- leak (self-detected via runtime.NumGoroutine(), no external
+--   go   : leak (self-detected via runtime.NumGoroutine(), no external
 --           tool watches Go goroutine leaks the way valgrind watches
 --           malloc) and race (-race build, "DATA RACE", exit 66). uaf/
 --           uninit/overflow are not expressible in safe Go: bounds/nil
 --           checks and the GC rule them out at runtime, so those exit 64
 --           with a fixed note.
---   rust -- leak only (Box::leak, a real unfreed allocation valgrind
+--   rust : leak only (Box::leak, a real unfreed allocation valgrind
 --           reports as "definitely lost"; miri additionally confirms it
---           when available -- informational, since the pinned 1.97.1
+--           when available; informational, since the pinned 1.97.1
 --           toolchain does not ship miri). uaf/uninit/overflow/race are
 --           rejected by the borrow checker / bounds checks at compile
 --           time or by construction, so those exit 64 with a fixed note.
@@ -65,7 +65,7 @@ if lang == "cpp" then
   -- memory or threads, not a plain run, to produce its finding.
 
   -- ASan+UBSan and TSan builds aren't part of the plain demo.sh contract
-  -- (build/run/TARGET deploy) -- build them directly via the CMake
+  -- (build/run/TARGET deploy); build them directly via the CMake
   -- presets that ship alongside the release preset.
   r = checks.run("cd cpp && cmake --preset asan >/dev/null && cmake --build --preset asan >/dev/null")
   checks.expect_exit(r, 0, "cpp: ASan+UBSan build configures and compiles")
@@ -114,7 +114,7 @@ elseif lang == "go" then
 
   -- race: needs a -race build, which is not what the plain demo.sh build
   -- produces for this chapter (unlike ch06, this chapter is not
-  -- exclusively about concurrency) -- build the instrumented binary
+  -- exclusively about concurrency); build the instrumented binary
   -- directly.
   r = checks.run("cd go && go build -race -o bin/app-race .")
   checks.expect_exit(r, 0, "go: race-instrumented build compiles")
@@ -145,7 +145,7 @@ else -- rust
 
   -- miri: informational only. The pinned toolchain (rust-toolchain.toml,
   -- 1.97.1) does not ship a miri component; a nightly toolchain with miri
-  -- installed is a bonus double-check, never a requirement -- absence
+  -- installed is a bonus double-check, never a requirement; absence
   -- must degrade gracefully, not fail the example.
   local probe = checks.run("rustup which --toolchain nightly miri")
   if probe.exit == 0 then

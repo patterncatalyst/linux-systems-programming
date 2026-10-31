@@ -1,4 +1,4 @@
-//! pmon run -- CMD [ARGS...] — minimal process monitor for the process
+//! pmon run -- CMD [ARGS...]: minimal process monitor for the process
 //! lifecycle chapter: spawn CMD, wait for it, report its fate and rusage.
 //!
 //! ```text

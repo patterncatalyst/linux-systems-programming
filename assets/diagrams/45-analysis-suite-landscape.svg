@@ -5,7 +5,7 @@
 <rect x="380" y="40" width="340" height="590" rx="12" fill="#fafafa" stroke="#ddd"/>
 <text x="392" y="60" font-size="12" font-weight="700" fill="#1d1d1d">SystemTap: kernel-module tracing (VM)</text>
 <rect x="740" y="40" width="340" height="590" rx="12" fill="#fafafa" stroke="#ddd"/>
-<text x="752" y="60" font-size="12" font-weight="700" fill="#1d1d1d">PCP: pmcd + PMDAs (container, ch45)</text>
+<text x="752" y="60" font-size="12" font-weight="700" fill="#1d1d1d">PCP: pmcd + PMDAs (container)</text>
 <rect x="60" y="90" width="240" height="50" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
 <text x="180.0" y="113.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">browser</text>
 <text x="180.0" y="130.0" font-size="11.5" fill="#555555" text-anchor="middle">https://&lt;vm&gt;:9090/</text>
@@ -39,10 +39,10 @@
 <text x="910.0" y="330.0" font-size="11.5" fill="#dddddd" text-anchor="middle">central metrics daemon</text>
 <rect x="780" y="460" width="260" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="910.0" y="488.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pmda-podman</text>
-<text x="910.0" y="505.0" font-size="11.5" fill="#555555" text-anchor="middle">podman.sock (ch34)</text>
+<text x="910.0" y="505.0" font-size="11.5" fill="#555555" text-anchor="middle">podman.sock</text>
 <rect x="780" y="560" width="260" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
 <text x="910.0" y="588.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">pmda-bcc: NOT shipped</text>
-<text x="910.0" y="605.0" font-size="11.5" fill="#555555" text-anchor="middle">super-privileged; ch30 on the VM</text>
+<text x="910.0" y="605.0" font-size="11.5" fill="#555555" text-anchor="middle">super-privileged; on the VM</text>
 <path d="M180,140 L180,190" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="186.0" y="159.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">HTTP 200 (verified)</text>
 <text x="186.0" y="159.0" font-size="11" fill="#555" text-anchor="middle">HTTP 200 (verified)</text>
@@ -55,6 +55,6 @@
 <path d="M910,460 L910,350" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <text x="60" y="410" font-size="11" fill="#555555" text-anchor="start">Web panels (Overview / Podman / Logs): described only</text>
 <text x="60" y="426" font-size="11" fill="#555555" text-anchor="start">no browser automation in this session.</text>
-<text x="410" y="460" font-size="11" fill="#555555" text-anchor="start">Contrast: ch30&#x27;s dyninst backend was inconclusive on this host</text>
+<text x="410" y="460" font-size="11" fill="#555555" text-anchor="start">Contrast: the dyninst backend was inconclusive on this host</text>
 <text x="410" y="476" font-size="11" fill="#555555" text-anchor="start">the kernel-module path needed matching kernel-devel; now verified.</text>
 </svg>

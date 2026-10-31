@@ -37,7 +37,7 @@ occasionally or only in an environment you cannot freely recompile in.
 The three languages also make the same bug look completely different at the
 tooling layer: a core file is the right artifact for C++, useless for Rust's
 panic-and-unwind, and only accidentally adequate for Go once goroutines enter
-the picture. Knowing which tool actually sees your language's failure mode,
+the picture. Knowing which tool sees your language's failure mode,
 and which one just looks like it does, is what keeps a debugging session from
 turning into a search for frames that were never going to be there.
 
@@ -92,7 +92,7 @@ gdb's job starts where that photograph does. Opened against a binary that
 still carries debug info; this chapter's C++ build uses the `release`
 CMake preset, which is `RelWithDebInfo` (`-O2 -g`, optimized *and*
 debuggable), gdb reconstructs source-level frames, local variables, and
-even C++ types from the DWARF the compiler embedded, not from guesswork.
+even C++ types straight from the DWARF the compiler embedded.
 That last part is what "pretty-printers" buy you: without them, a
 `std::string_view` is a two-word struct (`{ _M_str, _M_len }`) and you'd read
 its text by hand out of memory; with libstdc++'s printers loaded (they ship
@@ -162,7 +162,7 @@ Thread 1 "app" received signal SIGSEGV, Segmentation fault.
 That result is flattering and it hides the real problem. gdb's thread list
 maps to **OS threads** (the `M`s in Go's `G`/`M`/`P` scheduler), not to
 **goroutines** (`G`s): a goroutine that is parked on a channel, blocked in a
-`select`, or simply not currently scheduled onto any `M` has no OS thread for
+`select`, or not currently scheduled onto any `M` has no OS thread for
 gdb to show you, and gdb has no notion of "goroutine 41" as a selectable
 frame context the way it has "thread 3". The moment your program has more
 than a handful of concurrent goroutines, `info threads` and `bt` stop mapping
@@ -241,7 +241,7 @@ Remote debugging using systems-target:2345
 afterward; the right default for a scripted reproduction, since a stray
 `gdbserver` left listening on a lab VM is a debug backdoor with no
 authentication. `target remote` is the one gdb command that changes
-everything downstream of it: every `break`, `run` (really `continue`, since
+everything downstream of it: every `break`, `run` (which behaves as `continue`, since
 the process is already started), `print`, and `bt` you already know behaves
 identically, dispatched over the wire instead of a local `ptrace(2)`. The
 binary path you pass to gdb on the host must be the *unstripped*, debug-info
@@ -397,20 +397,20 @@ languages part ways, and the table is the chapter in miniature:
 | Go | nil deref → runtime catches `SIGSEGV`, converts to panic | 2 | no | the goroutine trace in the panic output |
 | Rust | `Option::unwrap()` on `None` → panic | 101 | no | `RUST_BACKTRACE=1` |
 
-One more thing worth reading off the C++ trace directly: the `ShutdownGuard`
-RAII type in `run_supervisor`'s clean path prints "supervisor exiting
-cleanly" from its destructor, and that line never appears on the crash path,
-confirmed in every transcript above. RAII buys you cleanup on every
-*C++-level* exit (`return`, a thrown exception, `std::exit` via a registered
-handler); it buys you nothing against a signal, because a signal does not
-unwind the stack; the kernel simply stops the process where it stands.
+The C++ trace also shows the `ShutdownGuard` RAII type in `run_supervisor`'s
+clean path printing "supervisor exiting cleanly" from its destructor; that
+line never appears on the crash path, confirmed in every transcript above.
+RAII buys you cleanup on every *C++-level* exit (`return`, a thrown
+exception, `std::exit` via a registered handler); it buys you nothing
+against a signal, because a signal does not unwind the stack: the kernel
+stops the process where it stands.
 
 ## What each language's tooling gives you
 
-This chapter is tooling-heavy rather than concurrency-heavy, so the lens
-here is what each debugger sees, not a data race: gdb sees raw memory,
-registers, and DWARF: it is precise but blind to any concept a language
-runtime invented for itself. That is exactly why it is the *only* tool for
+gdb, `delve`, and `rust-gdb` differ in what they see: gdb sees raw memory,
+registers, and DWARF, precise but blind to any concept a language runtime
+invented for itself.
+That is exactly why it is the *only* tool for
 the C++ crash (there is no higher-level runtime to ask) and only an
 *accidentally* adequate one for Go (it happened to catch this crash while
 the program was still single-goroutine); `delve` exists specifically to
@@ -484,7 +484,7 @@ without it.
 Every address gdb reported above is derived from the same `.debug_line`
 section `readelf` and `objdump` can decode independently, with no gdb
 involved at all; if they agree, gdb isn't inventing anything. `readelf -S`
-first confirms the binary actually carries full DWARF (it is optimized, not
+first confirms the binary carries full DWARF (it is optimized, not
 stripped):
 
 ```console
@@ -552,7 +552,7 @@ and gdb all read the same way.
   on `.debug_line` are the independent cross-check that confirms gdb's own
   addresses rather than trusting them blind.
 
-Next, **valgrind, sanitizers, and Miri**: three very different ways of
+Next, **valgrind, sanitizers, and Miri**: three different ways of
 catching the memory bugs a debugger only shows you *after* they've already
 happened.
 

@@ -2040,13 +2040,13 @@
    "updated": 1,
    "link": null,
    "locked": false,
-   "text": "FNV-1a is language-independent: the same 0x481984990deee5ff digest appears in the ch46 C++ and ch47 Go toolbox reports.",
+   "text": "FNV-1a is language-independent: the same 0x481984990deee5ff digest appears in the C++ and Go toolbox reports.",
    "fontSize": 12,
    "fontFamily": 1,
    "textAlign": "left",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "FNV-1a is language-independent: the same 0x481984990deee5ff digest appears in the ch46 C++ and ch47 Go toolbox reports.",
+   "originalText": "FNV-1a is language-independent: the same 0x481984990deee5ff digest appears in the C++ and Go toolbox reports.",
    "lineHeight": 1.25,
    "baseline": 12
   }

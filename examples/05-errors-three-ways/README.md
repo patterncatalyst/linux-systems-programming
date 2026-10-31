@@ -1,6 +1,6 @@
-# 05-errors-three-ways — copyx
+# 05-errors-three-ways: copyx
 
-A file copier, written three times — C++23, Go, and Rust — to establish the
+A file copier, written three times, in C++23, Go, and Rust, to establish the
 book's error taxonomy: every failure is classified by *which side of the copy
 broke*, the reason is printed in one fixed shape, and the exit code carries
 the classification for scripts and callers.
@@ -28,7 +28,7 @@ copyx: write /dev/full: No space left on device     # exit 3
 copyx: close /dev/full: No space left on device     # exit 3
 ```
 
-Two policies are deliberately visible in each implementation:
+Two policies are visible in each implementation:
 
 - **EINTR is retried.** `read(2)`/`write(2)` interrupted by a signal
   transferred nothing; each language has an explicit retry loop
@@ -36,7 +36,7 @@ Two policies are deliberately visible in each implementation:
 - **Short writes are resumed.** `write_all`/`writeAll` advances past the
   bytes the kernel accepted and reissues the rest until the buffer is gone.
   The write side also *observes* `close(2)`, because that is where deferred
-  IO errors surface — the read side's close result carries nothing actionable
+  IO errors surface; the read side's close result carries nothing actionable
   and is released by RAII/defer.
 
 The copy loop uses a 64 KiB buffer; `DST` is created `0644` and truncated.
@@ -63,11 +63,11 @@ The copy loop uses a 64 KiB buffer; `DST` is created `0644` and truncated.
 
 Each language directory has a `demo.sh` with the book-wide interface:
 
-- `./demo.sh build` — build only
-- `./demo.sh run [args]` — run the built binary with `args`
+- `./demo.sh build`: build only
+- `./demo.sh run [args]`: run the built binary with `args`
   (with env `TARGET` set, deploys to that lab VM via
   `scripts/lab/deploy-to-vm.sh` instead of running locally)
-- `./demo.sh` — build, then run a local walkthrough of the taxonomy:
+- `./demo.sh`: build, then run a local walkthrough of the taxonomy:
   a real 200 000-byte copy verified with `cmp`, a missing source (exit 2),
   and a write to `/dev/full` (exit 3)
 

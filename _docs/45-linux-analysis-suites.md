@@ -2,7 +2,7 @@
 title: "Linux analysis suites: Cockpit, SystemTap, and PCP watch a whole fleet"
 order: 45
 part: "Appendices: Tooling"
-description: "linux-analysis-suites builds a single Fedora-based, multi-stage Containerfile (lsp45-pcp, 265 MB) shipping Performance Co-Pilot's pmcd with two live PMDAs -- openmetrics and podman -- run rootless with podman, alongside Cockpit's zero-scripting web console and SystemTap's kernel-module tracing on the systems-target VM: verified PASS 10/0 with a real pminfo value 42, live podman-socket container visibility, a working SystemTap kernel-module smoke test, and Cockpit's socket answering HTTP 200."
+description: "linux-analysis-suites builds a single Fedora-based, multi-stage Containerfile (lsp45-pcp, 265 MB) shipping Performance Co-Pilot's pmcd with two live PMDAs (openmetrics and podman) run rootless with podman, alongside Cockpit's zero-scripting web console and SystemTap's kernel-module tracing on the systems-target VM: verified PASS 10/0 with a real pminfo value 42, live podman-socket container visibility, a working SystemTap kernel-module smoke test, and Cockpit's socket answering HTTP 200."
 duration: "35 minutes"
 ---
 
@@ -15,15 +15,15 @@ appendices, and it pivots from single-process tools to three fleet-wide
 **suites**, each built on a different philosophy for the same underlying
 question: what is this system doing right now. Cockpit answers it with a
 web console you never script. SystemTap answers it by compiling a kernel
-module per probe, bcc's harder-to-build sibling from Chapter 30. And PCP
-(Performance Co-Pilot) answers it by pulling metrics out of things this book
-already built: a `podman.sock` (Chapter 34) and an OpenMetrics document
-(Chapter 38).
+module per probe, the harder-to-build sibling to bcc-tools and bpftrace. And
+PCP (Performance Co-Pilot) answers it by pulling metrics out of things this
+book already built: a `podman.sock` from its container fleet work and an
+OpenMetrics document from its OpenTelemetry pipeline.
 
 {% include excalidraw.html
    file="45-analysis-suite-landscape"
-   alt="Three side-by-side boxes under a banner reading three philosophies for fleet-wide observation. Left: a browser icon into a Cockpit box, labeled zero-scripting web console, cockpit-ws multiplexing sessions over a socket answering on port 9090. Middle: a stap CLI box compiling into a kernel-module icon, labeled SystemTap -- bcc's harder-to-build kernel-module-compiling sibling from Chapter 30, needing matching kernel-devel. Right: a pmcd hub box with two labeled PMDA arms -- pmda-openmetrics reading a file:// document and pmda-podman reading a podman.sock -- both arrows curving back to two smaller ghost boxes captioned Chapter 34 containers and Chapter 38 OpenMetrics, showing PCP pulls metrics out of things this book already built. Caption: three ways to observe a fleet -- click, script, or scrape."
-   caption="Figure 45.1: three philosophies for fleet-wide observation: Cockpit's zero-scripting console, SystemTap's kernel-module scripting (bcc's harder-to-build sibling from Chapter 30), and PCP pulling metrics out of two things this book already built" %}
+   alt="Three side-by-side boxes under a banner reading three philosophies for fleet-wide observation. Left: a browser icon into a Cockpit box, labeled zero-scripting web console, cockpit-ws multiplexing sessions over a socket answering on port 9090. Middle: a stap CLI box compiling into a kernel-module icon, labeled SystemTap: bcc's harder-to-build kernel-module-compiling sibling, needing matching kernel-devel. Right: a pmcd hub box with two labeled PMDA arms: pmda-openmetrics reading a file:// document and pmda-podman reading a podman.sock, both arrows curving back to two smaller ghost boxes captioned containers and OpenMetrics, showing PCP pulls metrics out of things this book already built. Caption: three ways to observe a fleet: click, script, or scrape."
+   caption="Figure 45.1: three philosophies for fleet-wide observation: Cockpit's zero-scripting console, SystemTap's kernel-module scripting (bcc's harder-to-build sibling), and PCP pulling metrics out of two things this book already built" %}
 
 > **Tools used**: `podman` (host, build/run/exec, in
 > `scripts/check-host.sh`); `pmcd`/`pminfo`/`pmrep`/`pcp` (a third location:
@@ -43,8 +43,8 @@ running the check once rather than three times for no behavioral gain.
 Whichever of the three is given, the image built and the container run are
 byte-identical. Code excerpts below are therefore plain fenced blocks, never
 the tri-language `codetabs` include this book uses everywhere else; there
-is only one path through this example, the same handling Chapter 44 used for
-its single-language runtime deep dive.
+is only one path through this example, the same handling the Go runtime
+chapter used for its single-language deep dive.
 
 ## Cockpit: a web console with no scripting required
 
@@ -60,9 +60,9 @@ answering before this chapter's demo ever runs.
 
 ## SystemTap: bcc's kernel-module-compiling sibling
 
-Chapter 30 put SystemTap side by side with bcc-tools and bpftrace and found
-its kernel-module backend blocked by a real `kernel-devel`/running-kernel
-mismatch, a friction point flagged, not resolved, in that chapter. This
+Putting SystemTap side by side with bcc-tools and bpftrace surfaced its
+kernel-module backend blocked by a real `kernel-devel`/running-kernel
+mismatch, a friction point flagged but not resolved at the time. This
 appendix is where it gets resolved: once `kernel-devel-$(uname -r)` matches
 the running kernel, `stap` compiles a real, loadable kernel module per probe
 script, runs it, and unloads it when the script exits, the same
@@ -83,9 +83,10 @@ namespace, queryable with `pminfo`, `pmrep`, or the summary command `pcp`
 itself. This chapter's image layers exactly two PMDAs, and both pull their
 numbers from things this book already built rather than from anything new:
 `pmda-openmetrics` bridges an OpenMetrics/Prometheus-style document, the
-same format Chapter 38 wired a real exporter around, into PCP's namespace,
-and `pmda-podman` reads container and pod state over a `podman.sock`, the
-same rootless socket Chapter 34 built a container fleet around. PCP doesn't
+same format this book's OpenTelemetry pipeline wired a real exporter around,
+into PCP's namespace, and `pmda-podman` reads container and pod state over a
+`podman.sock`, the same rootless socket this book's container fleet work
+built around. PCP doesn't
 introduce a new thing to observe; it gives a uniform namespace to metrics
 this book's own examples already produce.
 
@@ -107,7 +108,7 @@ scrape of a real file, every run, with zero network dependency.
 
 ### Why Fedora, not UBI
 
-Every other container example in this book, Chapter 34's, builds on a
+Every other container example in this book builds on a
 UBI 10 base, per this project's own convention. This one doesn't, and the
 reason is direct: checked directly against a real `dnf
 install`, `pcp` and its PMDA packages are **not resolvable on UBI 9 or UBI
@@ -118,18 +119,18 @@ exists, but it needs Red Hat portal authentication, and there is no
 conventions, are assumed **not** to have a RHEL subscription. Fedora's own
 repositories carry `pcp 7.1.5` and every PMDA package this chapter needs,
 fully unauthenticated, so `registry.fedoraproject.org/fedora:44` is the
-base that actually builds for everyone, not just readers with a Red Hat
+base that builds for everyone, not just readers with a Red Hat
 account.
 
 One PMDA is absent from this image: `pmda-bcc`, PCP's own
-bridge into the eBPF world Chapter 30 covered directly. Activating it needs
-a working BCC/eBPF stack underneath: raw `BPF` syscalls, `/sys/kernel/
+bridge into the eBPF world bcc-tools and bpftrace cover directly. Activating
+it needs a working BCC/eBPF stack underneath: raw `BPF` syscalls, `/sys/kernel/
 debug`, a kernel-devel package matching the exact running kernel, which in
 turn needs a **super-privileged container**, the opposite of the rootless
 posture every other example in this book targets. It's covered here only as
 a name: PCP's privileged sibling PMDA, demonstrated properly on the
-`systems-target` VM where Chapter 30's real eBPF tooling already runs, not
-shipped inside this rootless image.
+`systems-target` VM where real bcc-tools and bpftrace tooling already runs,
+not shipped inside this rootless image.
 
 ## How the code works
 
@@ -211,13 +212,13 @@ ENTRYPOINT ["/usr/libexec/pcp/bin/pmcd", "-f"]
 ```
 
 `FROM smoke AS runtime` both reuses `smoke`'s already-activated PMDA state
-(no third `./Install` re-run needed) and forces `podman build` to actually
-build `smoke` first: the gate stage only runs because something real
-depends on it existing.
+(no third `./Install` re-run needed) and forces `podman build` to build
+`smoke` first: the gate stage only runs because something real depends on
+it existing.
 
 {% include excalidraw.html
    file="45-pcp-build-gate"
-   alt="A vertical three-stage pipeline. Stage one, builder, installs pcp packages, copies lsp45.prom, starts pmcd, and runs two ./Install calls against that live pmcd. An arrow labeled FROM builder AS smoke descends into stage two, smoke, which restarts pmcd and asserts both PMDAs are listed plus a real value 42 and a real kernel.all.load sample, gated by grep -q calls that can fail the whole podman build. A ghost, disconnected box beside stage two reads FROM builder AS runtime -- the skipped path, dashed and crossed out, with a note that podman silently never builds a stage nothing chains onto. The real arrow, solid and amber, is labeled FROM smoke AS runtime and descends into stage three, runtime, which reuses the smoke stage's already-activated PMNS/pmcd.conf and carries only EXPOSE 44321 and the pmcd entrypoint. Caption: chaining onto smoke, not builder, is what forces the gate stage to actually build."
+   alt="A vertical three-stage pipeline. Stage one, builder, installs pcp packages, copies lsp45.prom, starts pmcd, and runs two ./Install calls against that live pmcd. An arrow labeled FROM builder AS smoke descends into stage two, smoke, which restarts pmcd and asserts both PMDAs are listed plus a real value 42 and a real kernel.all.load sample, gated by grep -q calls that can fail the whole podman build. A ghost, disconnected box beside stage two reads FROM builder AS runtime: the skipped path, dashed and crossed out, with a note that podman silently never builds a stage nothing chains onto. The real arrow, solid and amber, is labeled FROM smoke AS runtime and descends into stage three, runtime, which reuses the smoke stage's already-activated PMNS/pmcd.conf and carries only EXPOSE 44321 and the pmcd entrypoint. Caption: chaining onto smoke, not builder, is what forces the gate stage to build."
    caption="Figure 45.2: the PCP image's build gate: chaining runtime onto smoke forces the gate stage to build, and a PMDA that fails to register fails the build, not just the demo" %}
 
 ## Errors, three ways
@@ -256,16 +257,17 @@ environment-dependent optional feature look like a broken build.
 Each suite here answers "how many things are running at once" a different
 way. `pmcd` is one reactor process fronting **N independent PMDA
 processes**, each talking to `pmcd` over its own pipe, the same
-process-isolation discipline Chapter 11 built `pmon` around, applied here
-to metrics collection instead of service supervision: a PMDA that hangs or
-crashes takes down only its own slice of the namespace, never `pmcd`
-itself or any sibling agent. SystemTap's `<<<` operator is the sharpest
-concurrency idea in this chapter: it's a per-CPU-safe **statistical
-aggregation**: every CPU accumulates into its own private bucket with no
-shared-memory contention at all, and only the `end` probe's `@count()`
-call folds those per-CPU buckets together into the single number a script
-prints. That's the same lock-free instinct Chapter 26 built atomics and
-CAS loops around, reached here through a completely different mechanism:
+process-isolation discipline this book's process-lifecycle work built
+`pmon` around, applied here to metrics collection instead of service
+supervision: a PMDA that hangs or crashes takes down only its own slice of
+the namespace, never `pmcd` itself or any sibling agent. SystemTap's `<<<`
+operator is the sharpest concurrency idea in this chapter: it's a
+per-CPU-safe **statistical aggregation**: every CPU accumulates into its own
+private bucket with no shared-memory contention at all, and only the `end`
+probe's `@count()` call folds those per-CPU buckets together into the single
+number a script prints. That's the same lock-free instinct behind this
+book's atomics and CAS loops, reached here through a completely different
+mechanism:
 avoid the race by never sharing the counter in the first place, rather
 than serializing access to one. Cockpit's concurrency story is the
 simplest of the three: one `cockpit-ws` process multiplexes every browser
@@ -333,7 +335,7 @@ podman.container.running
 (`root pmcd proc pmproxy xfs linux mmv kvm jbd2`), all eleven active. The
 openmetrics PMDA hands back the exact `42` `config/lsp45.prom` ships, every
 run. The podman PMDA, once the container's own `podman.sock` is mounted
-into it, sees `lsp45-pcp-demo` (the very container running the query),
+into it, sees `lsp45-pcp-demo`, the same container running the query,
 reporting itself as `podman.container.running value 1`. `pmrep`'s three
 load-average columns come from `kernel.all.load`, a core PCP metric with
 nothing to do with either PMDA this chapter added, confirming that `pmcd`'s
@@ -369,7 +371,7 @@ stap-module-ok
 
 That one line is a real kernel module compiled against
 `kernel-devel-$(uname -r)` (matched to the running `6.19.10-300.fc44`
-kernel), loaded, run once, and unloaded: the payoff Chapter 30 flagged as
+kernel), loaded, run once, and unloaded: the payoff flagged earlier as
 blocked by a kernel-devel mismatch, resolved here once the matching
 package is installed. A slightly larger script aggregates real syscall
 activity from a controlled workload:
@@ -399,7 +401,8 @@ PASS 10 / FAIL 0
 ```
 
 Image size on this host: **265 MB** (`podman images lsp45-pcp`), much
-larger than Chapter 34's few-tens-of-MB runtime images, because PCP's own
+larger than this book's other few-tens-of-MB container runtime images,
+because PCP's own
 dependency chain (Python, `pcp-libs`, `pcp-system-tools`) is the size
 driver, and there's no further multi-stage trim available when `runtime`
 needs the exact same userspace `smoke` just proved works.
@@ -441,11 +444,11 @@ shipped, and started cold. Neither check trusts the other's result.
 
 - **Three suites, three philosophies for the same question.** Cockpit
   answers "what is this system doing" with a browser and zero scripting;
-  SystemTap answers it by compiling a real kernel module per probe, bcc's
-  harder-to-build sibling from Chapter 30; PCP answers it by giving a
-  uniform namespace to metrics pulled out of things this book already
-  built: a `podman.sock` (Chapter 34) and an OpenMetrics document
-  (Chapter 38).
+  SystemTap answers it by compiling a real kernel module per probe, the
+  harder-to-build sibling to bcc-tools and bpftrace; PCP answers it by
+  giving a uniform namespace to metrics pulled out of things this book
+  already built: a `podman.sock` from its container fleet work and an
+  OpenMetrics document from its OpenTelemetry pipeline.
 - **Fedora, not UBI, because the packages aren't there.** `pcp` and
   its PMDAs are unresolvable on UBI 9/10 without a RHEL entitlement this
   book's readers are assumed not to have;
@@ -453,7 +456,7 @@ shipped, and started cold. Neither check trusts the other's result.
 - **A disconnected build stage is a build stage that never runs.**
   `FROM builder AS runtime` compiles cleanly and silently skips `smoke`
   entirely; `FROM smoke AS runtime` is what forces `podman build` to
-  actually execute the gate.
+  execute the gate.
 - **A PMDA's own `Install` script can silently revert itself.** With no
   systemd in a build layer, `systemctl restart pmcd.service` fails and
   `Install`'s failure path un-does its own `pmcd.conf` edit: starting
@@ -467,7 +470,7 @@ shipped, and started cold. Neither check trusts the other's result.
 - **`pmda-bcc` is excluded by design, not by oversight.** Real eBPF
   attachment needs a super-privileged container, the opposite of every
   rootless posture in this book, so it's named here as PCP's privileged
-  sibling PMDA and left to Chapter 30's real eBPF toolkit on
+  sibling PMDA and left to the real bcc-tools/bpftrace toolkit on
   `systems-target`.
 
 Part 13's appendices continue from here, tooling this book leaned on

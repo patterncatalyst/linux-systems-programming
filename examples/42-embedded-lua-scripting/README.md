@@ -1,7 +1,7 @@
-# 42 — embedded-lua-scripting
+# 42: embedded-lua-scripting
 
 `pmon` lifts its restart/backoff decision out of the host binary and into a
-shared **`policy.lua`**. Each host — C++ (sol2), Go (gopher-lua), Rust (mlua) —
+shared **`policy.lua`**. Each host, C++ (sol2), Go (gopher-lua), Rust (mlua),
 embeds a Lua interpreter, sandboxes it, and calls `on_exit(info)` after each
 supervised child dies. Lua returns a `{ action, delay_ms, reason }` decision the
 host obeys. Edit `policy.lua`, send **SIGHUP**, and the running supervisor
@@ -24,16 +24,16 @@ policy  --host.now_ms()--> host  -- monotonic-ish clock, for time-aware policies
 The sandbox opens only `base`, `string`, `table`, `math`, and removes
 `load`/`loadfile`/`dofile`/`require`; `os`, `io`, `package` and `debug` are
 never loaded. A policy therefore cannot touch the filesystem, spawn processes,
-or pull in new code — `policy-evil.lua` proves it.
+or pull in new code; `policy-evil.lua` proves it.
 
 ## Policy files
 
 | file | role |
 |---|---|
-| `policy.lua` | v1 — base backoff 500ms, give up after 8 restarts |
-| `policy-v2.lua` | v2 — base backoff 100ms, give up after 2 restarts (the SIGHUP edit) |
-| `policy-evil.lua` | calls `os.execute` — rejected by the sandbox at runtime |
-| `policy-broken.lua` | a syntax error — rejected at load |
+| `policy.lua` | v1: base backoff 500ms, give up after 8 restarts |
+| `policy-v2.lua` | v2: base backoff 100ms, give up after 2 restarts (the SIGHUP edit) |
+| `policy-evil.lua` | calls `os.execute`: rejected by the sandbox at runtime |
+| `policy-broken.lua` | a syntax error: rejected at load |
 
 `policy.lua` uses only the intersection of Lua 5.1 (gopher-lua) and Lua 5.4
 (sol2/mlua): no `//`, no bitwise operators, no `<close>`/`<const>`, no

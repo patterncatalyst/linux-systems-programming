@@ -1,19 +1,19 @@
-// fwatch v3 — the ch09 watcher, now sandboxed.
+// fwatch v3: the ch09 watcher, now sandboxed.
 //
 // `watch --sandbox DIR` applies two independent kernel access-control layers
 // before the watch loop starts:
 //
-//   Landlock — a ruleset restricting filesystem READS to DIR. Unprivileged,
-//              self-imposed, enforced by the kernel against this process and
-//              every descendant.
-//   seccomp  — a syscall allowlist (a hand-assembled classic-BPF program,
-//              installed via the raw seccomp(2) syscall) covering only what
-//              the watch loop needs. Everything else returns EPERM.
+//	Landlock: a ruleset restricting filesystem READS to DIR. Unprivileged,
+//	           self-imposed, enforced by the kernel against this process and
+//	           every descendant.
+//	seccomp:  a syscall allowlist (a hand-assembled classic-BPF program,
+//	           installed via the raw seccomp(2) syscall) covering only what
+//	           the watch loop needs. Everything else returns EPERM.
 //
 // GO RUNTIME CAVEAT: both mechanisms are, by default, per-THREAD kernel
 // state. The Go runtime schedules goroutines across OS threads it creates
 // and destroys on its own schedule (GC workers, sysmon, threads parked in
-// blocking syscalls) — applying either sandbox to only the calling thread
+// blocking syscalls), applying either sandbox to only the calling thread
 // would leave those other threads unrestricted, and a goroutine the runtime
 // later migrates onto one of them would silently run outside the sandbox.
 // This program avoids that two ways:
@@ -23,7 +23,7 @@
 //     changes out from under it.
 //   - Both landlock_restrict_self and the seccomp(2) syscall are called with
 //     their respective TSYNC flag, which applies the new state to every
-//     thread in the process atomically — not just the calling one — so
+//     thread in the process atomically, not just the calling one, so
 //     threads that already exist (and the ones any of them later clone) are
 //     covered too.
 //
@@ -53,7 +53,7 @@ import (
 const debounce = 100 * time.Millisecond
 
 // ---------------------------------------------------------------------------
-// Landlock — raw syscalls (x/sys/unix has the numbers, not wrappers).
+// Landlock: raw syscalls (x/sys/unix has the numbers, not wrappers).
 // ---------------------------------------------------------------------------
 
 const (
@@ -138,7 +138,7 @@ func applyLandlock(dir string) error {
 }
 
 // ---------------------------------------------------------------------------
-// seccomp — a hand-assembled classic-BPF allowlist, installed via seccomp(2).
+// seccomp: a hand-assembled classic-BPF allowlist, installed via seccomp(2).
 // ---------------------------------------------------------------------------
 
 const (
@@ -216,7 +216,7 @@ func installSeccomp(allowed []uint32, denyErrno uint32) (int, error) {
 
 // Syscalls the watch loop issues, empirically confirmed with `strace -f`
 // across a full watch session (goroutine reading the inotify fd through the
-// netpoller, signal.Notify, time.After/time.Timer) — plus the small,
+// netpoller, signal.Notify, time.After/time.Timer), plus the small,
 // well-known set the Go runtime itself needs for scheduling, GC, and stack
 // management on any goroutine (futex, mmap/munmap/mprotect, clone, sigaltstack,
 // rt_sigaction). Anything else returns EPERM once the filter loads.
@@ -320,7 +320,7 @@ func cmdDiff(oldPath, newPath string) error {
 }
 
 // ---------------------------------------------------------------------------
-// v1: watch — goroutine + channels; the runtime owns the epoll loop.
+// v1 (watch): goroutine + channels; the runtime owns the epoll loop.
 // ---------------------------------------------------------------------------
 
 type fsEvent struct {
@@ -494,7 +494,7 @@ func cmdWatch(dir string, timeoutMs int, sandbox bool) error {
 }
 
 // ---------------------------------------------------------------------------
-// probes — negative controls, one Landlock, one seccomp, exercised alone.
+// probes: negative controls, one Landlock, one seccomp, exercised alone.
 // ---------------------------------------------------------------------------
 
 // Exit codes distinct from the ordinary 0/1/2 contract: a verifier can tell

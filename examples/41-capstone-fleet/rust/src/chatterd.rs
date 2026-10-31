@@ -1,4 +1,4 @@
-// chatterd.rs — the book's recurring peer-to-peer chat daemon (ch21-27),
+// chatterd.rs: the book's recurring peer-to-peer chat daemon (ch21-27),
 // reduced to what the capstone needs: serve local clients, and (new in this
 // chapter) bridge two chatterd instances across hosts so a message sent on
 // one node is delivered to clients on the other. The wire frame (proto.rs)
@@ -14,7 +14,7 @@
 //
 // A local MSG is broadcast as DELIVER to every registered connection
 // (including a bridge connection dialed in from the other side) exactly like
-// any other client — no protocol change. When a bridge *worker* itself
+// any other client: no protocol change. When a bridge *worker* itself
 // receives a DELIVER over the connection it dialed, it re-broadcasts locally
 // with include_bridges=false, so the message never goes back out over any
 // bridge: no ping-pong between two nodes.
@@ -23,7 +23,7 @@
 // chatterd.cpp's own RAII-Fd approach: a poll(2)-with-timeout accept loop
 // (so the process can check the shutdown flag between accepts) instead of
 // closing a blocked accept() from another thread, which std::net cannot do
-// safely. OwnedFd is the RAII socket — closes on drop, move-only, no
+// safely. OwnedFd is the RAII socket: closes on drop, move-only, no
 // hand-written destructor needed.
 use std::net::{Ipv4Addr, SocketAddrV4};
 use std::os::fd::{AsFd, AsRawFd, FromRawFd, OwnedFd, RawFd};
@@ -46,7 +46,7 @@ use crate::telemetry::{self, Telemetry};
 use crate::util;
 
 // ---------------------------------------------------------------------------
-// TCP helpers — IPv4-literal only, matching chatterd.cpp's inet_pton-based
+// TCP helpers: IPv4-literal only, matching chatterd.cpp's inet_pton-based
 // listen_tcp/connect_tcp (every caller in this example, verify.lua included,
 // only ever passes literal addresses, never a hostname to resolve).
 // ---------------------------------------------------------------------------
@@ -122,7 +122,7 @@ fn connect_tcp(host: &str, port: u16, timeout_ms: i64) -> Result<OwnedFd, String
 }
 
 // ---------------------------------------------------------------------------
-// Hub — the registry of every connection (local client or bridge worker)
+// Hub: the registry of every connection (local client or bridge worker)
 // currently attached to this server.
 // ---------------------------------------------------------------------------
 
@@ -336,7 +336,7 @@ pub fn serve(
 }
 
 // ---------------------------------------------------------------------------
-// send / listen — minimal test clients used by verify to prove cross-host
+// send / listen: minimal test clients used by verify to prove cross-host
 // delivery deterministically (this capstone trims ch27's fuller "loadtest").
 // ---------------------------------------------------------------------------
 

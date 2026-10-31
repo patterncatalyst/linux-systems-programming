@@ -1,7 +1,7 @@
 """Conan 2 consumer for the isolated toolbox-conan-demo sub-target (ch46
 "Conan 2 lockfiles" section). Pulls exactly one small dependency (fmt) via
 CMakeDeps + CMakeToolchain. Deliberately its own conanfile, separate from
-the default cpp/ build -- ./demo.sh cpp build and the release preset never
+the default cpp/ build: ./demo.sh cpp build and the release preset never
 evaluate this, so fedora:44 CI build-smoke (no Conan installed) stays green.
 """
 

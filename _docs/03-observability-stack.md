@@ -46,8 +46,8 @@ same tools (`curl`, `podman ps`) you would use against the real thing, is a
 skill this book leans on again when the lab VMs and later the page cache
 force the same kind of judgment call.
 
-Chapter 1 gave you three toolchains; Chapter 2 gave you two disposable VMs.
-This chapter adds the last piece of the workbench: somewhere for telemetry to
+The prerequisites gave you three toolchains; lab setup gave you two disposable
+VMs. This chapter adds the last piece of the workbench: somewhere for telemetry to
 *go*. Many chapters in this book emit metrics, traces, or logs (a syscall
 counter here, a request span there), and printing them to a terminal only gets
 you so far. What you want is a real backend you can query, graph, and
@@ -57,8 +57,8 @@ image, run rootless under Podman, listening on exactly two ports you will
 memorize: **4318** for sending and **3000** for looking.
 
 The infrastructure is in `examples/_infra/`: one compose file and a README.
-There is no per-chapter example here; every telemetry-emitting example from
-Chapter 38 onward depends on what you stand up now.
+There is no per-chapter example here; every telemetry-emitting example, once
+OpenTelemetry instrumentation begins, depends on what you stand up now.
 
 {% include excalidraw.html
    file="03-telemetry-pipeline"
@@ -146,7 +146,7 @@ polls Grafana's `/api/health` from inside the container with a generous
 `start_period`, because first boot unpacks and starts all five services and
 takes ~30 seconds; the health state is what scripts wait on instead of
 sleeping. Finally the network gets the fixed name `lsp-observability` so any
-future container (the PCP suite in Chapter 45, for instance) can join it by
+future container (the PCP suite, for instance) can join it by
 name rather than by guessing a generated one.
 
 ## The prerequisite: the Podman user socket
@@ -333,12 +333,12 @@ endpoint, two network paths, both answering.
   `.122.1`), and `deploy-to-vm.sh` forwards `OTEL_ENDPOINT` through `sudo
   env` because sudo strips the environment.
 
-The stack sits idle until Chapter 38 instruments real programs in all three
-languages against it, and Chapter 45 adds the PCP, Cockpit, and SystemTap
-suites alongside. With the toolchains, the lab, and the telemetry pipeline in
+The stack sits idle until OpenTelemetry instrumentation puts real programs in
+all three languages against it, and the Linux analysis suites add PCP,
+Cockpit, and SystemTap alongside. With the toolchains, the lab, and the telemetry pipeline in
 place, the workbench is complete; next, Foundations begins where everything
 in this book bottoms out: the syscall boundary and the ABI beneath it.
 
 ---
 
-<p><span class="status status--verified">verified</span>: on the Fedora 44 host: <code>podman.socket</code> enabled, <code>podman compose -f examples/_infra/compose-lgtm.yaml up -d</code> brought <code>lsp-lgtm</code> (otel-lgtm:0.8.1) to healthy, <code>/api/health</code> returned ok, the OTLP HTTP POST to <code>:4318/v1/traces</code> returned 200, and the Tempo query by trace ID through Grafana's datasource proxy returned the span <code>r02-gate-smoke</code> (service <code>lsp-smoke</code>). Not yet exercised: exporting telemetry from inside a lab VM via the <code>192.168.124.1</code> gateway; the endpoint-forwarding path is verified only as far as <code>deploy-to-vm.sh</code> running host-built binaries on the guest; a VM-side OTLP export lands with Chapter 38.</p>
+<p><span class="status status--verified">verified</span>: on the Fedora 44 host: <code>podman.socket</code> enabled, <code>podman compose -f examples/_infra/compose-lgtm.yaml up -d</code> brought <code>lsp-lgtm</code> (otel-lgtm:0.8.1) to healthy, <code>/api/health</code> returned ok, the OTLP HTTP POST to <code>:4318/v1/traces</code> returned 200, and the Tempo query by trace ID through Grafana's datasource proxy returned the span <code>r02-gate-smoke</code> (service <code>lsp-smoke</code>). Not yet exercised: exporting telemetry from inside a lab VM via the <code>192.168.124.1</code> gateway; the endpoint-forwarding path is verified only as far as <code>deploy-to-vm.sh</code> running host-built binaries on the guest; a VM-side OTLP export lands with OpenTelemetry instrumentation.</p>

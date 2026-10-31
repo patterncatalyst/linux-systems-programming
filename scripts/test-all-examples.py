@@ -405,7 +405,7 @@ def run(argv: list[str]) -> int:
             state = "ok" if r.status == "PASS" else "FAILED"
             print(f"  build {ex['id']} [{l}]: {state}")
 
-    # Verify phase — strictly sequential; VM examples serial by construction.
+    # Verify phase: strictly sequential; VM examples serial by construction.
     print("\nverifying...")
     vm_examples_run = 0
     for ex in selected:

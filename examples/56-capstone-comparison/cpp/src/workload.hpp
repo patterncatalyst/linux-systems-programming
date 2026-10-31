@@ -1,4 +1,4 @@
-// workload.hpp -- ONE workload, shared verbatim by every arm of ch56.
+// workload.hpp: ONE workload, shared verbatim by every arm of ch56.
 //
 // This header exists so that the comparison is a comparison. Each of ch50-ch55
 // measured its own model, with its own instrument, on its own workload, so no
@@ -6,7 +6,7 @@
 // THIS function, kTasks * kRounds times, and folds into ONE accumulator.
 //
 // The fold is addition on uint64, which is commutative and associative, so the
-// accumulator does not depend on the order the models happen to run in -- and
+// accumulator does not depend on the order the models happen to run in, and
 // the models genuinely differ in that order. A model that produced a different
 // total would not be a slower answer to the same question, it would be a wrong
 // one, which is why gate B checks the total before any comparison is drawn.
@@ -42,7 +42,7 @@ inline std::uint64_t fnv1a(const std::uint8_t* data, std::size_t len, std::uint6
     std::uint64_t h = seed;
     for (std::size_t i = 0; i < len; ++i) {
         h ^= data[i];
-        h *= kFnvPrime;  // uint64_t wraps by definition -- no UB to sanitize
+        h *= kFnvPrime;  // uint64_t wraps by definition, no UB to sanitize
     }
     return h;
 }

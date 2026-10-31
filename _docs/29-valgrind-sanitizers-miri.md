@@ -48,7 +48,7 @@ need to worry about (directly from this chapter's own catch/miss matrix) is
 what turns "run every tool on everything" into picking the right one for the
 binary in front of you.
 
-Chapter 28 read a crash after it happened. This chapter catches five bugs
+A debugger reads a crash after it happened. This chapter catches five bugs
 *before* they get the chance to crash anything; or, in one case, watches a
 tool fail to catch one at all. `bugfarm` is a single CLI,
 `app <leak|uaf|uninit|overflow|race>`, seeding one specific memory or
@@ -70,8 +70,8 @@ directly, since instrumented builds are outside every chapter's normal
 
 {% include excalidraw.html
    file="29-tool-coverage-matrix"
-   alt="A grid with defect down the rows -- leak, uninit, uaf, overflow, race -- and C++, Go, Rust across the columns. C++/leak: valgrind memcheck caught it, definitely lost. C++/uninit: valgrind memcheck caught it, uninitialised value(s); ASan alone missed it, needs MemorySanitizer. C++/uaf: valgrind caught it (invalid write, freed) and ASan caught it (heap-use-after-free). C++/overflow: valgrind caught it (0 bytes after a block) and ASan caught it (heap-buffer-overflow). C++/race: memcheck is not built for this and was not the tool tried; helgrind caught it (possible data race) and ThreadSanitizer caught it. Go/leak: self-detected via goroutines before and after; valgrind was confused, 630 errors and 0 real signal. Go/uninit, uaf, overflow: prevented by the runtime, exit 64, no tool needed. Go/race: go -race caught it, WARNING DATA RACE, exit 66. Rust/leak: valgrind caught it, 65536 bytes lost, and miri on nightly additionally reported memory leaked. Rust/uninit, uaf, overflow, race: prevented at compile time by the borrow checker, exit 64; a note says unsafe Rust plus miri catches the use-after-free class separately, shown elsewhere in the chapter. A footer legend says amber cells mean a tool run this session caught the defect, dark cells mean the language prevents it outright, and plain cells mean a real blind spot this session measured; every cell traces to a command in Build run observe or Cross-check."
-   caption="Figure 29.1: the five bugfarm defects against three languages, every cell backed by a command this chapter actually ran" %}
+   alt="A grid with defect down the rows (leak, uninit, uaf, overflow, race) and C++, Go, Rust across the columns. C++/leak: valgrind memcheck caught it, definitely lost. C++/uninit: valgrind memcheck caught it, uninitialised value(s); ASan alone missed it, needs MemorySanitizer. C++/uaf: valgrind caught it (invalid write, freed) and ASan caught it (heap-use-after-free). C++/overflow: valgrind caught it (0 bytes after a block) and ASan caught it (heap-buffer-overflow). C++/race: memcheck is not built for this and was not the tool tried; helgrind caught it (possible data race) and ThreadSanitizer caught it. Go/leak: self-detected via goroutines before and after; valgrind was confused, 630 errors and 0 real signal. Go/uninit, uaf, overflow: prevented by the runtime, exit 64, no tool needed. Go/race: go -race caught it, WARNING DATA RACE, exit 66. Rust/leak: valgrind caught it, 65536 bytes lost, and miri on nightly additionally reported memory leaked. Rust/uninit, uaf, overflow, race: prevented at compile time by the borrow checker, exit 64; a note says unsafe Rust plus miri catches the use-after-free class separately, shown elsewhere in the chapter. A footer legend says amber cells mean a tool run this session caught the defect, dark cells mean the language prevents it outright, and plain cells mean a real blind spot this session measured; every cell traces to a command in Build run observe or Cross-check."
+   caption="Figure 29.1: the five bugfarm defects against three languages, every cell backed by a command this chapter ran" %}
 
 > **Tools used**: `valgrind` 3.27.1 (`--tool=memcheck`, `--tool=helgrind`,
 > `--tool=massif`), `cmake`/`g++` 16.1.1 with the `asan`/`tsan` CMake presets
@@ -130,14 +130,14 @@ whose every load and store already carries its own inline check: no
 separate CPU, no re-translation, just a few extra machine instructions the
 compiler emitted. ASan's mechanism is **shadow memory**: one shadow byte
 covers eight bytes of application memory (`shadow_addr = (app_addr >> 3) +
-offset`), and specific byte values mean specific things — `00` fully
+offset`), and specific byte values mean specific things: `00` fully
 addressable, `fa` a heap redzone the allocator placed around every block to
 catch overflow, `fd` a freed block's bytes repainted so any further access
 trips instantly.
 
 {% include excalidraw.html
    file="29-shadow-memory"
-   alt="Two stacked bands. The upper application-memory band shows three boxes: a left redzone at addresses ending ff80 through ffff, a 4-byte int* p at address ending 0010 marked as new'd then delete'd with the note that writing through it is undefined behavior, and a right redzone at addresses ending 0018 through 007f. The lower shadow-memory band shows the corresponding three shadow bytes: fa labeled heap left redzone, fd labeled freed heap region and marked as the exact byte the write trips, and fa labeled heap left redzone again for the next block's guard. An arrow labeled shift right by 3 then add offset connects the freed block down to its fd shadow byte. A footer formula reads shadow address equals app address shifted right 3 plus offset, one comparison before every load or store, not a full CPU emulation, and a note gives the real legend from this session's ASan run -- 00 addressable, 01 through 07 partially addressable, fa heap redzone, fd freed heap region, f1 through f8 stack states, f9 global redzone -- plus the measured gap: 0.002s native, 0.046s under ThreadSanitizer, 1.0s under valgrind memcheck, for the same tiny program."
+   alt="Two stacked bands. The upper application-memory band shows three boxes: a left redzone at addresses ending ff80 through ffff, a 4-byte int* p at address ending 0010 marked as new'd then delete'd (writing through it is undefined behavior), and a right redzone at addresses ending 0018 through 007f. The lower shadow-memory band shows the corresponding three shadow bytes: fa labeled heap left redzone, fd labeled freed heap region and marked as the exact byte the write trips, and fa labeled heap left redzone again for the next block's guard. An arrow labeled shift right by 3 then add offset connects the freed block down to its fd shadow byte. A footer formula reads shadow address equals app address shifted right 3 plus offset, one comparison before every load or store, not a full CPU emulation, and a footer gives the real legend from this session's ASan run (00 addressable, 01 through 07 partially addressable, fa heap redzone, fd freed heap region, f1 through f8 stack states, f9 global redzone), plus the measured gap: 0.002s native, 0.046s under ThreadSanitizer, 1.0s under valgrind memcheck, for the same tiny program."
    caption="Figure 29.2: ASan's shadow-memory model, with the real freed-block shadow bytes this chapter's `uaf` run produced" %}
 
 Running the `uaf` binary under ASan pulls exactly the `fd` byte at
@@ -155,8 +155,8 @@ stays silent here: its absence from these transcripts is expected, not a
 missed catch. **TSan** needs its own separate build (ASan and TSan cannot
 be linked into the same binary) and uses yet another shadow model (a vector
 clock per thread recording happens-before relationships) to catch a race
-*while it actually executes*, meaning it can only report interleavings the
-run actually hits. The overhead lands close to native either way: `race`
+*while it executes*, meaning it can only report interleavings the
+run hits. The overhead lands close to native either way: `race`
 measured **0.03-0.046s** under TSan versus **0.002s** plain, roughly the
 constant-factor cost of a few inlined instructions per access, not
 valgrind's order-of-magnitude software CPU.
@@ -213,7 +213,7 @@ and `unsafe` is where Rust admits it.
 Each language's `main.cpp` / `main.go` / `main.rs` shares one shape: a
 `Bug` enum with exactly five variants (`enum class Bug` in C++, a plain
 string switch in Go, `enum Bug` in Rust), a `parse_bug` function returning
-that enum or an error through each language's Chapter 5 error-handling
+that enum or an error through each language's own error-handling
 idiom (`std::expected`, `(string, error)`, `Result<Bug, String>`), and one
 `do_*` function per variant holding the seeded defect. The enum, not a raw
 string comparison scattered through `main`, is what makes "five bugs, three

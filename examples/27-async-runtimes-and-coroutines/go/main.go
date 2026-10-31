@@ -1,4 +1,4 @@
-// chatterd v4 (Go) — a peer-to-peer chat daemon.
+// chatterd v4 (Go): a peer-to-peer chat daemon.
 //
 // This is the async chapter, and Go's answer is unchanged from v1: goroutines
 // already ARE the async model. `serve --engine async` and `--engine thread`
@@ -15,7 +15,7 @@
 //	frame is MSG (payload = message text). For a MSG with text T from the
 //	client whose nick is N, the server sends every OTHER client a DELIVER
 //	frame whose payload is N + 0x00 (NUL) + T. This chapter's engines use
-//	only JOIN/MSG/DELIVER — WELCOME and PING are other versions' additions to
+//	only JOIN/MSG/DELIVER; WELCOME and PING are other versions' additions to
 //	the same frame and are simply never sent here.
 //
 // Usage:
@@ -42,7 +42,7 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// Frame helpers — canonical chatterd chat frame (see file header).
+// Frame helpers: canonical chatterd chat frame (see file header).
 // ---------------------------------------------------------------------------
 
 const (
@@ -232,7 +232,7 @@ func runServe(engine, host string, port int) int {
 }
 
 // ---------------------------------------------------------------------------
-// loadtest client — drives the broadcast assertion.
+// loadtest client: drives the broadcast assertion.
 // ---------------------------------------------------------------------------
 
 func runLoadtest(host string, port, nclients int) int {

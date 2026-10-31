@@ -38,9 +38,9 @@
 <text x="706.0" y="219.0" font-size="11" fill="#b8650a" text-anchor="middle">gdb remote serial protocol, TCP:2345</text>
 <path d="M830,100 L810,95" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
 <path d="M700,390 L700,420" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="50" y="235" font-size="11" fill="#1d1d1d" text-anchor="start">Left: the local path this chapter&#x27;s evidence is built on -- app crashes, systemd-coredump</text>
+<text x="50" y="235" font-size="11" fill="#1d1d1d" text-anchor="start">Left: the local path this chapter&#x27;s evidence is built on (app crashes, systemd-coredump)</text>
 <text x="50" y="250" font-size="11" fill="#1d1d1d" text-anchor="start">catches it, coredumpctl extracts core.app, gdb opens the core file directly.</text>
-<text x="590" y="235" font-size="11" fill="#1d1d1d" text-anchor="start">Right: the remote path -- gdbserver attaches on the VM, the host&#x27;s gdb drives it over</text>
+<text x="590" y="235" font-size="11" fill="#1d1d1d" text-anchor="start">Right: the remote path (gdbserver attaches on the VM, the host&#x27;s gdb drives it over)</text>
 <text x="590" y="250" font-size="11" fill="#1d1d1d" text-anchor="start">TCP with &#x27;target remote&#x27;. No systems-target VM was up this session; not run here.</text>
 <text x="590" y="500" font-size="10.5" fill="#666666" text-anchor="start">gdbserver is preinstalled on the lab VM image (not on this host).</text>
 </svg>

@@ -30,14 +30,14 @@ By the end of this chapter you can:
 
 Every allocation-heavy service eventually asks the same question: where did
 the memory go? Answering it requires knowing what your language's allocator
-actually does with a `free`, a dropped `Box`, or a Go object the collector
+does with a `free`, a dropped `Box`, or a Go object the collector
 has not traced yet, because a dashboard only reports the outcome, not the
 mechanism, and "my program freed everything but RSS didn't drop" is a
 question that costs an on-call engineer real time if the mechanism is not
 already familiar.
 
 This chapter opens the allocator and the GC pacer directly: glibc's arena
-and tcache, what `pmr`/`bumpalo` arenas really buy you, and the live
+and tcache, what `pmr`/`bumpalo` arenas buy you, and the live
 `GOGC`/`GOMEMLIMIT` knobs that turn Go's memory footprint into a negotiated
 policy rather than a mystery.
 
@@ -107,7 +107,7 @@ pointer through a slab, never free individuals, release the whole slab in one
 move when the batch of work is done. C++23 spells it
 `std::pmr::monotonic_buffer_resource` (a memory resource whose `deallocate`
 is a **no-op**); everything comes back when the resource is
-destroyed. What pmr actually changes is therefore two things and only two
+destroyed. What pmr changes is therefore two things and only two
 things: **allocation locality** (the batch's strings sit contiguously in one
 slab instead of scattered across malloc chunks) and **free-at-once** (batch
 teardown is one release, not a thousand `free` calls). It does not lower
@@ -292,8 +292,9 @@ slab*. Same reason `make_kv` builds numbers with `std::to_chars` via
 `append_num`: `std::to_string` would hand back an ordinary heap
 `std::string`, silently routing churn around the arena. The survivors are
 copied out explicitly (`std::string{key}`) because the index must outlive the
-resource; forgetting that copy is the classic pmr lifetime bug, and it is the
-exact discipline in one line: *bulk-free the churn, copy out what survives.*
+resource; skipping that copy leaves a dangling reference into freed arena
+memory, and the discipline is one line: *bulk-free the churn, copy out what
+survives.*
 
 The Rust version encodes the same rules in types instead of comments.
 `BumpString::new_in(&bump)` borrows the arena, so the inner block must end

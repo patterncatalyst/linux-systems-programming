@@ -1,14 +1,14 @@
-// pmon — chapter 42: an embedded-Lua restart policy via sol2.
+// pmon: chapter 42: an embedded-Lua restart policy via sol2.
 //
 // The restart/backoff decision lives entirely in policy.lua, not in this
 // binary: the host loads it into a *sandboxed* Lua 5.4 state (base/string/
-// table/math only — no os, io, package, debug; load/loadfile/dofile/require/
+// table/math only, no os, io, package, debug; load/loadfile/dofile/require/
 // collectgarbage/loadstring removed even though their libraries were never
 // opened, since a global with that name could otherwise be reintroduced by a
 // careless policy), calls `on_exit(info)` for every simulated child exit, and
-// prints exactly what the policy hands back. A real SIGHUP — blocked with
+// prints exactly what the policy hands back. A real SIGHUP: blocked with
 // sigprocmask and consumed as data through a signalfd + poll, the same
-// pattern ch12/ch13 use for SIGCHLD — reloads the policy file with no
+// pattern ch12/ch13 use for SIGCHLD: reloads the policy file with no
 // restart of pmon itself: the running supervisor keeps its child-tracking
 // state, only the decision logic changes underneath it.
 
@@ -41,7 +41,7 @@ using std::chrono::steady_clock;
 
 // Every stdout write is a bare fflush away from a race with the parent shell
 // that greps this process's redirected output file for a sentinel line (see
-// demo.sh's `run()`) — std::println is fully buffered once stdout is not a
+// demo.sh's `run()`): std::println is fully buffered once stdout is not a
 // tty, so every print here is followed by an explicit flush.
 void say(std::string_view line) {
     std::println("{}", line);
@@ -159,7 +159,7 @@ void print_decision(std::string_view name, const Decision& dec) {
 // ---------------------------------------------------------------------------
 // SIGHUP, the systems-programming content: block it process-wide up front so
 // there is never a window where it could interrupt a syscall or fire a
-// default handler, then consume it as ordinary readability on a signalfd —
+// default handler, then consume it as ordinary readability on a signalfd: 
 // same pattern ch12/ch13 use for SIGCHLD, just a different signal.
 // ---------------------------------------------------------------------------
 
@@ -196,7 +196,7 @@ void wait_for_sighup(int sigfd) {
 }
 
 // Fresh sandbox + host table + protected load + on_load(), all rebuilt from
-// scratch — the simplest correct way to guarantee reload leaves no state
+// scratch: the simplest correct way to guarantee reload leaves no state
 // from the previous policy behind.
 [[nodiscard]] std::expected<sol::state, std::string> reload(const std::string& policy_path) {
     sol::state lua = make_sandbox();
@@ -250,7 +250,7 @@ int cmd_run(const std::string& policy_path) {
     say("pmon: reload requested");
     ::close(*sigfd);
 
-    // Re-read the same --policy path — its content is now policy-v2.lua.
+    // Re-read the same --policy path: its content is now policy-v2.lua.
     auto phase2 = reload(policy_path);
     if (!phase2) {
         std::println(stderr, "pmon: policy error: {}", phase2.error());

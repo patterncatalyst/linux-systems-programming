@@ -2,7 +2,7 @@
 title: "OpenTelemetry to LGTM: instrument a service, then prove the spans and metrics actually arrived"
 order: 38
 part: "Observability"
-description: "lsp-otel is a traced request/response server that exports OpenTelemetry traces and metrics over OTLP/HTTP to the LGTM stack from Chapter 3: a parent request span wrapping work and respond children, a requests_total counter and a request_duration histogram, and the verify step proves it by querying Tempo and Prometheus through Grafana rather than trusting the program's own word, across C++, Go, and Rust each tagged with its own service.name."
+description: "lsp-otel is a traced request/response server that exports OpenTelemetry traces and metrics over OTLP/HTTP to the local LGTM stack: a parent request span wrapping work and respond children, a requests_total counter and a request_duration histogram, and the verify step proves it by querying Tempo and Prometheus through Grafana rather than trusting the program's own word, across C++, Go, and Rust each tagged with its own service.name."
 duration: "50 minutes"
 ---
 
@@ -20,24 +20,24 @@ By the end of this chapter you can:
 
 ## Why this matters
 
-A program that claims to export telemetry and a program that actually exports telemetry look identical from the terminal: both print a clean exit and move on. The only way to tell them apart is to go read the backend the export was supposed to reach, which is exactly what this chapter's verification step does instead of trusting `serve`'s own stdout.
+A program that claims to export telemetry and a program that exports telemetry look identical from the terminal: both print a clean exit and move on. The only way to tell them apart is to go read the backend the export was supposed to reach, which is exactly what this chapter's verification step does instead of trusting `serve`'s own stdout.
 
-That distinction matters because the usual failure mode here is silent: a wrong OTLP endpoint path, a default SDK log flooding the output contract, or a batch that never flushes before the process exits all produce a program that looks healthy and ships nothing. Querying Tempo and Prometheus back is what turns "I instrumented the service" into a claim you can actually stand behind.
+That distinction matters because the usual failure mode here is silent: a wrong OTLP endpoint path, a default SDK log flooding the output contract, or a batch that never flushes before the process exits all produce a program that looks healthy and ships nothing. Querying Tempo and Prometheus back is what turns "I instrumented the service" into a claim you can stand behind.
 
-Chapter 37's `loadmix analyze` printed a USE-method verdict to a terminal, and
-Chapter 36's `sysagent` served one JSON snapshot per HTTP request. Both make you
-*present* to read the number: someone has to be running the command, or scraping
-the endpoint, at the moment the system is in trouble. This chapter closes that
+The USE-method verdict that `loadmix analyze` prints to a terminal, and the one
+JSON snapshot per HTTP request that `sysagent` serves, both make you *present*
+to read the number: someone has to be running the command, or scraping the
+endpoint, at the moment the system is in trouble. This chapter closes that
 gap. `lsp-otel` is a small traced server that emits the three OpenTelemetry
 signal shapes: a distributed **trace** per request, a monotonic **counter**, and
 a latency **histogram**, and exports them over OTLP/HTTP into the LGTM stack
-(Loki, Grafana, Tempo, Mimir plus an OpenTelemetry collector) that Chapter 3
-stood up, so the next time a request is slow you can go *look* at when it
+(Loki, Grafana, Tempo, Mimir plus an OpenTelemetry collector) already running
+on the host, so the next time a request is slow you can go *look* at when it
 happened instead of needing to have been watching. And because "I sent
 telemetry" is the easiest claim in observability to get quietly wrong, the whole
 point of the verification here is that it queries the stack back (Tempo for the
 traces, Prometheus for the metrics) and refuses to believe the export happened
-until the data is actually there to read.
+until the data is there to read.
 
 The code is in `examples/38-opentelemetry-to-lgtm/`. It is a **local-mode
 example that requires the LGTM stack**: `serve` and `drive` run on the host, and
@@ -52,7 +52,7 @@ the exporter posts to the collector on `localhost:4318`.
 > OTLP on `:4318`, Grafana on `:3000`) and `curl` (host, the only tool the
 > verification needs: it queries Prometheus and Tempo through Grafana's
 > datasource proxy). The stack is the same `lsp-lgtm` container the
-> `lgtm-podman-stack` setup from Chapter 3 provides; nothing else is required on
+> `lgtm-podman-stack` setup provides; nothing else is required on
 > the host.
 
 ## Three signals, one request
@@ -63,7 +63,7 @@ one "request":
 
 - A **trace** describes the shape and timing of that request as a tree of
   spans. `lsp-otel` starts a parent span named `request`, and *inside* it two
-  child spans: `work` (a deliberately tiny, variable `1 + seq%4` ms sleep
+  child spans: `work` (a tiny, variable `1 + seq%4` ms sleep
   standing in for actual computation) and `respond` (writing the `ok <seq>` reply).
   The parent/child nesting is what lets Tempo later show you that the request's
   time was spent in `work`, not `respond`, or vice versa.
@@ -233,7 +233,7 @@ defaults (5-second span batches, 60-second metric batches) are fine for a
 long-running service but far too slow for a demo that starts, drives ten
 requests, and stops within a couple of seconds. A short interval plus a **flush
 on shutdown** is what guarantees the last batch (often *all* the batches, at
-this scale) actually leaves the process before it exits. That shutdown path is
+this scale) leaves the process before it exits. That shutdown path is
 the subject of the Concurrency lens below, because it turned out to be where the
 three languages diverge most.
 
@@ -252,7 +252,7 @@ A **runtime error** is exit **1** with an `app: error: …` message: the one
 `verify.lua` exercises is `drive` against an address nothing is listening on,
 which fails to connect and prints `app: error: dial …: connection refused`. This
 is the one message that is *not* byte-identical across the three languages:
-each surfaces its own dial/`errno` wording, the same way Chapter 40's `connect`
+each surfaces its own dial/`errno` wording, the same way a low-latency fastpath's `connect`
 errors carry each platform's `strerror` text, so `verify.lua` asserts only the
 shared `app: error:` prefix and the exit code, not the full string. A clean run
 of either subcommand exits **0**: `serve` after a signal-driven shutdown, `drive`
@@ -444,9 +444,9 @@ from the program telling us about itself.
   `SIG_IGN` a background shell hands a child before `sigwait` can ever see the
   signal.
 
-Chapter 39 turns from *collecting* numbers to *trusting* them: how to benchmark
-your own code without the warmup, coordinated-omission, and dead-code traps that
-make most microbenchmarks quietly measure the wrong thing.
+Benchmarking without lies turns from *collecting* numbers to *trusting* them:
+how to benchmark your own code without the warmup, coordinated-omission, and
+dead-code traps that make most microbenchmarks quietly measure the wrong thing.
 
 ---
 

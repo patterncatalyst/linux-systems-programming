@@ -1,8 +1,8 @@
-# 13 — pidfd: modern process management
+# 13: modern process management with pidfd
 
-`pmon` v2, the chapter's process supervisor, implemented three times — C++23,
-Go, and Rust — with identical observable behavior (CLI, output lines, exit
-codes). This iteration adds a second supervision engine built on **pidfd**,
+`pmon` v2, the chapter's process supervisor, implemented three times, in
+C++23, Go, and Rust, with identical observable behavior (CLI, output lines,
+exit codes). This iteration adds a second supervision engine built on **pidfd**,
 the modern child becomes-a-file-descriptor API, and makes it the default:
 
 ```
@@ -15,12 +15,12 @@ usage: pmon <command>
 
 ## What each version added
 
-- **v0 — `run`**: spawn a command, wait for it, report and mirror its exit
+- **v0 (`run`)**: spawn a command, wait for it, report and mirror its exit
   (`status` → same exit code, fatal signal → `128+signo`).
-- **v1 — `supervise --engine sigchld`**: restart the child on abnormal exit,
+- **v1 (`supervise --engine sigchld`)**: restart the child on abnormal exit,
   driven the classic way: SIGCHLD arrives (via a signalfd in C++/Rust,
   `signal.Notify` in Go), then a `WNOHANG` wait reaps and classifies it.
-- **v2 — `supervise --engine pidfd`** (default): no SIGCHLD anywhere.
+- **v2 (`supervise --engine pidfd`, default)**: no SIGCHLD anywhere.
   `pidfd_open(2)` turns the child pid into a file descriptor; `poll(2)` on it
   reports the exit as ordinary readability; `waitid(P_PIDFD, ...)` reaps
   exactly the process behind the fd (a recycled pid can never be reaped or
@@ -47,23 +47,23 @@ spawned exits 1 with `pmon: spawn: <cmd>: ...`.
 
 ## Per-language mechanics
 
-- **C++23** (`cpp/src/main.cpp`) — raw `syscall(SYS_pidfd_open)` and
-  `syscall(SYS_pidfd_send_signal)` on purpose (the libc wrappers are recent),
+- **C++23** (`cpp/src/main.cpp`): raw `syscall(SYS_pidfd_open)` and
+  `syscall(SYS_pidfd_send_signal)` directly (the libc wrappers are recent),
   `poll(2)` over `{pidfd, signalfd}`, `waitid(P_PIDFD)` to reap. RAII `Fd` and
   `SpawnAttrs` owners, `std::expected` error paths, `std::println`,
   `posix_spawnp` with `POSIX_SPAWN_SETSIGMASK` so the child does not inherit
   the blocked signalfd mask.
-- **Go 1.26** (`go/main.go`) — `unix.PidfdOpen` + a goroutine parked in
+- **Go 1.26** (`go/main.go`): `unix.PidfdOpen` + a goroutine parked in
   `unix.Poll`, exit delivered over a channel into one `select` alongside
   `signal.Notify` and the deadline; a raw `waitid(P_PIDFD)` via
   `unix.Syscall6` with an explicit `siginfo_t` layout (x/sys keeps the union
   opaque); stop path via `unix.PidfdSendSignal`. Errors are wrapped with `%w`.
-- **Rust edition 2024** (`rust/src/main.rs`) — `rustix::process::pidfd_open`
+- **Rust edition 2024** (`rust/src/main.rs`): `rustix::process::pidfd_open`
   returning an `OwnedFd`, `rustix::event::poll` over the pidfd + a nix
   `SignalFd`, `rustix::process::waitid(WaitId::PidFd)`, stop path via
   `rustix::process::pidfd_send_signal`. `Result` + `?` throughout.
   Note: `std::process::Command` does **not** reset the child's signal mask, so
-  `pre_exec` clears it — otherwise a supervised `sleep` inherits a blocked
+  `pre_exec` clears it; otherwise a supervised `sleep` inherits a blocked
   SIGTERM and can never be stopped.
 
 ## Try it
@@ -87,6 +87,6 @@ spawned exits 1 with `pmon: spawn: <cmd>: ...`.
   anywhere in its output, and its restart lines are byte-identical to the
   pidfd engine's.
 - Both stop paths terminate the supervised child (`killed signal=15`), print
-  the `exiting (...)` line, exit 0 — and a `pgrep` process-tree check proves
+  the `exiting (...)` line, exit 0, and a `pgrep` process-tree check proves
   no supervised `sleep` outlives its supervisor.
 - Usage errors exit 2; an unspawnable command exits 1 and names the command.

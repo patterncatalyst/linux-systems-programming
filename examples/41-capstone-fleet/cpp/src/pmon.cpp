@@ -1,4 +1,4 @@
-// pmon.cpp — the book's recurring process supervisor (ch11-14, 18-19, 32,
+// pmon.cpp: the book's recurring process supervisor (ch11-14, 18-19, 32,
 // 34), grown here into the capstone's fleet init: it drops the capability
 // bounding set once (caps.cpp), then fork/execs (self-re-exec via
 // /proc/self/exe, the same technique ch34's container entrypoint uses)
@@ -76,7 +76,7 @@ struct ChildState {
 };
 
 // run_child_supervisor: fork+exec `self_exe args...` in a loop, restarting on
-// unexpected exit — the per-service goroutine from go/pmon.go, one std thread
+// unexpected exit: the per-service goroutine from go/pmon.go, one std thread
 // per service here too.
 void run_child_supervisor(const std::string& self_exe, const ChildSpec& spec, ChildState& cs,
                            std::atomic<bool>& shutting_down) {

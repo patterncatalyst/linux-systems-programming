@@ -22,21 +22,22 @@ By the end of this chapter you can:
 
 A metrics agent that's going to run continuously in production can't afford to fork a subprocess or shell out to a tool for every sample; reading `/proc` and `/sys/fs/cgroup` directly is the only approach cheap enough to run every second for months between deploys. Getting the `/proc/stat` delta wrong, or treating a cumulative counter as an instantaneous reading, is one of the most common correctness bugs in hand-rolled monitoring code.
 
-The cross-language schema discipline here also matters beyond this one example: a dashboard, a `jq` filter, or a test suite that has to understand three different field-naming and serialization conventions across a C++, Go, and Rust build of the same tool is not a tool anyone will actually standardize on. Byte-identical output is what makes the three builds interchangeable in practice, not just in principle.
+The cross-language schema discipline here also matters beyond this one example: a dashboard, a `jq` filter, or a test suite that has to understand three different field-naming and serialization conventions across a C++, Go, and Rust build of the same tool is not a tool anyone will standardize on. Byte-identical output is what makes the three builds interchangeable in practice, not just in principle.
 
-Chapter 35's `overheadbench` measured syscall, memory, and I/O overhead across
-a bare process, a container, and a VM, but every one of those numbers came
-from watching `strace -c` and hand-timed loops wrapped around each run. That's
-the right instrument for a one-off measurement campaign; it is not how a
-program watches a system continuously, in production, for the months between
-deploys. This chapter builds the tool that does: `sysagent`, a USE-method
-metrics collector that reads `/proc` and `/sys/fs/cgroup` directly (no root,
-no subprocess, no tool you'd have to trust is still installed on the box next
-year). Chapter 37's `loadmix` builds the opposite kind of tool: an `analyze`
+The virtualization-overhead benchmark, `overheadbench`, measured syscall,
+memory, and I/O overhead across a bare process, a container, and a VM, but
+every one of those numbers came from watching `strace -c` and hand-timed
+loops wrapped around each run. That's the right instrument for a one-off
+measurement campaign; it is not how a program watches a system continuously,
+in production, for the months between deploys. This chapter builds the tool
+that does: `sysagent`, a USE-method metrics collector that reads `/proc` and
+`/sys/fs/cgroup` directly (no root, no subprocess, no tool you'd have to
+trust is still installed on the box next year). The USE-method checklist
+tool covered next, `loadmix`, builds the opposite kind of tool: an `analyze`
 mode that shells out to `vmstat`, `mpstat`, `iostat`, `sar`, and `pidstat`
 exactly the way an on-call engineer would, and parses their plain-text tables
 by column name instead of reading kernel counters directly. The split between
-the two chapters is deliberate: this one is the case for reading the
+the two is deliberate: this one is the case for reading the
 kernel's own accounting straight from the source, and the numbers it produces
 are the ones a long-running agent can afford to compute every second without
 forking a process to do it.
@@ -55,8 +56,8 @@ drive it.
 > no root. The only tool this chapter reaches for to observe it from the
 > outside is `curl` (host), against the `serve --port P` `/metrics` endpoint;
 > `curl` ships in Fedora's base install and isn't separately checked by
-> `scripts/check-host.sh`, the same way Chapter 39 notes for `cpupower` and
-> `objdump`.
+> `scripts/check-host.sh`, the same way the benchmarking-without-lies chapter
+> notes for `cpupower` and `objdump`.
 
 ## Six sources, one deterministic schema
 
@@ -215,7 +216,7 @@ never becomes the interesting part of the diff. `cmd_sample` calls
 `cmd_serve` hands `port` and `interval_ms` straight to `serve`, which owns
 the HTTP loop and calls `take_snapshot` again on every `GET /metrics`.
 
-`to_json`/`ToJSON`/`to_json` is the piece that actually delivers the
+`to_json`/`ToJSON`/`to_json` is the piece that delivers the
 cross-language guarantee the schema promises, and it earns that guarantee by
 staying unglamorous by design: none of the three languages hands the
 `Snapshot` to a generic serializer. C++ builds the object with an
@@ -227,11 +228,11 @@ the *same* key order or the same float formatting as the others out of the
 box, and a schema that's supposed to be byte-identical across languages
 can't leave that up to three different libraries' defaults. Hand-writing the
 same fixed field order three times, with the same `%.2f`-style two-decimal
-formatting (`fmt2`/`f2`/`{:.2}`) for every float, is what actually makes
+formatting (`fmt2`/`f2`/`{:.2}`) for every float, is what makes
 `verify.lua`'s key-by-key checks, and a `diff` between any two languages'
 output, meaningful.
 
-The HTTP layer is the one place the three implementations actually diverge
+The HTTP layer is the one place the three implementations diverge
 in mechanism rather than just syntax, and it follows the book's established
 chatterd pattern: Go leans on `net/http`'s stdlib server, registering
 `/metrics` on a `ServeMux` and letting `http.Server.Shutdown` handle a clean
@@ -239,8 +240,9 @@ chatterd pattern: Go leans on `net/http`'s stdlib server, registering
 instead (a raw listening socket, `poll(2)` waiting on both the listener and
 a `signalfd`/`SignalFd` doorbell, and one inline HTTP/1.1 response writer)
 because pulling in a framework for one endpoint would hide the exact
-mechanism this book has been building toward since Chapter 21's `chatterd`
-and Chapter 24's signal-driven shutdown, not simplify it.
+mechanism this book has been building toward since `chatterd`'s raw TCP
+sockets and the signal-driven shutdown pattern from the timers-and-deadlines
+chapter, not simplify it.
 
 ## Errors, three ways
 
@@ -270,7 +272,7 @@ never does, its `if` guards only the success path. Go hardcodes the same
 asymmetry directly into the fan-in loop, which explicitly `continue`s past
 `r.source == "psi"` before counting it toward the required sources or a
 possible `firstErr`. Three different enforcement mechanisms (a type the
-compiler checks, a code path that's simply never written, a loop that
+compiler checks, a code path that's never written, a loop that
 explicitly skips one name) for the same one-sentence rule: a missing PSI
 source degrades the snapshot, it never fails it.
 
@@ -284,7 +286,7 @@ the wall-clock cost of one `sample` is `max(interval_ms, gather_time)`, not
 (`loadavg`, `meminfo`, `diskstats`, `netdev`, `psi`), sleeps, and joins before
 `t1` is read, guaranteeing every field is filled in before the delta is
 computed, but *how* each language gets a result out of a worker back into
-the shared `Snapshot` is where the three actually part ways:
+the shared `Snapshot` is where the three part ways:
 
 {% include codetabs.html langs="C++|Go|Rust" %}
 
@@ -508,7 +510,7 @@ five spawned closures (`s.spawn(read_loadavg)`, etc.) don't capture `snap` at
 all, because two closures each holding `&mut snap` to write disjoint fields
 would still require *two simultaneous mutable borrows of the same value*,
 something the borrow checker refuses regardless of whether the underlying
-fields actually overlap, since it reasons about the whole object, not the
+fields overlap, since it reasons about the whole object, not the
 fields a closure happens to touch. So Rust's workers return owned values
 through their `JoinHandle`s instead, and every assignment into `snap` happens
 in the *scope* thread itself, sequentially, immediately after each
@@ -593,7 +595,7 @@ noise, since nothing about this number is supposed to move between two
 reads a few milliseconds apart.
 
 The second cross-check backs a **dynamic** claim instead: that `cpu_util_pct`
-actually tracks real CPU load rather than returning a constant or a
+tracks real CPU load rather than returning a constant or a
 miscomputed delta. `verify.lua` takes an idle `sample --json` baseline, spins
 up `nproc` tight busy-loop children for slightly longer than a
 `--interval-ms 500` window, samples again, and checks that `cpu_util_pct`
@@ -602,7 +604,7 @@ floor (or an outright ≥55% reading, for the case where the host is already
 loaded before the check even starts). The margin and the retries exist
 because this runs on a real, possibly-noisy development box, not an isolated
 benchmark rig; the check has to distinguish "this host happened to be busy
-for an unrelated reason" from "the parser is broken," and a single
+for an unrelated reason" from "the sampler is miscomputing," and a single
 non-retried comparison couldn't.
 
 ## What you learned
@@ -636,15 +638,15 @@ non-retried comparison couldn't.
 - **`mem_total_kb` served over HTTP matched a direct `/proc/meminfo` read
   exactly**, and a busy-loop child measurably raised `cpu_util_pct` over an
   idle baseline: two cross-checks confirming the schema reports what the
-  kernel actually has, not what the code merely claims.
+  kernel has, not what the code merely claims.
 
-Chapter 37 keeps the same Utilization/Saturation/Errors lens but inverts the
-source of truth entirely: instead of reading `/proc` directly the way this
-chapter does, `loadmix analyze` shells out to `uptime`, `vmstat`, `mpstat`,
-`iostat`, `sar`, and `pidstat` exactly as an on-call engineer would, and
-parses each tool's plain-text table by column name rather than reading
-kernel counters itself. Read the two chapters back to back: same checklist,
-same USE method, two structurally opposite ways of answering it.
+The next USE-method checklist keeps the same Utilization/Saturation/Errors
+lens but inverts the source of truth entirely: instead of reading `/proc`
+directly the way this chapter does, `loadmix analyze` shells out to
+`uptime`, `vmstat`, `mpstat`, `iostat`, `sar`, and `pidstat` exactly as an
+on-call engineer would, and parses each tool's plain-text table by column
+name rather than reading kernel counters itself. Same checklist, same USE
+method, two structurally opposite ways of answering it.
 
 ---
 

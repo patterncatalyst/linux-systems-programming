@@ -1,4 +1,4 @@
-// proto.hpp — the canonical chatterd chat frame (ch21, unchanged since):
+// proto.hpp: the canonical chatterd chat frame (ch21, unchanged since):
 // magic "CH", version 1, one byte type, big-endian u16 length, then payload.
 #pragma once
 

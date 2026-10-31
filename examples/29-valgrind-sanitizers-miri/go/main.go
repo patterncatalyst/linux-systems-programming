@@ -1,4 +1,4 @@
-// bugfarm — chapter 29: valgrind, sanitizers, and miri.
+// bugfarm: chapter 29 (valgrind, sanitizers, and miri).
 //
 //	app <leak|uaf|uninit|overflow|race>
 //
@@ -6,17 +6,17 @@
 // after free (the GC never reclaims memory a live reference still points
 // at), no read of uninitialised memory (every value starts zeroed), and no
 // out-of-bounds write that silently corrupts a neighbor (a slice/array
-// access past its bound panics immediately -- a runtime check, not
+// access past its bound panics immediately, a runtime check, not
 // something a background tool has to catch after the fact). So uaf,
 // uninit, and overflow print a "prevented by the runtime" note and exit
 // 64: that absence of a bug *is* the language's story here.
 //
 // What Go can still get wrong:
 //
-//	leak -- a goroutine that blocks forever. There's no valgrind
+//	leak: a goroutine that blocks forever. There's no valgrind
 //	        equivalent watching the Go heap for this; the way you notice
 //	        is runtime.NumGoroutine() not going back down.
-//	race -- unsynchronized access to a shared variable from goroutines.
+//	race: unsynchronized access to a shared variable from goroutines.
 //	        Build with `go build -race` and the runtime's race detector
 //	        prints "WARNING: DATA RACE" and the process exits 66.
 package main

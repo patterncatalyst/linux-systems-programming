@@ -1,7 +1,7 @@
 -- Verify the embedded-Lua policy engine for LSP_LANG (cpp|go|rust).
 --
 -- The C++/Go/Rust hosts all embed the SAME policy.lua and must produce the
--- SAME observable decisions -- that identity is what this script asserts, not
+-- SAME observable decisions: that identity is what this script asserts, not
 -- merely a zero exit. Every assertion is a checks.expect_match against the
 -- host's fixed decision-line format, so it is deterministic and language-
 -- neutral (no wall-clock timing, no process introspection).

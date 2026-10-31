@@ -1,14 +1,14 @@
 // Command gen is the self-contained generator behind
 // `//go:generate go run ./internal/gen` (see main.go). It has no external
-// dependencies -- stdlib only -- and is invoked from the module root, so the
+// dependencies (stdlib only) and is invoked from the module root, so the
 // working directory when it runs is the go/ module root itself: it writes
 // tools_generated.go as a sibling of the //go:generate directive.
 //
 // Deterministic on purpose: the tool table below is keyed by name and
 // deliberately listed out of order in source, but gen sorts the keys before
 // rendering and passes the emitted source through go/format. Re-running the
-// generator against unchanged input always reproduces the exact same bytes
-// -- the property verify.lua's gate B (copy-aside, regenerate, diff) checks.
+// generator against unchanged input always reproduces the exact same bytes,
+// the property verify.lua's gate B (copy-aside, regenerate, diff) checks.
 package main
 
 import (
@@ -21,7 +21,7 @@ import (
 
 // toolTable is the hand-maintained source of truth for `toolbox tools`.
 // Keys are listed out of alphabetical order on purpose, to prove the
-// generator -- not the author -- is what sorts them into generatedTools.
+// generator (not the author) is what sorts them into generatedTools.
 var toolTable = map[string]string{
 	"staticcheck":   "advanced static analysis and unused-code detection",
 	"gofmt":         "format Go source files",

@@ -6,8 +6,9 @@ description: "Provision two disposable Fedora KVM guests with cloud-init: an obs
 duration: 45 minutes
 ---
 
-Chapter 1 proved that three toolchains build and run the same program on your
-workstation. This chapter builds the other half of the book's infrastructure:
+The hello-syscalls example already proved that three toolchains build and run
+the same program on your workstation. This chapter builds the other half of
+the book's infrastructure:
 two disposable Fedora VMs (`systems-target` and `systems-peer`) that absorb
 everything you should never do to the machine you work on. A systems-programming
 book keeps asking you to run code as root, watch the kernel from the inside,
@@ -36,7 +37,7 @@ a path on your workstation is a bad afternoon. **Kernel observation** (bpftrace
 one-liners, perf profiles, the BCC tools) attaches instrumentation to a live
 kernel, and you want that kernel to be one you can reboot without losing your
 editor. **Destructive demos** (OOM kills, disk-full behavior, broken network
-configs) only teach if you actually break something, which
+configs) only teach if you break something, which
 means you need something safe to break.
 
 A VM answers all three at once, and adds the property no container gives you:
@@ -44,7 +45,7 @@ A VM answers all three at once, and adds the property no container gives you:
 you kernel-version drift, can't be probed as an isolated kernel, and can't be
 snapshot-reverted with its kernel state. The lab guests run their own
 `6.19.10-300.fc44` kernel while the host runs `7.1`, a visible
-difference this chapter turns into its cross-check.
+difference used below as a cross-check.
 
 That said, the VM is not the default. The book's decision rule, applied at the
 top of every example:
@@ -148,8 +149,8 @@ base keeps provisioning fast and the snapshot meaningful.
 *and* disk, because the guest is running, so a revert restores it
 *running*, tools warm, in seconds. The discipline has two halves:
 
-- **Snapshot immediately after provisioning** (and after any deliberate
-  addition you want to keep). This is your known-good tooled baseline.
+- **Snapshot immediately after provisioning** (and after any addition you
+  want to keep). This is your known-good tooled baseline.
 - **Revert after every destructive demo**: `scripts/lab/revert-vm.sh
   systems-target` puts the guest back to `lab-ready`, no forensics, no
   "did that experiment leave state behind?" doubt.
@@ -291,8 +292,8 @@ lab: built once, reverted forever.
 
 ## Cross-check: prove the code runs *there*
 
-Chapter 1's example prints the kernel it runs on, which makes it a perfect
-independent check that `deploy-to-vm.sh` really executes on the guest rather
+The hello-syscalls example prints the kernel it runs on, which makes it a
+perfect independent check that `deploy-to-vm.sh` executes on the guest rather
 than, say, quietly running the local binary. Run it both ways:
 
 ```bash

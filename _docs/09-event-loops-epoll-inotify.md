@@ -21,14 +21,14 @@ By the end of this chapter you can:
 
 Every scalable network service, file watcher, and terminal multiplexer rests on the same decision: decouple waiting from the work the wait is for. The readiness model is how a single thread tracks thousands of file descriptors without a thread per source, and it is the direct ancestor of the event loops behind editors, sync clients, and the servers Part 6 builds.
 
-This chapter also establishes the comparison that drives the rest of this part: an explicit, visible-in-source epoll loop versus a runtime that hides the same machinery behind channels and goroutines. Chapter 10 builds on this foundation by introducing the completion model, io_uring, as the second half of the readiness-versus-completion pair.
+This chapter also establishes the comparison that drives the rest of this part: an explicit, visible-in-source epoll loop versus a runtime that hides the same machinery behind channels and goroutines. io_uring builds on this foundation by introducing the completion model, as the second half of the readiness-versus-completion pair.
 
-Chapter 8 closed on a question durability cannot answer: "which of ten
+Page-cache durability closed on a question it cannot answer: "which of ten
 thousand fds is ready?" This chapter answers it with the **readiness model**:
 the kernel will tell you *when an fd has something for you*, and a program
 built on that promise never blocks anywhere except the one call that asks.
-`fwatch` v1 keeps the polling-era `snapshot` and `diff` subcommands from
-Chapters 7 and 8 and adds `watch`: a real-time watcher that reports
+`fwatch` v1 keeps the polling-era `snapshot` and `diff` subcommands built on
+RAII-wrapped fds and page-cache durability and adds `watch`: a real-time watcher that reports
 `created`/`modified`/`deleted` per file, debounced 100 ms per path. The C++
 and Rust versions build it the explicit way: one `epoll` loop over three
 kernel fds (inotify, timerfd, signalfd), a single thread, every step visible
@@ -73,7 +73,7 @@ mask (`EPOLLIN`, readable) and a caller-chosen 64-bit cookie
 interest list lives **in the kernel**, which is the whole advantage over the
 older `poll(2)`/`select(2)`: those pass the entire fd set on every call, so
 each wait is O(fds); epoll pays the setup cost once and each wakeup returns
-only the fds that are actually ready. `fwatch` has three fds so any of them
+only the fds that are ready. `fwatch` has three fds so any of them
 would work; the point of learning epoll on three is that the loop is
 *identical* at thirty thousand, which is where Part 6's network servers take
 it.
@@ -85,7 +85,7 @@ performance: **when** does a ready fd count as ready again?
 
 - **Level-triggered** (the default): `epoll_wait` reports the fd as long as
   data *remains*, a fact about the fd's state. Forget to read everything and
-  the next wait simply reports it again.
+  the next wait reports it again.
 - **Edge-triggered** (`EPOLLET`): the fd is reported only on the
   *transition* to readable, a fact about a state change. Miss data and no
   further wakeup comes until *new* data arrives; the only correct consumer
@@ -97,7 +97,7 @@ The discipline it demands instead is smaller but real: **consume what made
 the fd readable**. That is why the loop below reads the timerfd's 8-byte
 expiration counter even though it only wants "the timer fired"; leave those
 8 bytes and the timerfd stays readable, `epoll_wait` returns instantly
-forever, and your loop spins at 100% CPU. Note that `fwatch` drains its
+forever, and your loop spins at 100% CPU. `fwatch` drains its
 inotify fd to `EAGAIN` anyway: with level triggering that is an optimization
 (fewer wakeups per burst, and each burst is timestamped coherently); under
 edge it would be the difference between working and silently stalling.
@@ -109,8 +109,8 @@ edge it would be the difference between working and silently stalling.
 > is mid-read. `EPOLLONESHOT` disarms the registration after each report;
 > the owning thread must re-arm with `EPOLL_CTL_MOD` when done. It is the
 > standard fix for multi-threaded epoll, and the reason this book's
-> single-threaded loops do not need it. One loop, one thread, no re-arm
-> protocol: that simplicity is a feature, not a limitation.
+> single-threaded loops do not need it: one loop, one thread, no re-arm
+> protocol.
 
 Interestingly, the readiness style is observable per implementation: the
 strace later in this chapter shows Go's netpoller registering our inotify fd
@@ -141,9 +141,9 @@ when it fills, the kernel does not block the writer and does not drop
 silently: it appends one `IN_Q_OVERFLOW` event and discards until you catch
 up. A correct watcher treats `IN_Q_OVERFLOW` as "my view is stale,
 re-scan," which is exactly why `fwatch` kept its `snapshot`/`diff`
-subcommands: the polling machinery from Chapters 7 and 8 is the recovery
-path for the event machinery of Chapter 9. Also note what a directory watch does
-*not* give you: recursion. Subdirectories need their own watches, the cost
+subcommands: the polling machinery built on RAII-wrapped fds and page-cache
+durability is the recovery path for the event machinery here. A directory watch does
+*not* give you recursion. Subdirectories need their own watches, the cost
 model behind editors and sync clients burning thousands of `wd`s.
 
 ## Everything is an fd: timerfd and signalfd
@@ -187,7 +187,7 @@ reads as `modified`, the same visible truth `diff` would have reported.
 
 Setup is four fallible constructions (`inotify_init1` + `inotify_add_watch`,
 `timerfd_create`, `sigprocmask` + `signalfd`, `epoll_create1` + three
-`epoll_ctl` ADDs); every fd owned by Chapter 7's RAII wrapper (`Fd` in C++,
+`epoll_ctl` ADDs); every fd owned by the RAII wrapper (`Fd` in C++,
 `OwnedFd`-backed nix types in Rust, `os.File` in Go). Then the loop; here it
 is in all three languages, verbatim from
 `examples/09-event-loops-epoll-inotify/`:
@@ -390,7 +390,7 @@ channels and the kernel machinery is rented from the runtime.
 ### Errors, three ways
 
 Setup is where `watch` can fail, and the missing-directory case exercises
-each language's Chapter 5 policy end to end. C++ threads four
+each language's error-handling policy end to end. C++ threads four
 `std::expected` constructions together, chaining the three `epoll_ctl` adds
 with `.and_then(…)` so the first failure short-circuits with its
 `std::error_code`; the observed result is
@@ -413,13 +413,13 @@ three verified below.
 
 Count the threads doing *your* work: one in C++, one in Rust, and one
 goroutine plus `main` in Go, multiplexed by the runtime onto its thread
-pool. The single-threaded epoll design is not an accident, it is the
-concurrency *strategy*: since only one thread touches `pending`, there are
+pool. The single-threaded epoll design is the concurrency *strategy*: since
+only one thread touches `pending`, there are
 no locks, no atomics, and no `EPOLLONESHOT` re-arm protocol; the event loop
 serializes everything by construction. Go reaches the same freedom-from-locks
 differently: `pending` is confined to the `select` goroutine, and other
-concerns communicate by channel, which is Chapter 6's "share memory by
-communicating" applied to I/O. The costs surface in `strace`: idle for 400 ms,
+concerns communicate by channel, which is the concurrency-three-ways "share
+memory by communicating" idiom applied to I/O. The costs surface in `strace`: idle for 400 ms,
 the C++ watcher makes exactly **1** `epoll_wait` call (armed once, sleeps,
 fires at the deadline), while the Go binary makes **10** `epoll_pwait` calls
 across its threads: the netpoller is consulted by the scheduler, not just
@@ -551,8 +551,8 @@ lab VM:</strong> the kernel-side view of this loop, watching wakeup sources
 fire with bpftrace on <code>tracepoint:syscalls:sys_enter_epoll_wait</code>
 and kprobes on the eventpoll internals, and forcing a real
 <code>IN_Q_OVERFLOW</code> by shrinking <code>max_queued_events</code>,
-needs root and a disposable kernel, so it is not run here; chapter 30
-(Debugging part) exercises exactly this on <code>systems-target</code>.</p>
+needs root and a disposable kernel, so it is not run here; the eBPF
+observation toolkit exercises exactly this on <code>systems-target</code>.</p>
 
 ## What you learned
 

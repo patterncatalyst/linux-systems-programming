@@ -2,14 +2,14 @@
 -- does not, and what each control does that the kernel or glibc can be asked
 -- to confirm. ch49 measured threads from above with std::thread; this chapter
 -- goes under it to the pthread, and every assertion below checks a real,
--- program-observed effect -- a tid, a procfs string, an installed stack size,
+-- program-observed effect: a tid, a procfs string, an installed stack size,
 -- a CPU id, a scheduling policy, an errno, or an abort message.
 --
 -- NOTHING HERE IS TIMED (see ch39). Nothing here needs root, a VM, a network,
 -- or a second host.
 --
 -- Hard-gated (A-G):
---   A. Every facet computes the same digest, 0x481984990deee5ff -- the value
+--   A. Every facet computes the same digest, 0x481984990deee5ff, the value
 --      ch46's C++, ch47's Go, ch48's Rust, and ch49's conc all produce over
 --      the same 16 payload bytes.
 --   B. identity: the main thread's tid EQUALS the process pid (a process is
@@ -24,12 +24,12 @@
 --      PTHREAD_STACK_MIN is refused with EINVAL rather than rounded up.
 --   E. affinity: two threads pinned with pthread_setaffinity_np report two
 --      DIFFERENT sched_getcpu() values while the calling thread's own mask is
---      unchanged. This is the ch49 contrast -- that chapter moved the whole
+--      unchanged. This is the ch49 contrast: that chapter moved the whole
 --      process, this one moves one thread. Skipped with an informational
 --      SKIP (never a FAIL, never a false PASS) on a host allowed <2 CPUs.
 --   F. sched: the default policy is SCHED_OTHER at priority 0, and an
 --      unprivileged SCHED_FIFO request is refused with EPERM leaving the
---      policy unchanged. The REFUSAL is the gate -- asserting a successful
+--      policy unchanged. The REFUSAL is the gate: asserting a successful
 --      SCHED_FIFO would require root and would not run on a reader's laptop.
 --   G. cancel, both directions:
 --        - pthread_cancel unwinds: the C++ destructor AND the

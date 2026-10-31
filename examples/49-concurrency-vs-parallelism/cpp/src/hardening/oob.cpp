@@ -1,9 +1,9 @@
-// oob -- C++26-era safety hardening, ch49's gate F.
+// oob: C++26-era safety hardening, ch49's gate F.
 //
 // std::vector::operator[] performs no bounds check in the standard: an
 // out-of-range subscript is undefined behavior, full stop. libstdc++ can add
 // a check when _GLIBCXX_ASSERTIONS is defined, and on Fedora 44 g++ defines
-// it FOR YOU -- but only when it is not optimizing. Measured on this host:
+// it FOR YOU, but only when it is not optimizing. Measured on this host:
 //
 //   g++ -std=c++23            -> _GLIBCXX_ASSERTIONS defined     -> traps
 //   g++ -std=c++23 -O2        -> _GLIBCXX_ASSERTIONS NOT defined -> no check
@@ -26,7 +26,7 @@ int main() {
 
     // Out of bounds on purpose. In the hardened build this line aborts with
     // an assertion naming the failed predicate. In the unchecked build it is
-    // undefined behavior -- whatever it prints is not a result, and this
+    // undefined behavior: whatever it prints is not a result, and this
     // example never asserts on it.
     std::printf("hardening: v[7] = %d\n", v[7]);
     std::printf("hardening: survived the out-of-bounds read\n");

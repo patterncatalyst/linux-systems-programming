@@ -1,4 +1,4 @@
-// pmon v1 — a mini process supervisor (chapter 12: signals and safe handling).
+// pmon v1: a mini process supervisor (chapter 12: signals and safe handling).
 //
 //	pmon run -- CMD [ARGS...]
 //	pmon supervise [--max-restarts N] [--backoff-ms B] -- CMD [ARGS...]

@@ -2,11 +2,11 @@
 title: "The Go toolbox: go.mod toolchain pins, go generate discipline, and the pprof-to-benchstat workflow"
 order: 47
 part: "Appendices: Tooling"
-description: "go-toolbox is one Go binary and the toolchain wrapped around it -- go.mod's go/toolchain directives resolved through GOTOOLCHAIN, a self-contained go generate pipeline producing a DO-NOT-EDIT tool table, and gofmt/go vet/pprof as go-native hard gates -- with committed configs for gofumpt, golangci-lint, staticcheck, delve, and benchstat shown as reference but absent on the reference host. Verified on the Fedora 44 host: verify.lua PASS 16/FAIL 0 offline, toolbox report digest=0x481984990deee5ff (byte-identical to ch46's C++ digest), go generate regenerating tools_generated.go byte-for-byte, go vet -tags vetdemo catching a printf mismatch at vetdemo.go:13, and go tool pprof -top naming hotLoop."
+description: "go-toolbox is one Go binary and the toolchain wrapped around it (go.mod's go/toolchain directives resolved through GOTOOLCHAIN, a self-contained go generate pipeline producing a DO-NOT-EDIT tool table, and gofmt/go vet/pprof as go-native hard gates) with committed configs for gofumpt, golangci-lint, staticcheck, delve, and benchstat shown as reference but absent on the reference host. Verified on the Fedora 44 host: verify.lua PASS 16/FAIL 0 offline, toolbox report digest=0x481984990deee5ff (byte-identical to the C++ toolbox's digest), go generate regenerating tools_generated.go byte-for-byte, go vet -tags vetdemo catching a printf mismatch at vetdemo.go:13, and go tool pprof -top naming hotLoop."
 duration: "50 minutes"
 ---
 
-Chapter 46 turned all the way around on C++: one language, one small binary,
+The C++ toolbox chapter turned all the way around on C++: one language, one small binary,
 and every tool that touches it before it ever runs: two compilers, a
 build-system generator, a package manager, a static analyzer, a debugger
 taught a custom type. Go gets the identical treatment here, and the shape of
@@ -40,8 +40,8 @@ catch or confirm, never just a clean exit.
 > `examples/47-go-toolbox` is `mode: local` in `examples/manifest.yaml`.
 
 Because the Go toolchain is itself the subject, `examples/47-go-toolbox/`
-ships `langs: [go]` only, the same way Chapter 44's Go-runtime chapter and
-Chapter 46's C++ chapter each stayed inside one language: a C++ or Rust
+ships `langs: [go]` only, the same way the Go-runtime chapter and
+the C++ toolbox chapter each stayed inside one language: a C++ or Rust
 build would have nothing new to say about a `go.mod` toolchain directive or a
 `.golangci.yml`. Every code block below is a plain fenced `go`/`console`/
 `yaml` block; there is no `codetabs` include to reach for when only one
@@ -83,7 +83,7 @@ itself enforces, and on this host it resolves to the binary already
 installed without a single byte crossing the network.
 
 That is also the cleanest point of contrast with the two sibling toolchain
-chapters. C++ has no equivalent single-file pin: Chapter 46 needed seven
+chapters. C++ has no equivalent single-file pin: the C++ toolbox chapter needed seven
 named `CMakePresets.json` configurations plus a Conan lockfile to make
 "which compiler, which build type" and "which exact package revision"
 explicit, because C++ leaves compiler choice and dependency resolution as
@@ -163,7 +163,7 @@ $ ./demo.sh go run report
 toolbox report: payload_len=16 digest=0x481984990deee5ff
 ```
 
-`digest=0x481984990deee5ff` is not a coincidence shared with Chapter 46: it
+`digest=0x481984990deee5ff` is not a coincidence shared with the C++ toolbox chapter: it
 is the same 16-byte payload, hashed by the same 64-bit FNV-1a algorithm,
 computed by an entirely different compiler and runtime. FNV-1a has no
 floating-point rounding, no pointer values, and no unordered-container
@@ -179,7 +179,7 @@ twice by hand.
 
 `go generate` is Go's answer to "keep a derived file accurate against its
 source of truth": it runs a directive comment, once, on demand, and never as part
-of `go build`. `main.go`'s directive is one line at the very top of the
+of `go build`. `main.go`'s directive is one line at the top of the
 file:
 
 ```go
@@ -300,7 +300,7 @@ checks.expect_exit(gen, 0,
 Run directly, both directions agree: the copy-aside diff is empty, and the
 idiomatic form a reader would actually put in CI,
 `go generate ./... && git diff --exit-code`, exits 0 on this checkout too.
-Either way, the claim is the same one Chapter 46 made about GCC-vs-clang
+Either way, the claim is the same one the C++ toolbox chapter made about GCC-vs-clang
 parity, aimed at a different kind of determinism: not "two compilers agree,"
 but "the generator, run twice against unchanged input, agrees with itself."
 
@@ -471,13 +471,13 @@ func unused_smell_name() int {
 ```
 
 Three functions, three distinct designed-for findings, none of them
-overlapping: `unusedHelper` (line 15) is simply dead code: **U1000**,
+overlapping: `unusedHelper` (line 15) is dead code: **U1000**,
 staticcheck's unused-declaration check. `deadStore` (line 24) is dead *and*
 its first assignment (`x := 10`) is overwritten before ever being read:
 **U1000** again for the whole function, plus **SA4006** for the specific
-overwritten value, a pattern `go vet` does not catch because `x` actually
+overwritten value, a pattern `go vet` does not catch because `x`
 is read eventually, just not at its first value. `unused_smell_name`
-(line 34) is dead a third time (a third **U1000**) and also violates Go's
+(line 34) is dead a third time (a third **U1000**) and also breaks Go's
 `mixedCaps` naming convention on its own: **ST1003**, staticcheck's
 `stylecheck` companion. None of the three is ever referenced from `main.go`
 or anywhere else, so all three compile cleanly and none of them can ever
@@ -495,7 +495,7 @@ its default check set.
 
 `govulncheck` answers a question neither `gofmt`, `go vet`, nor
 `staticcheck` can: not "is this code suspicious," but "does anything this
-module actually calls sit inside a function the Go vulnerability database
+module calls sit inside a function the Go vulnerability database
 has an advisory against." That is a fundamentally different kind of check:
 it needs a reachable network (the vulnerability database lives at
 `vuln.go.dev`) and it only has something to say about a *vulnerable
@@ -503,7 +503,7 @@ dependency*, which this module does not have: `go/go.mod` pulls
 in nothing outside the standard library, so there is no `go.sum` and nothing
 for `govulncheck` to cross-reference here at all.
 
-The workflow a reader would actually use is `govulncheck ./...` (or
+The workflow a reader would use is `govulncheck ./...` (or
 `govulncheck -mode=binary ./bin/toolbox` against an already-built binary),
 run from inside the module whose dependencies are in question. Because this
 module has no third-party dependency to demonstrate against, the practical way
@@ -542,7 +542,7 @@ The two details worth carrying away from that shape: `govulncheck` reports a
 stable `GO-xxxx-xxxxx` identifier per advisory (the same kind of durable
 token `staticcheck`'s `U1000`/`SA4006` and `golangci-lint`'s `(unused)`
 are (a name to grep for that survives wording changes across releases),
-and it only ever flags a symbol your own code actually reaches (the
+and it only ever flags a symbol your own code reaches (the
 "Example traces found" call chain). A vulnerable function sitting unused
 in a dependency you happen to import produces no finding at all, since
 nothing calls it. There is no `verify.lua` gate for `govulncheck` in this
@@ -552,8 +552,8 @@ example, by design: it is prose and workflow here, not a gated check.
 
 Delve is Go's native debugger, DWARF-aware like `gdb`, but built with
 goroutines as a first-class concept rather than bolted on. `go/.dlvinit` is
-a committed, four-line headless-batch script, the same idea as Chapter 46's
-`gdb` batch invocation, expressed in delve's own init-script format:
+a committed, four-line headless-batch script, the same idea as the C++ toolbox
+chapter's `gdb` batch invocation, expressed in delve's own init-script format:
 
 ```
 break main.go:33
@@ -578,7 +578,7 @@ its own line prints anything, which is exactly why `print d.FNV` has
 something meaningful to show: delve renders `Digest`'s one field as a plain
 64-bit unsigned decimal, `5195329438047200767`, the same bits as
 `0x481984990deee5ff`, the identical value `toolbox report`'s own `%016x`
-formatting and Chapter 46's `gdb` pretty-printer both already surfaced, this
+formatting and the C++ toolbox chapter's `gdb` pretty-printer both already surfaced, this
 time with no pretty-printer at all, because a single-field `uint64` needs no
 help to read. The designed-for invocation a reader with `dlv` installed
 would run:
@@ -601,7 +601,7 @@ above prints `5195329438047200767` and exits 0.
 `main.go`'s whole dispatch is a three-way `switch` on `os.Args[1]`: `report`
 computes and prints the FNV-1a digest above, `tools` prints the
 `go generate`-produced table, and `defect divzero` seeds a deliberate
-runtime panic, Go's analog of Chapter 46's UBSan-caught signed-integer
+runtime panic, Go's analog of the C++ toolbox chapter's UBSan-caught signed-integer
 overflow, using the failure mode Go itself provides instead:
 
 ```go
@@ -621,7 +621,7 @@ func cmdDefectDivZero() int {
 ```
 
 `divisor` is a variable initialized to its zero value, not a literal `0`,
-the same reason Chapter 46's `max_value` was declared `volatile`: a constant
+the same reason the C++ toolbox chapter's `max_value` was declared `volatile`: a constant
 division by a literal zero is a compile-time error in Go (`invalid
 operation: division by zero`), so the defect has to survive as far as run
 time to be the thing this section demonstrates, and a plain variable the
@@ -629,10 +629,10 @@ compiler cannot constant-fold does exactly that.
 
 `digest.go` holds the `Digest` type and the `fnv1a` implementation quoted
 above; `tools_generated.go` holds the generator's committed output;
-`smells.go` and `vetdemo.go` hold the deliberate, never-called findings for
+`smells.go` and `vetdemo.go` hold the never-called findings for
 the static-analysis and `go vet` gates. Every one of those last three files
 is isolated from the digest and from each other by a different mechanism:
-`smells.go`'s functions are simply unreferenced, `vetdemo.go` sits behind a
+`smells.go`'s functions are unreferenced, `vetdemo.go` sits behind a
 `//go:build vetdemo` tag excluded from the default build entirely, and the
 `testdata/` fixtures are ignored by `go build`/`go vet`/`go test` by
 directory-name convention. Nothing about running `toolbox report` or
@@ -641,7 +641,7 @@ has not been "fixed."
 
 {% include excalidraw.html
    file="47-go-tool-gates"
-   alt="One Go module box splits into two gate lanes. The amber hard lane lists gofmt -l, go generate diff-clean, go vet -tags vetdemo naming a printf finding, go tool pprof -top naming hotLoop, and the FNV-1a digest -- all shipping inside the go binary and verifying offline. A dashed ghost lane beside it lists gofumpt, golangci-lint, staticcheck, and delve as gated-if-present, govulncheck marked network required, and benchstat, all shown as reference and not verified on this host."
+   alt="One Go module box splits into two gate lanes. The amber hard lane lists gofmt -l, go generate diff-clean, go vet -tags vetdemo naming a printf finding, go tool pprof -top naming hotLoop, and the FNV-1a digest: all shipping inside the go binary and verifying offline. A dashed ghost lane beside it lists gofumpt, golangci-lint, staticcheck, and delve as gated-if-present, govulncheck marked network required, and benchstat, all shown as reference and not verified on this host."
    caption="Figure 47.2: one module, two gate lanes: the go-native hard gates (gofmt, go generate, go vet, pprof, digest) that ship with the go binary and verify offline, beside the gated-if-present tools (gofumpt, golangci-lint, staticcheck, delve, govulncheck, benchstat) shown as reference" %}
 
 ## Errors, three ways
@@ -659,7 +659,7 @@ question that tool answers.
 
 The second surface is `go vet`, which ships with `go` itself and reads
 *usage patterns the compiler allows but almost never means*. `vetdemo.go`,
-excluded from the default build by its own build tag, is one deliberate
+excluded from the default build by its own build tag, is one designed-for
 mismatch:
 
 ```go
@@ -682,7 +682,7 @@ func printBadFormat() {
 The Go compiler accepts this without complaint: `Printf`'s format string
 and its variadic arguments are only strings and `interface{}` values at the
 type level, so there is nothing for the type checker itself to reject. `go
-vet`'s printf analyzer is what actually reads the format verb against the
+vet`'s printf analyzer is what reads the format verb against the
 argument's real type and flags the mismatch, run directly on this host:
 
 ```console
@@ -702,7 +702,7 @@ the others do.
 
 ## Concurrency lens
 
-Chapter 44 spent a whole chapter on the GMP model: `GOMAXPROCS` P's are the
+The Go-runtime chapter already covered the GMP model in full: `GOMAXPROCS` P's are the
 scarce resource that lets an M run Go code at all, goroutines are cheap, and
 work-stealing moves half a queue at a time between P's that run dry. This
 chapter's benchmark is the tooling side of that same picture: not *how*
@@ -740,7 +740,7 @@ func BenchmarkHotLoopParallel(b *testing.B) {
 }
 ```
 
-`b.RunParallel` is not doing anything Chapter 44 didn't already name: each
+`b.RunParallel` is not doing anything the Go-runtime chapter didn't already name: each
 of the goroutines it launches is a G, competing for one of `GOMAXPROCS` P's
 the same way any other goroutines would, and `hotLoop`'s pure, allocation-free
 loop is close to the best case for that model: no channel sends, no shared
@@ -774,16 +774,16 @@ $ go tool pprof -top -nodecount=15 toolbox.test cpu.prof
 intends, and the gate this chapter asserts is that name, `hotLoop`, appearing
 in the top frames, never the timing next to it. Sample counts and elapsed
 seconds vary with host load and iteration count from run to run; the
-*identity* of the function actually spending the cycles does not, which is
+*identity* of the function spending the cycles does not, which is
 why `verify.lua` gate E matches the string `hotLoop` and nothing else. That
 same profile also shows `BenchmarkHotLoop` (7.43% cumulative) and
 `BenchmarkHotLoopParallel.func1` (92.57% cumulative) as the two call paths
 into `hotLoop`: both benchmarks ran during profiling, and `pprof` attributes
-each sample to whichever one was actually on the stack at that instant.
+each sample to whichever one was on the stack at that instant.
 
 `benchstat` is the tool that turns two sets of raw benchmark numbers into a
 statistical comparison instead of an eyeballed diff: the workflow a reader
-would use to ask "did this change actually help, or is that just noise":
+would use to ask "did this change help, or is that just noise":
 
 ```console
 $ go test -bench=BenchmarkHotLoop -run=^$ -count=10 . > old.txt
@@ -801,8 +801,8 @@ scheduling noise, and this chapter's gates never assert a raw timing as
 if it were a fixed literal. A reader comparing `-cpu=1` against `-cpu=N` for
 `BenchmarkHotLoopParallel` would read the same table shape, with `benchstat`'s
 own statistics (median, confidence interval) doing the job of saying whether
-an observed difference is real or within noise, the same discipline Chapter
-44's `GOGC`/`GOMEMLIMIT` comparisons used exact `NumGC` deltas to sidestep
+an observed difference is real or within noise, the same discipline the
+Go-runtime chapter's `GOGC`/`GOMEMLIMIT` comparisons used exact `NumGC` deltas to sidestep
 entirely, here handled by a purpose-built statistics tool instead because
 wall-clock benchmark timings have no exact-integer shortcut.
 
@@ -846,7 +846,7 @@ not have installed.
 ## Cross-check: the same digest, two languages apart
 
 The clearest falsifiable claim in this chapter is not internal to Go at
-all: it is the one this chapter shares with Chapter 46. `toolbox report`
+all: it is the one this chapter shares with the C++ toolbox chapter. `toolbox report`
 here and `toolbox report` there hash a byte-for-byte identical 16-byte
 payload with the byte-for-byte identical FNV-1a algorithm, and land on the
 identical 64-bit value:
@@ -867,9 +867,9 @@ every conforming language implementation is required to agree on bit for
 bit. The second cross-check is internal: the copy-aside `go generate` diff
 and the idiomatic `git diff --exit-code` form check the identical property
 two different ways: one without assuming a git checkout exists, one the
-way a reader's own CI would actually gate it. Both report clean on
+way a reader's own CI would gate it. Both report clean on
 this tree, which is the same "two independent paths to the same answer"
-discipline Chapter 46's GCC-vs-clang `diff` used, aimed here at a generator
+discipline the C++ toolbox chapter's GCC-vs-clang `diff` used, aimed here at a generator
 agreeing with itself instead of two compilers agreeing with each other.
 
 ## Where this sits next to the book's other tooling chapters
@@ -877,7 +877,7 @@ agreeing with itself instead of two compilers agreeing with each other.
 Two earlier chapters already covered pieces of this ground, and this
 chapter does not re-teach either:
 
-- **Chapter 31** ("Per-Language Toolbelts") gave Go one column of a
+- **The earlier Per-Language Toolbelts coverage** gave Go one column of a
   three-language *profiling breadth* comparison: `runtime/pprof`,
   `go tool trace`, and `dlv`, one paragraph each, next to C++'s `perf` and
   Rust's `cargo flamegraph`. This chapter is the opposite shape: it never
@@ -885,16 +885,16 @@ chapter does not re-teach either:
   `dlv`'s **config authoring** (a committed `.dlvinit` headless-batch
   script, not just "delve exists") and the `pprof`-to-`benchstat`
   **workflow**, going from a raw CPU profile to a statistically
-  defensible before/after comparison, ground Chapter 31 never had room for.
-- **Chapter 44** ("The Go Runtime from a Systems Programmer's Seat") is
-  where the GMP scheduler, the pacer, and the netpoller actually live:
-  what `GOMAXPROCS`, work-stealing, and `SIGURG`-based preemption mean and
-  why they behave as they do. This chapter assumes all of that and asks a
-  narrower, tooling-shaped question on top of it: given that model, how does
-  a reader *measure* whether a change to `hotLoop` actually changed
-  anything, with `b.RunParallel` as the harness and `pprof`/`benchstat` as
-  the instruments: the tooling that measures the runtime, not the runtime
-  itself.
+  defensible before/after comparison, ground that earlier coverage never
+  had room for.
+- **The Go-runtime chapter** is where the GMP scheduler, the pacer, and the
+  netpoller live: what `GOMAXPROCS`, work-stealing, and `SIGURG`-based
+  preemption mean and why they behave as they do. This chapter assumes all
+  of that and asks a narrower, tooling-shaped question on top of it: given
+  that model, how does a reader *measure* whether a change to `hotLoop`
+  changed anything, with `b.RunParallel` as the harness and
+  `pprof`/`benchstat` as the instruments: the tooling that measures the
+  runtime, not the runtime itself.
 
 What is new here: the `go`/`toolchain` directive pair and
 `GOTOOLCHAIN`'s resolution rule, `go generate` as a diff-clean CI discipline
@@ -916,21 +916,21 @@ has no earlier chapter to point back to instead.
   `sort.Strings` plus `go/format`'s `format.Source` are what make
   `tools_generated.go` byte-identical across regenerations, which is the
   property `go generate ./... && git diff --exit-code` (and this chapter's
-  copy-aside equivalent) actually gates.
+  copy-aside equivalent) gates.
 - **`gofmt`, `gofumpt`, `go vet`, and `staticcheck`/`golangci-lint` read
   successively more context before saying anything**: pure text shape, one
   function call's argument types (`vetdemo.go:13`'s printf mismatch), and a
   whole package's data flow and naming (`smells.go`'s `U1000`/`SA4006`/
   `ST1003`): three static surfaces, not three languages, and none of them
   ever executes the program.
-- **`b.RunParallel` is Chapter 44's GMP model, applied as a measurement
+- **`b.RunParallel` is the Go-runtime chapter's GMP model, applied as a measurement
   harness**: `hotLoop`'s allocation-free, lock-free loop is close to the
   best case for `GOMAXPROCS` P's to scale cleanly, which is exactly why it
   is the right benchmark to hand to `benchstat` for a statistically
   defensible `-cpu=1` vs `-cpu=N` comparison rather than an eyeballed one.
 - **The same digest twice, in two languages that share nothing else**:
-  `toolbox report`'s `0x481984990deee5ff` here matches Chapter 46's C++
-  `toolbox report` byte for byte, because FNV-1a constrains only integer
+  `toolbox report`'s `0x481984990deee5ff` here matches the C++ toolbox
+  chapter's `toolbox report` byte for byte, because FNV-1a constrains only integer
   arithmetic over a fixed payload: one of the few things every conforming
   language implementation is required to agree on exactly.
 - **Six real, committed tool configs, none of them run on this host**:
@@ -940,7 +940,7 @@ has no earlier chapter to point back to instead.
   and the footer below marks exactly that gap and nothing more.
 
 Part 13 continues with Rust's own toolchain, getting the same reference-depth
-treatment this chapter and Chapter 46 gave C++ and Go.
+treatment this chapter and the C++ toolbox chapter gave C++ and Go.
 
 ---
 
@@ -955,7 +955,7 @@ folded into that PASS count, the go-native hard gates A-E: <code>go.mod</code>
 pins <code>go 1.26</code> and <code>toolchain go1.26.5</code>;
 <code>toolbox report</code> printed
 <code>toolbox report: payload_len=16 digest=0x481984990deee5ff</code>,
-byte-identical to Chapter 46's C++ digest; <code>go generate ./...</code>
+byte-identical to the C++ toolbox chapter's C++ digest; <code>go generate ./...</code>
 regenerated <code>tools_generated.go</code> byte-for-byte against the
 committed copy (copy-aside diff empty) and <code>toolbox tools</code>
 printed the generated table's <code>count=10</code> plus its sorted
@@ -970,7 +970,7 @@ class="status status--unverified">unverified</span>: <code>gofumpt</code>,
 <code>dlv</code>, and <code>benchstat</code> are all absent from this
 reference host (confirmed by <code>command -v</code> for each), so gates
 F, G, H, I, and K each printed an informational <code>SKIP:</code> rather
-than actually running, and their sections above show committed configs
+than running, and their sections above show committed configs
 (<code>.golangci.yml</code>, <code>.dlvinit</code>) and designed-for
 findings, the exact tokens (<code>(unused)</code>, <code>U1000</code>,
 <code>SA4006</code>, the decimal <code>5195329438047200767</code>,

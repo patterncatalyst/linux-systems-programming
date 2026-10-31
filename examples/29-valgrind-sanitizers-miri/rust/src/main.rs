@@ -1,4 +1,4 @@
-//! bugfarm — chapter 29: valgrind, sanitizers, and miri.
+//! bugfarm, chapter 29: valgrind, sanitizers, and miri.
 //!
 //!   app <leak|uaf|uninit|overflow|race>
 //!
@@ -7,13 +7,13 @@
 //! data race compile, and there's no way to name an uninitialised value or
 //! index past a slice's bound without either a panic (bounds check) or an
 //! explicit `unsafe` block. So `uaf`, `uninit`, `overflow`, and `race` each
-//! print a fixed note and exit 64 -- the compile-time rejection *is* the
+//! print a fixed note and exit 64: the compile-time rejection *is* the
 //! finding, reproduced here as a documented outcome rather than a crash.
 //!
 //! What safe Rust can still do is leak memory on purpose: `Box::leak`
 //! consumes a `Box` and hands back a `'static` reference, deliberately
 //! opting the allocation out of Rust's normal drop-based reclamation.
-//! Nothing frees it -- valgrind's memcheck reports the same "definitely
+//! Nothing frees it: valgrind's memcheck reports the same "definitely
 //! lost" block it would for an equivalent C/C++ leak.
 
 use std::env;
@@ -44,13 +44,13 @@ fn parse_bug(arg: &str) -> Result<Bug, String> {
 }
 
 // leak: Box::leak is a safe API whose entire purpose is to opt an
-// allocation out of automatic reclamation -- the program exits normally,
+// allocation out of automatic reclamation: the program exits normally,
 // but the 64 KiB Vec (and the Box that briefly held it) are never freed.
 //
 // black_box on the pointer is load-bearing, not decoration: without it,
 // LLVM can see that nothing observable depends on the buffer's *contents*
 // (only its statically-known length gets printed) and optimizes the
-// entire allocation away, leak and all -- confirmed on this host by
+// entire allocation away, leak and all: confirmed on this host by
 // valgrind reporting zero bytes lost until the barrier was added.
 fn leak() {
     let leaked: &'static mut Vec<u8> = Box::leak(Box::new(vec![0xAAu8; 65536]));

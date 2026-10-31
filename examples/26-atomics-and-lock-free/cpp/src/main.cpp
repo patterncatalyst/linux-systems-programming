@@ -5,7 +5,7 @@
 // A producer thread pushes N u64 values (0, 1, ..., N-1) through a bounded
 // ring of K slots; the consumer (this thread) pops and sums them. The head
 // and tail indices are std::atomic<uint64_t> monotonic counters synchronised
-// with explicit acquire/release ordering (Lamport's SPSC queue) — no mutex,
+// with explicit acquire/release ordering (Lamport's SPSC queue), no mutex,
 // no lock. --pad places head and tail on separate cache lines to remove the
 // false sharing that otherwise ping-pongs the line between the two cores.
 //

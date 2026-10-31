@@ -22,7 +22,7 @@ By the end of this chapter you can:
 
 "Container" names no single kernel object: it is namespaces and cgroups, two independent primitives any userspace program can assemble by hand. Seeing them built from raw syscalls, rather than through `podman run`, is what makes the pid-1 reparenting rules, the per-thread nature of `unshare`, and a cgroup's enforcement all concrete instead of folklore.
 
-The Go `ENOMEM` failure in this chapter is a real, reproduced defect, not a hypothetical: `unshare(CLONE_NEWPID)` caps the caller to exactly one child in the new namespace, and `os/exec`'s internal probe fork silently spends it. Knowing that restriction, and the `SysProcAttr.Cloneflags` fix that avoids it entirely, is the difference between a container tool that works on the host you tested and one that fails unpredictably on every other kernel.
+The Go `ENOMEM` failure in this chapter happened on real hardware, not in theory: `unshare(CLONE_NEWPID)` caps the caller to exactly one child in the new namespace, and `os/exec`'s internal probe fork silently spends it. Knowing that restriction, and the `SysProcAttr.Cloneflags` fix that avoids it entirely, is the difference between a container tool that works on the host you tested and one that fails unpredictably on every other kernel.
 
 Every `pmon` version so far has supervised, signaled, and identified a
 child, but the child has always lived in the same world as its parent: same
@@ -95,7 +95,7 @@ The three syscalls answer three different questions:
 
 - **`unshare(2)`**: "take *me*, right now, out of my current namespaces
   and into brand-new ones." For most types this applies to the calling
-  process/thread immediately. `CLONE_NEWPID` is the deliberate exception:
+  process/thread immediately. `CLONE_NEWPID` is the exception:
   unshare(2) can never move an already-running process into a new PID
   namespace (a process's own pid can't change mid-life), so it only
   arranges that the *next* child the caller creates becomes pid 1 of a
@@ -131,8 +131,8 @@ whatever it does next. That is a simplification, not an
 oversight: a supervisor that expects to run *multiple* processes inside
 one PID namespace (the way `podman run` with more than one process, or a
 process manager container, would) needs an init that actually reaps,
-which is exactly what chapters 11 and 12 already built, just not wired to
-this namespace yet.
+which is exactly what the process-lifecycle reaping and signal-handling
+work already built, just not wired to this namespace yet.
 
 ## Cgroup v2: the unified hierarchy
 
@@ -196,14 +196,14 @@ together by one userspace program: **namespaces** (this chapter, minus
 user: `containerize` never requests `CLONE_NEWUSER`, so its "root" inside
 the container is uid 0 on the host, which is why the demo needs
 real root rather than rootless mapped uids), **cgroups** (this chapter),
-a **rootfs** (a different filesystem view via `pivot_root`/bind mounts;
-chapter 34 builds this), **capabilities** (chapter 14's five sets,
-dropped to a minimal set before `exec`), and a **seccomp/Landlock**
-filter (chapter 33, next). `pmon containerize` deliberately stops after
+a **rootfs** (a different filesystem view via `pivot_root`/bind mounts,
+assembled when building a container image), **capabilities** (the five
+capability sets, dropped to a minimal set before `exec`), and a
+**seccomp/Landlock** filter. `pmon containerize` deliberately stops after
 the first two, on the same host filesystem CMD would otherwise see; the
 point is to make namespaces and cgroups *visible* as syscalls you could
-write yourself, before chapter 34 shows what podman assembles from all
-five at once inside a multi-stage Containerfile.
+write yourself, before a Containerfile build shows what podman assembles
+from all five at once inside a multi-stage build.
 
 {% include excalidraw.html
    file="32-cgroup-hierarchy"
@@ -222,8 +222,8 @@ false-matches inside `"cpuset"`, `mkdir` the leaf, write `memory.max` then
 pid into `cgroup.procs`) runs **before** any namespace call in every
 language, by design: cgroup membership is inherited across `fork`/
 `clone`/`exec`, so writing pmon's pid first means every later child (the
-pid-1 task, and CMD after it execs) is under the limits from its very
-first instruction, never after.
+pid-1 task, and CMD after it execs) is under the limits from its first
+instruction, never after.
 
 {% include codetabs.html langs="C++|Go|Rust" %}
 
@@ -485,7 +485,8 @@ Concurrency lens below.
 inside, including `ps` run via `nsenter`, still see the host's process
 table (the cross-check below demonstrates this directly); a rootfs
 container fixes this with `mount -t proc proc /proc` after `pivot_root`,
-which is chapter 34's job, not this one's. `memory.swap.max` is written
+which belongs to assembling a full container image, not this chapter's
+scope. `memory.swap.max` is written
 best-effort because not every kernel exposes swap accounting identically.
 And `deploy-to-vm.sh` rebuilds the remote command line with a bare `$*`,
 which flattens quoting, so every `CMD` in this chapter's runs is
@@ -530,8 +531,9 @@ exit code alone, no log-scraping required.
    caption="Figure 32.3: C++/Rust's unshare-then-clone3 shape beside Go's two attempts: a real ENOMEM, then the SysProcAttr.Cloneflags fix that passes" %}
 
 Namespace changes made by `unshare(2)`/`setns(2)` are per-**thread**
-kernel state, not per-process: the same fact chapter 14 hit with
-capabilities. A Go program is multithreaded before `main` even runs, and
+kernel state, not per-process, the same per-thread behavior that
+capability dropping runs into. A Go program is multithreaded before
+`main` even runs, and
 the goroutine scheduler is free to migrate any goroutine onto any OS
 thread between two lines of Go code. The textbook answer is
 `runtime.LockOSThread()`: pin the calling goroutine to its current OS
@@ -569,8 +571,9 @@ with which thread is running: it is about how many times the *same*
 thread group is allowed to fork into a namespace it merely unshared
 rather than was born into.
 
-The fix is the same move chapter 14 made for capabilities: stop calling
-the namespace syscall directly from live, threaded Go code, and describe
+The fix mirrors how dropping capabilities handles the same per-thread
+hazard: stop calling the namespace syscall directly from live, threaded
+Go code, and describe
 it declaratively instead. `exec.Cmd.SysProcAttr.Cloneflags` asks the
 runtime's own fork/exec trampoline to create the namespaces **and** the
 real child in one `clone(2)` call: there is no separate `unshare()`
@@ -683,10 +686,10 @@ root           2       0  0 14:42 ?        00:00:00 [kthreadd]
 namespaces before forking `ps`, but `ps` reads `/proc`, and the mount
 namespace it entered never got a *fresh* procfs mounted after `unshare`;
 it still resolves to the host's original procfs instance, so `ps` prints
-the host's entire process table instead of a scoped one. This is not a
-bug in `containerize`; it is precisely why chapter 34's Containerfile
-build includes a `pivot_root` and a fresh `/proc` mount; a namespace
-without a matching filesystem view is only half a container.
+the host's entire process table instead of a scoped one. That gap is
+precisely why a container image's Containerfile build includes a
+`pivot_root` and a fresh `/proc` mount: a namespace without a matching
+filesystem view is only half a container.
 
 Third, the kernel's own OOM log, read independently of anything `pmon`
 printed:
@@ -721,7 +724,7 @@ reported, confirmed at the source that actually made the decision.
   internal probe fork silently spends, producing a real `ENOMEM` this
   chapter reproduced live; the fix is `SysProcAttr.Cloneflags`, pushing
   the whole operation into the runtime's own fork/exec trampoline, the
-  same move chapter 14 made for capabilities.
+  same move that handles the per-thread capability-dropping hazard.
 - A container is namespaces + cgroups + rootfs + capabilities + seccomp,
   assembled by userspace, not one kernel object, and a namespace without
   its matching filesystem view is observably incomplete: `nsenter`'s `ps
@@ -730,7 +733,8 @@ reported, confirmed at the source that actually made the decision.
 
 Next, **seccomp and Landlock**: filtering which syscalls a process may
 even attempt, and restricting which files it may reach, as the two
-primitives chapter 32 left out of "what a container runtime assembles."
+primitives left out of "what a container runtime actually assembles"
+above.
 
 ---
 
@@ -752,9 +756,9 @@ kill of pid 27013; <code>nsenter -p -m -u -n ps -ef</code> was run live and
 showed the host's full process table, confirming the missing
 <code>/proc</code> remount. The Go <code>ENOMEM</code> failure quoted in
 the Concurrency lens is this session's own <code>strace</code> output
-against the pre-fix build, kept as evidence of a real, reproduced defect
+against the pre-fix build, kept as evidence of the real failure mode
 before the <code>Cloneflags</code> fix that now ships and passes. A
-one-line <code>verify.lua</code> bug this chapter also surfaced and fixed
-(an unescaped <code>-</code> in a Lua pattern silently failing the
+one-line <code>verify.lua</code> fix this chapter also surfaced
+(an unescaped <code>-</code> in a Lua pattern that silently failed the
 hostname assertion) is recorded in the example's own history, not
 restated here as a finding about the chapter's subject matter.</p>

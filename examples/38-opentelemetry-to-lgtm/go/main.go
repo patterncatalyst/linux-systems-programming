@@ -1,4 +1,4 @@
-// lsp-otel — a traced request/response loop (chapter 38: OpenTelemetry to LGTM).
+// lsp-otel: a traced request/response loop (chapter 38: OpenTelemetry to LGTM).
 //
 //	app serve --port PORT [--otel-endpoint URL]
 //	app drive --n N --addr HOST:PORT
@@ -8,7 +8,7 @@
 // ("work", "respond"), a monotonic counter (requests_total) is incremented,
 // and a histogram (request_duration, milliseconds) records the parent
 // span's wall time. drive is an untraced TCP client that sends N requests
-// down one connection and waits for N replies — the load generator for
+// down one connection and waits for N replies; the load generator for
 // serve's telemetry, not a telemetry source itself.
 //
 // Every signal appears exactly once in the OTLP stream: serve's own
@@ -291,7 +291,7 @@ func runServe(args []string) int {
 // ------------------------------------------------------------------- drive
 
 // runDrive is a plain, untraced TCP client: it generates the load that
-// makes serve's telemetry interesting, but emits none of its own — the
+// makes serve's telemetry interesting, but emits none of its own; the
 // service under observation is serve, not drive.
 func runDrive(args []string) int {
 	n := 0

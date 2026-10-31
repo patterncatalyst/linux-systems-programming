@@ -2,7 +2,7 @@
 title: "Benchmarking without lies: warmup, coordinated omission, and the percentile the mean hides"
 order: 39
 part: "Performance and Low Latency"
-description: "benchlab measures the ch21 chatterd frame codec two ways in the same binary: a real run with warmup discard, per-iteration timing, and a coordinated-omission-corrected p99, and --lie's single unwarmed wall-clock sample, cross-checked with perf stat cycles/instructions and an objdump proof that an unwatched microbenchmark just gets compiled away."
+description: "benchlab measures the chatterd frame codec two ways in the same binary: a real run with warmup discard, per-iteration timing, and a coordinated-omission-corrected p99, and --lie's single unwarmed wall-clock sample, cross-checked with perf stat cycles/instructions and an objdump proof that an unwatched microbenchmark just gets compiled away."
 duration: "50 minutes"
 ---
 
@@ -22,10 +22,10 @@ By the end of this chapter you can:
 
 A microbenchmark you wrote yourself is the easiest number in the whole book to get quietly wrong, because nothing stops it from compiling cleanly and printing a confident, reproducible figure for code that never ran, or for a stall a closed loop recorded once when a real caller would have felt it hundreds of times over. `benchlab` is built to show both traps happening in the same binary, so the gap between a misleading number and a real one is something you can watch rather than take on faith.
 
-The payoff carries past this chapter: Chapter 40 spends the discipline earned here, pinning a core and reusing a buffer to shrink exactly the tail this chapter learned to measure accurately.
+The payoff carries past this chapter: a low-latency fastpath spends the discipline earned here, pinning a core and reusing a buffer to shrink exactly the tail this chapter learned to measure accurately.
 
-Chapter 37 gave you the USE method's 60-second checklist for a system already
-in trouble, and Chapter 38 wired that telemetry into the LGTM stack you can
+The USE method gives a 60-second checklist for a system already
+in trouble, and OpenTelemetry wires that telemetry into the LGTM stack you can
 query back. Both assume the numbers arriving are real. This chapter asks the
 harder question: when *you* produce the number (a microbenchmark of your own
 function, timed on your own laptop), what makes it trustworthy? The uncomfortable
@@ -146,7 +146,7 @@ distribution the tail exists to describe.
 {% include excalidraw.html
    file="39-coordinated-omission"
    alt="Two stacked bands. Top, benchlab's raw closed-loop timer: iterations 1 through 3 each a small box around 40 nanoseconds, iteration 4 an accent box labeled STALL page fault slash sched, 1057 nanoseconds, one sample. Bottom, what a fixed-rate caller would have seen: the same three small requests, the same stalling request 4, then two dashed ghost boxes labeled request 5 queued and request 6 queued at roughly 1018 and 979 nanoseconds, backfilled synthetic samples continuing down toward the expected interval floor. A dashed vertical line connects the two request 4 boxes labeled same stall. Captions read the raw p99 over a 1000-sample window buries the single stall sample, while the corrected co_p99 backfills the queued requests so co_p99_ns is always at least p99_ns."
-   caption="Figure 39.2: one stall, recorded once by the closed loop (top) versus what a fixed-rate caller actually experiences (bottom); co_correct backfills the difference" %}
+   caption="Figure 39.2: one stall, recorded once by the closed loop (top) versus what a fixed-rate caller experiences (bottom); co_correct backfills the difference" %}
 
 The correction (HdrHistogram calls it `recordValueWithExpectedInterval`) is
 mechanical once you see the picture: for every raw sample `v` that exceeds an
@@ -187,7 +187,7 @@ tens of nanoseconds, and a small minority (the ones a scheduler, a page
 fault, or, in a GC'd runtime, a collection pause touches) finish orders of
 magnitude slower. Average those together and the mean is dragged toward the
 tail by exactly the outliers a reader most needs to see reported accurately,
-while simultaneously hiding *how bad* the tail actually gets: a mean of 200 ns
+while hiding *how bad* the tail gets: a mean of 200 ns
 is consistent with "every call took 200 ns" and with "999 calls took 40 ns and
 one took 160,200 ns," and those are utterly different systems to operate. A
 **percentile** answers a sharper question: "what latency do 99% of calls beat?"
@@ -209,7 +209,7 @@ loop. Every `run_once` call in `benchlab` folds its result into a running
 `checksum` for exactly this reason: the accumulation is a real, observable
 side effect (it's printed at the end), so nothing upstream of it can be
 proven dead. To see the failure mode this guards against, compile a stripped
-version of the same idea and read what GCC actually produced:
+version of the same idea and read what GCC produced:
 
 ```console
 [host]$ g++ -std=c++23 -O2 -c dce.cpp -o dce.o && objdump -d --no-show-raw-insn dce.o
@@ -360,7 +360,7 @@ fixed workload and checks the identical invariants (`co_p99_ns >= p99_ns`,
 `percentile()` is the other half: given a *sorted* array and a fraction `p`,
 nearest-rank indexing (`sorted[floor(p * (len - 1))]`) picks the sample at
 that rank directly: no interpolation, no bucketing, correct as long as the
-array really is sorted first, which `main` guarantees by calling `sort`
+array is sorted first, which `main` guarantees by calling `sort`
 (C++'s `std::sort`, Go's `sort.Slice`, Rust's `sort_unstable`) immediately
 before computing `median_ns`, `p99_ns`, and again after `co_correct` before
 computing `co_p99_ns`. The warmup loop and the timed loop share the same
@@ -408,7 +408,7 @@ between any of this host's 16 logical CPUs between iterations, and a
 migration that lands it on a core the kernel had to first bring back up
 from a low C-state, or evicts its L1/L2 working set entirely, produces
 exactly the multi-microsecond single-iteration stall this chapter measures
-and corrects for. Chapter 26's `taskset -c 0,2` pinning is the mitigation:
+and corrects for. CPU pinning with `taskset -c 0,2` is the mitigation:
 running `taskset -c 4 ./cpp/build/release/app ...` confines the benchmark
 to one core for the whole run, trading the ability to migrate away from a
 noisy neighbor for the elimination of migration-induced stalls as a source
@@ -495,7 +495,7 @@ explicitly:
 
 Same run, same 100,000 timed iterations, same single 56,595 ns stall visible
 in `max_ns`: one number treats that stall as a footnote, the other treats it
-as the ~197x-worse tail a real fixed-rate caller would have actually felt.
+as the ~197x-worse tail a real fixed-rate caller would have felt.
 Neither number is "wrong" in isolation; reporting only the left column while
 implying it describes what users experience is the mistake this chapter
 warns against.
@@ -525,7 +525,7 @@ warns against.
   between samples, and pinning to `performance` before benchmarking removes
   that confound from the tail you're trying to measure.
 
-Chapter 40 takes the discipline this chapter earned (real percentiles, a
+The low-latency fastpath takes the discipline this chapter earned (real percentiles, a
 pinned clock, a tail you trust) and spends it: stripping a hot path down to
 pinned cores, zero allocation, and the low-latency techniques that make the
 corrected p99 small in the first place.

@@ -2,7 +2,7 @@
 title: "Our programs in containers"
 order: 34
 part: "Containers and Virtualization"
-description: "The same three daemons this book has built all along, now shipped as multi-stage UBI10 Containerfiles and run under rootless podman -- pid 1's signal and reaping duties, the GOMAXPROCS-from-cgroup story that catches C++'s hardware_concurrency() lying about its own container, debugging across the namespace boundary with podman exec/nsenter/gdb, and the seccomp default that quietly denies io_uring."
+description: "The same three daemons this book has built all along, now shipped as multi-stage UBI10 Containerfiles and run under rootless podman: pid 1's signal and reaping duties, the GOMAXPROCS-from-cgroup story that catches C++'s hardware_concurrency() lying about its own container, debugging across the namespace boundary with podman exec/nsenter/gdb, and the seccomp default that quietly denies io_uring."
 duration: "60 minutes"
 ---
 
@@ -22,16 +22,16 @@ By the end of this chapter you can:
 
 Shipping a daemon as a container changes facts the program itself can observe and must handle correctly: what counts as CPU parallelism, what happens to an unhandled signal on PID 1, and which syscalls are even reachable. Getting any of these wrong doesn't fail loudly, a C++ build that trusts `hardware_concurrency()` inside a `--cpus=2` container just oversubscribes silently, and a naive entrypoint just sits through a full `podman stop` grace period before being killed.
 
-This chapter also closes the loop on two mechanisms the book built from raw syscalls in Chapters 32 and 33: a container runtime assembles namespaces, cgroups, and a seccomp profile for you, but the pid-1 obligations and the per-thread signal-mask hazards underneath them are the same ones you'd hit building a container tool by hand.
+This chapter also closes the loop on two mechanisms the book built from raw syscalls: namespace/cgroup assembly and seccomp sandboxing. A container runtime assembles namespaces, cgroups, and a seccomp profile for you, but the pid-1 obligations and the per-thread signal-mask hazards underneath them are the same ones you'd hit building a container tool by hand.
 
-Chapter 32 gave one of our programs its own namespaces and cgroup directly,
-by calling `unshare`/`clone3` itself. Chapter 33 had `fwatch` sandbox itself
+Earlier, one of our programs built its own namespaces and cgroup directly,
+by calling `unshare`/`clone3` itself, and `fwatch` sandboxed itself
 with seccomp and Landlock. This chapter hands both jobs to something else:
 a container runtime. `app`, a tiny stand-in entrypoint built three times,
-runs as `podman`'s idea of a container -- and that changes what "process 1"
+runs as `podman`'s idea of a container, and that changes what "process 1"
 means, what "how many CPUs do I have" means, and what a debugger needs to
 cross to reach it. None of this is exotic: it is exactly the daemons this
-book already writes, deployed the way most of them actually ship.
+book already writes, deployed the way most of them ship.
 
 The code is in `examples/34-our-programs-in-containers/`. The run script
 there builds/sets up and runs it; its `README.md` covers the CLI, the
@@ -39,10 +39,10 @@ output contract, and the full verification story.
 
 {% include excalidraw.html
    file="34-image-layering"
-   alt="Two side-by-side bands. The left, discarded builder stage starts from registry.access.redhat.com/ubi10/ubi:10.2 at 220 MB measured, runs dnf install of gcc-c++, golang, or rustup, and statically links the binary (cpp -static-libstdc++ -static-libgcc, go CGO_ENABLED=0, rust rustup 1.97.1). An amber COPY --from=builder arrow crosses into the right, shipped runtime stage, which starts from registry.access.redhat.com/ubi10-micro:10.2 at 24.3 MB measured, copies only the one binary to /usr/local/bin/app, and sets ENTRYPOINT/CMD. A footer note reports the real measured final image sizes -- cpp and go both 27.2 MB, rust 24.9 MB -- barely above the bare micro base, and explains that static linking is what makes copying one binary sufficient."
-   caption="Figure 34.1 -- app's multi-stage Containerfile: the 220 MB builder never ships, only the binary crosses into the 24.3 MB runtime base" %}
+   alt="Two side-by-side bands. The left, discarded builder stage starts from registry.access.redhat.com/ubi10/ubi:10.2 at 220 MB measured, runs dnf install of gcc-c++, golang, or rustup, and statically links the binary (cpp -static-libstdc++ -static-libgcc, go CGO_ENABLED=0, rust rustup 1.97.1). An amber COPY --from=builder arrow crosses into the right, shipped runtime stage, which starts from registry.access.redhat.com/ubi10-micro:10.2 at 24.3 MB measured, copies only the one binary to /usr/local/bin/app, and sets ENTRYPOINT/CMD. A footer note reports the real measured final image sizes (cpp and go both 27.2 MB, rust 24.9 MB), barely above the bare micro base, and explains that static linking is what makes copying one binary sufficient."
+   caption="Figure 34.1: app's multi-stage Containerfile; the 220 MB builder never ships, only the binary crosses into the 24.3 MB runtime base" %}
 
-> **Tools used** -- `podman` build/run/exec/inspect/unshare/stop (host,
+> **Tools used:** `podman` build/run/exec/inspect/unshare/stop (host,
 > rootless), `nsenter` (host, both directly and via `podman unshare`),
 > `gdb` (host, attached across the container's pid namespace), `ldd`/`file`
 > (host, on binaries copied out of the built images), `python3`+`ctypes`
@@ -52,11 +52,11 @@ output contract, and the full verification story.
 
 ## Multi-stage images: the builder never ships
 
-A **Containerfile** -- podman's name for the same syntax Dockerfiles use --
+A **Containerfile** (podman's name for the same syntax Dockerfiles use)
 can declare more than one `FROM`. Each `FROM` starts a fresh, unrelated
 build stage; a later stage can `COPY --from=<earlier-stage>` specific files
 out of it, and only the *last* stage's filesystem becomes the image podman
-actually tags. `app`'s C++ build is the clearest read of the shape:
+tags. `app`'s C++ build is the clearest read of the shape:
 
 ```dockerfile
 FROM registry.access.redhat.com/ubi10/ubi:10.2 AS builder
@@ -75,30 +75,30 @@ ENTRYPOINT ["/usr/local/bin/app"]
 CMD ["serve"]
 ```
 
-The builder stage is `ubi10/ubi:10.2` -- measured on this host at 220 MB --
+The builder stage is `ubi10/ubi:10.2` (measured on this host at 220 MB)
 with a full `dnf` toolchain installed into it. The runtime stage is
 `ubi10-micro:10.2`, measured at 24.3 MB: no shell, no package manager, only
 `glibc` and the handful of libraries UBI's micro variant ships. `COPY
 --from=builder` reaches back into the discarded stage for exactly one
 file. Building all three languages' images fresh on this host: `lsp34-cpp`
-and `lsp34-go` land at 27.2 MB, `lsp34-rust` at 24.9 MB -- a few MB above
+and `lsp34-go` land at 27.2 MB, `lsp34-rust` at 24.9 MB, a few MB above
 the bare micro base, because the whole 220 MB builder is gone from the
 final image.
 
-That gap only closes because of the static-vs-dynamic linking recap
-chapter 4 built with `sysprobe`: pulling the three languages' binaries back
-out of these images with `podman cp` and running `ldd` on them tells the
-same story `ldd` told there, sharpened by one deliberate choice. Go's
-binary is `not a dynamic executable` -- `CGO_ENABLED=0` gives a fully
-static binary, so the runtime stage needs nothing beyond the file itself.
-Rust's binary still links `libgcc_s.so.1` and `libc.so.6` -- both already
-present in `ubi10-micro`, so no extra `RUN` is needed. C++'s binary is the
-interesting middle case: `ldd` lists `libm.so.6`, `libc.so.6`, and the vDSO,
-but *not* `libstdc++.so.6` -- the Containerfile's `-static-libstdc++
+That gap only closes because of the syscalls-and-ABI chapter's
+static-vs-dynamic linking recap, built with `sysprobe`: pulling the three
+languages' binaries back out of these images with `podman cp` and running
+`ldd` on them tells the same story `ldd` told there, sharpened by one
+deliberate choice. Go's binary is `not a dynamic executable` (`CGO_ENABLED=0`
+gives a fully static binary), so the runtime stage needs nothing beyond the
+file itself. Rust's binary still links `libgcc_s.so.1` and `libc.so.6`, both
+already present in `ubi10-micro`, so no extra `RUN` is needed. C++'s binary
+is the interesting middle case: `ldd` lists `libm.so.6`, `libc.so.6`, and
+the vDSO, but *not* `libstdc++.so.6`. The Containerfile's `-static-libstdc++
 -static-libgcc` flags embed exactly those two libraries into the binary,
 which is what lets the runtime stage skip installing them. A plain,
-dynamically-linked C++ build (chapter 4's default) would need `libstdc++`
-copied or installed into the runtime stage too; this chapter's Containerfile
+dynamically-linked C++ build (the syscalls-and-ABI chapter's default) would
+need `libstdc++` copied or installed into the runtime stage too; this chapter's Containerfile
 avoids that by choosing static linking specifically for the two libraries
 the micro base does not carry. Rust's builder has its own wrinkle worth
 naming: UBI10's `dnf` `rust` package is 1.92.0, older than this book's
@@ -107,9 +107,9 @@ exact toolchain via `rustup` instead of `dnf install rust`.
 
 ## Rootless podman: one user, one private uid range
 
-Every container here runs **rootless** -- no `sudo`, no privileged daemon
--- which is possible because of a second Linux mechanism from chapter 32's
-namespace tour: the **user namespace**. `podman` maps container uid 0 to
+Every container here runs **rootless**: no `sudo`, no privileged daemon.
+That is possible because of a second Linux mechanism from the
+namespaces-and-cgroups tour: the **user namespace**. `podman` maps container uid 0 to
 the invoking host user and a further range of container uids to a private,
 per-user block of otherwise-unused host uids, declared in `/etc/subuid` and
 `/etc/subgid`. On this host:
@@ -121,7 +121,7 @@ per-user block of otherwise-unused host uids, declared in `/etc/subuid` and
 ```
 
 That line grants `user` a private range of 65,536 host uids starting at
-524288 -- ids no other account owns. `podman unshare cat /proc/self/uid_map`,
+524288, ids no other account owns. `podman unshare cat /proc/self/uid_map`,
 run in podman's own user namespace, shows exactly how the two ranges
 combine:
 
@@ -131,24 +131,24 @@ combine:
      1     524288      65536
 ```
 
-Container uid 0 (root, inside) maps to host uid 1000 (`user`, outside) --
+Container uid 0 (root, inside) maps to host uid 1000 (`user`, outside):
 one id. Container uids 1 through 65536 map to the private subuid block.
 The consequence worth sitting with: a process that is root *inside* the
 container has, outside it, only the privileges of the ordinary host user
-who launched podman -- root in the container cannot write to another
+who launched podman; root in the container cannot write to another
 user's files, bind privileged host ports, or load kernel modules, because
 outside the namespace it never had uid 0 to begin with. This is the same
-"identity is a kernel-side mapping, not a label" lesson chapter 14 taught
-for capabilities, applied to the uid itself: the mapping table, not the
-number a `ps` inside the container prints, is what the kernel actually
-checks.
+"identity is a kernel-side mapping, not a label" lesson identity and
+privilege taught for capabilities, applied to the uid itself: the mapping
+table, not the number a `ps` inside the container prints, is what the
+kernel checks.
 
 ## PID 1: signal duties naive skips
 
 Every container's first process inherits a role most programs never
 occupy: it is PID 1 of its own PID namespace. The kernel treats PID 1
-specially -- a signal for which it has installed **no explicit handler**
-is simply dropped instead of running that signal's default action. An
+specially: a signal for which it has installed **no explicit handler**
+is dropped instead of running that signal's default action. An
 ordinary process ignoring `SIGTERM` still dies, because "terminate" is the
 default action when no handler exists; PID 1 with no handler does not even
 get that. Only `SIGKILL` and `SIGSTOP` still work. `app naive` demonstrates
@@ -156,19 +156,19 @@ this by installing nothing: it calls no `sigaction`, `signalfd`, or
 `signal.Notify` at all before its heartbeat loop. `app serve` is the fix:
 it blocks `SIGTERM`/`SIGINT`/`SIGCHLD`, receives them explicitly, stops
 spawning new work, forwards `SIGTERM` to the worker process it supervises,
-waits for that worker to exit, and only then exits itself -- so nothing is
+waits for that worker to exit, and only then exits itself, so nothing is
 left running or unreaped when the container stops.
 
 {% include excalidraw.html
    file="34-pid1-signal-flow"
-   alt="Two side-by-side bands contrasting serve and naive receiving SIGTERM as a container's PID 1. The serve band: podman stop sends SIGTERM, the signalfd/Notify/Signals wake fires, job_spawner.request_stop() runs, kill(worker, SIGTERM) plus waitpid/Wait() reaps it, a shutting-down line prints, and the process exits 0 -- measured at cpp 192ms, go 60 to 87ms, rust 101ms, all well inside a 3000ms grace budget. The naive band: podman stop sends SIGTERM into a kernel that finds no explicit handler on PID 1, so the signal is simply dropped for cpp and rust -- podman waits out the full grace period and falls back to SIGKILL, measured at cpp 2108ms and rust 2074ms. A muted box notes the Go exception: the Go runtime installs its own fatal-signal handler at startup regardless of user code, so naive still dies in about 60ms -- but with no shutting-down line and no cleanup, in every language."
-   caption="Figure 34.2 -- serve's graceful pid-1 shutdown sequence beside naive's kernel-masked signal, with this session's real podman stop timings" %}
+   alt="Two side-by-side bands contrasting serve and naive receiving SIGTERM as a container's PID 1. The serve band: podman stop sends SIGTERM, the signalfd/Notify/Signals wake fires, job_spawner.request_stop() runs, kill(worker, SIGTERM) plus waitpid/Wait() reaps it, a shutting-down line prints, and the process exits 0, measured at cpp 192ms, go 60 to 87ms, rust 101ms, all well inside a 3000ms grace budget. The naive band: podman stop sends SIGTERM into a kernel that finds no explicit handler on PID 1, so the signal is dropped for cpp and rust; podman waits out the full grace period and falls back to SIGKILL, measured at cpp 2108ms and rust 2074ms. A muted box notes the Go exception: the Go runtime installs its own fatal-signal handler at startup regardless of user code, so naive still dies in about 60ms, but with no shutting-down line and no cleanup, in every language."
+   caption="Figure 34.2: serve's graceful pid-1 shutdown sequence beside naive's kernel-masked signal, with this session's real podman stop timings" %}
 
 Reaping is the other pid-1 duty, and it splits into two real
 implementation strategies across the three languages, because Go's and
 Rust's runtimes are not safe to `fork()` once other threads or goroutines
 exist. C++ uses a raw `fork(2)` for both the worker and each short-lived
-job -- no `exec`, just a different function running in the child -- because
+job (no `exec`, just a different function running in the child) because
 `app`'s C++ build is single-threaded by design up to that point, so the
 forking thread and the whole process are the same thing. Go and Rust
 instead **self-reexec**: `serve` resolves its own binary path
@@ -184,7 +184,7 @@ builds.
 The headline trap: three ways of asking "how many CPUs do I have" give two
 different answers under the same constraint. `podman run --cpus=2
 --memory=128m` sets the container's cgroup v2 `cpu.max` to `200000
-100000` (200ms of CPU time per 100ms period -- two cores' worth) and
+100000` (200ms of CPU time per 100ms period, two cores' worth) and
 `memory.max` to `134217728` bytes. Reading those files back from inside
 each language's own process and reporting them alongside a
 parallelism estimate is `app`'s first printed line:
@@ -220,7 +220,7 @@ fn print_container_line() {
 ```
 
 All three share the same `cpu_max_display()`/`mem_max_display()` helpers
-(not shown above -- they resolve `/proc/self/cgroup`'s `"0::<path>"` line
+(not shown above; they resolve `/proc/self/cgroup`'s `"0::<path>"` line
 to find *this process's own* cgroup, then read `cpu.max`/`memory.max`
 under `/sys/fs/cgroup` at that path, falling back to the root cgroup file
 if the per-path one is missing). Those helpers agree completely across
@@ -236,20 +236,20 @@ rust: container: cpu.max=200000/100000 effective_parallelism=2  mem.max=13421772
 ```
 
 `std::thread::hardware_concurrency()` is `sysconf(_SC_NPROCESSORS_ONLN)`
-under the hood -- it asks how many CPUs the *host* has online and has no
+under the hood: it asks how many CPUs the *host* has online and has no
 concept of a cgroup, so it reports 16 regardless of `--cpus=2`. As of the
 `go 1.26` language version pinned in `go.mod`, `runtime.GOMAXPROCS(0)`'s
 *default* (unset by the environment or a prior call) divides the cgroup's
 CPU bandwidth quota by its period whenever that is lower than the host's
 core count, and re-checks periodically in case an orchestrator changes the
-limit live -- confirmed here as `2`, matching the actual constraint
+limit live, confirmed here as `2`, matching the actual constraint
 (`GODEBUG=containermaxprocs=0` opts back out, for anyone who needs the old
 host-count behavior). Rust's `std::thread::available_parallelism()` on
 Linux performs the same quota-over-period division against the calling
 thread's affinity mask, landing on the same correct `2`. A C++ thread pool
 sized off `hardware_concurrency()` in this container would spawn sixteen
-threads to share two cores' worth of CPU time -- oversubscribed, thrashing
-the scheduler, and never once reading the number that was actually true.
+threads to share two cores' worth of CPU time: oversubscribed, thrashing
+the scheduler, and never once reading the number that was true.
 
 ## How the code works
 
@@ -258,8 +258,9 @@ one shape in all three languages: block/register the shutdown signals,
 start the supervised worker, start a periodic job spawner, then block
 until a signal arrives. C++ blocks `SIGTERM`/`SIGINT`/`SIGCHLD` with
 `sigprocmask(SIG_BLOCK, ...)` and receives them as `signalfd(2)` reads
-inside an ordinary `poll(2)` loop -- the same pattern chapter 12 built for
-`pmon`, so no code ever runs in real signal-handler context. Go and Rust
+inside an ordinary `poll(2)` loop, the same pattern built earlier for
+`pmon`'s signal handling, so no code ever runs in real signal-handler
+context. Go and Rust
 skip that machinery entirely: Go's `signal.Notify` delivers onto a
 channel, and Rust's `signal_hook::iterator::Signals` delivers as a
 blocking iterator on the main thread; both are ordinary, safely-scheduled
@@ -267,7 +268,7 @@ code, not async-signal-restricted handlers, because neither language's
 runtime lets you install a raw POSIX handler as directly as C does. The
 `std::jthread` (C++) and background goroutine/thread (Go/Rust) that spawn
 jobs every second all take the same shape: loop, sleep in short slices so
-a stop request is noticed quickly, spawn one job, repeat -- and every one
+a stop request is noticed quickly, spawn one job, repeat, and every one
 is cooperatively stopped (`stop_token`, an atomic flag, a channel close)
 before `serve` waits on the worker, so no job-spawn races the shutdown
 sequence.
@@ -276,17 +277,17 @@ One hardcoded assumption deserves a direct look: `cpu_max_display()` only
 handles cgroup v2's single-line `cpu.max` format (`"max"` or
 `"<quota> <period>"`); a host still running cgroup v1 would need the older
 `cpu.cfs_quota_us`/`cpu.cfs_period_us` pair instead, and none of these
-builds falls back to that -- they print `"unknown"` from the empty-file
+builds falls back to that; they print `"unknown"` from the empty-file
 path instead of guessing.
 
 ## Errors, three ways
 
-Setup failures -- a `fork`/`spawn` that fails, a `signalfd`/`Signals` that
-cannot be installed -- exit `1` with the syscall name and its error text,
+Setup failures (a `fork`/`spawn` that fails, a `signalfd`/`Signals` that
+cannot be installed) exit `1` with the syscall name and its error text,
 formatted identically across languages. Usage errors (an unrecognized
 subcommand, missing arguments to `job`) exit `2` before anything is
 spawned. There is no third "confirmed denial" exit code in this example
-the way chapter 33's sandbox probes had one -- `app`'s only externally
+the way the seccomp-and-Landlock sandbox probes had one: `app`'s only externally
 visible contract is its stdout lines and its exit code on a clean
 shutdown (`0`), and the *absence* of the `shutting down` line from
 `naive`'s log is itself the evidence `verify.lua` checks, not a distinct
@@ -296,19 +297,18 @@ language needs, covered next.
 
 ## Concurrency lens
 
-The one real bug this example produced during development lived in C++'s
-raw `fork(2)` path, and it is the same class of mistake chapter 14 warned
-about for credentials: **signal masks are per-thread kernel state, and
-`fork()` copies only the calling thread into the child.** `serve` blocks
-`SIGTERM`/`SIGINT`/`SIGCHLD` with `sigprocmask(SIG_BLOCK, ...)` so it can
-receive them via `signalfd`. The worker, forked from that same thread,
-inherited the *blocked* mask -- so when `serve` later forwarded `SIGTERM`
-to it with `kill(worker_pid, SIGTERM)`, the signal did not run its default
-(terminate) action. It just sat **pending**, forever: the worker was
-unkillable by anything short of `SIGKILL`, exactly the failure mode
-`naive` demonstrates at the container's pid-1 layer, now
-reproduced accidentally one process down. The fix is one line in the
-child, immediately after `fork()`:
+C++'s raw `fork(2)` path hits the same class of mistake that identity and
+privilege warned about for credentials: **signal masks are per-thread
+kernel state, and `fork()` copies only the calling thread into the
+child.** `serve` blocks `SIGTERM`/`SIGINT`/`SIGCHLD` with
+`sigprocmask(SIG_BLOCK, ...)` so it can receive them via `signalfd`. The
+worker, forked from that same thread, inherited the *blocked* mask, so
+when `serve` later forwarded `SIGTERM` to it with `kill(worker_pid,
+SIGTERM)`, the signal did not run its default (terminate) action. It just
+sat **pending**, forever: the worker was unkillable by anything short of
+`SIGKILL`, exactly the failure mode `naive` demonstrates at the
+container's pid-1 layer, now reproduced one process down. The fix is one
+line in the child, immediately after `fork()`:
 
 ```cpp
         sigset_t empty;
@@ -316,16 +316,16 @@ child, immediately after `fork()`:
         ::sigprocmask(SIG_SETMASK, &empty, nullptr);
 ```
 
-which mirrors `pmon`'s reset-before-`execvp` from chapter 12 almost
-exactly -- the difference is that there is no `exec` here to reset the
-mask automatically, so the reset has to be written explicitly. Go and Rust
-never meet this bug at all, and not by luck: both languages avoid
+which mirrors `pmon`'s reset-before-`execvp` from the signals chapter
+almost exactly: the difference is that there is no `exec` here to reset
+the mask automatically, so the reset has to be written explicitly. Go and
+Rust never hit this failure mode: both languages avoid
 `fork()`-without-`exec()` entirely, because forking a multithreaded
 runtime (goroutine scheduler threads, Rust's allocator and async
 executors) risks a forked child whose only surviving thread might be
 holding a lock some other, vanished thread owned at the moment of the
 fork. Self-reexec sidesteps the whole hazard class by never forking a
-live multithreaded process in the first place -- the new process starts
+live multithreaded process in the first place; the new process starts
 clean, mask and all, from `execve`.
 
 ## Debugging across the namespace boundary
@@ -335,7 +335,7 @@ Three tools reach the same PID 1 from three different starting points.
 view, so `podman exec <name> cat /proc/1/status` just works. Reaching the
 same process from the **bare host** needs a different approach, because a
 rootless container's namespaces are private to podman's own unprivileged
-user namespace -- plain `nsenter` targeting the container's host-side pid
+user namespace: plain `nsenter` targeting the container's host-side pid
 fails outright:
 
 ```bash
@@ -354,8 +354,8 @@ the container's pid and mount namespaces on top:
 
 {% include excalidraw.html
    file="34-ns-debugging-map"
-   alt="A host band above a podman-user-namespace band. podman exec reaches the container PID 1 directly from inside the container runtime. podman unshare nsenter first joins podman's own user namespace, then nsenter --target --pid --mount reaches the same PID 1 from there -- both confirming Name: app and /proc/1/exe resolving to /usr/local/bin/app. A dashed, failing arrow shows plain nsenter without podman unshare returning EPERM: reassociate to namespaces failed. Below, real evidence boxes show the subuid mapping user:524288:65536 and a live zombie scan of /proc/[0-9]*/stat reporting zero."
-   caption="Figure 34.3 -- podman exec and podman unshare nsenter reach the same container PID 1 from two different starting namespaces; plain nsenter cannot" %}
+   alt="A host band above a podman-user-namespace band. podman exec reaches the container PID 1 directly from inside the container runtime. podman unshare nsenter first joins podman's own user namespace, then nsenter --target --pid --mount reaches the same PID 1 from there, both confirming Name: app and /proc/1/exe resolving to /usr/local/bin/app. A dashed, failing arrow shows plain nsenter without podman unshare returning EPERM: reassociate to namespaces failed. Below, real evidence boxes show the subuid mapping user:524288:65536 and a live zombie scan of /proc/[0-9]*/stat reporting zero."
+   caption="Figure 34.3: podman exec and podman unshare nsenter reach the same container PID 1 from two different starting namespaces; plain nsenter cannot" %}
 
 A live `gdb` attach is the real surprise: because
 rootless podman's user namespace is *owned by the same host uid* that is
@@ -371,13 +371,13 @@ exe = '/usr/local/bin/app'
 ```
 
 `gdb` attaches and correctly resolves the executable, but its own warning
-names the limitation precisely: it is reading `/proc/<hostpid>/*` from
+names the boundary precisely: it is reading `/proc/<hostpid>/*` from
 *outside* the container's pid namespace, so anything that depends on pid
 numbers matching what the container sees (`info threads`, breakpoints set
 by a pid the container reports) is unreliable from here. A `gdbserver`
 started with `podman exec` inside the container, with `gdb`'s `target
 remote` reaching it from the host, is the reliable version of this same
-cross-boundary attach -- the same shape chapter 28's remote-debugging
+cross-boundary attach, the same shape the gdb-and-remote-debugging
 topology already covers.
 
 ## Performance and security trade-offs
@@ -385,9 +385,9 @@ topology already covers.
 Two costs are worth pricing accurately against what a container buys. The
 **default seccomp profile** podman ships (`/usr/share/containers/seccomp.json`
 on this host) declares `defaultAction: SCMP_ACT_ERRNO` with
-`defaultErrnoRet: 38` (`ENOSYS`) for anything not on its allowlist -- and
+`defaultErrnoRet: 38` (`ENOSYS`) for anything not on its allowlist, and
 `io_uring_setup`, `io_uring_enter`, and `io_uring_register` are not on it.
-That is directly relevant after chapter 10: a program built to use
+That is directly relevant to io_uring: a program built to use
 `io_uring` for its I/O will silently fail to set up a ring inside a
 default-profile container. Probing the same call three ways on this host
 makes the boundary observable rather than assumed:
@@ -400,13 +400,14 @@ makes the boundary observable rather than assumed:
 ```
 
 `EFAULT` (14, "Bad address") is what the real kernel handler returns for a
-null `params` pointer -- proof the call reached it. `ENOSYS` (38) under
+null `params` pointer, proof the call reached it. `ENOSYS` (38) under
 the default profile is seccomp's own default-deny return, generated
 without the syscall ever running; `seccomp=unconfined` removes the filter
 and the exact same `EFAULT` reappears, isolating the profile as the cause.
-Namespace and cgroup accounting add their own small, measured tax --
-every `read`/`write` a namespaced process makes still walks the same
-cgroup memory accounting chapter 32 introduced, and every `cpu.max`
+Namespace and cgroup accounting add their own small, measured tax: every
+`read`/`write` a namespaced process makes still walks the same cgroup
+memory accounting the namespaces-and-cgroups chapter introduced, and
+every `cpu.max`
 lookup this chapter's own `app` performs is one extra `/proc`+`/sys` read
 at startup, not a per-syscall cost. What a container buys in return is
 concrete and already demonstrated above: one image that carries its own
@@ -415,7 +416,7 @@ compromised process cannot see or touch the rest of the host's process
 tree or filesystem by default, and a resource ceiling the kernel enforces
 whether or not the program inside ever asks about it. The next chapter's
 `overheadbench` puts hard numbers on the remaining rungs of this same
-ladder -- container versus full KVM guest versus bare host.
+ladder: container versus full KVM guest versus bare host.
 
 ## Build, run, observe
 
@@ -462,7 +463,7 @@ app: shutting down (SIGTERM)
 
 The `naive` half of the trap, run the same way with a 2s grace instead of
 3s, on all three images: `podman stop -t 2` measured `cpp` at 2108ms and
-`rust` at 2074ms -- the full grace period, both `SIGKILL`ed -- while `go`
+`rust` at 2074ms (the full grace period, both `SIGKILL`ed), while `go`
 stopped in 60ms because its runtime installs its own fatal-`SIGTERM`
 handler regardless of user code. Every one of the three logs, checked with
 `grep -c "shutting down"`, reported zero: none of the three ever ran the
@@ -480,13 +481,13 @@ CPUQuota=200000 CPUPeriod=100000 Memory=134217728
 ```
 
 `200000/100000` from `podman inspect` matches `app`'s own
-`cpu.max=200000/100000` line, and `134217728` matches `mem.max=134217728`
--- two independent readers of the same cgroup files agreeing. The `SIGTERM`
+`cpu.max=200000/100000` line, and `134217728` matches `mem.max=134217728`:
+two independent readers of the same cgroup files agreeing. The `SIGTERM`
 grace behavior is its own cross-check in miniature: `serve`'s stop time
 (87-192ms across languages) sits nowhere near the 3-second grace budget
 `podman stop -t 3` allows, while `naive`'s cpp/rust stop time (2074-2108ms)
 sits right at the 2-second grace budget `podman stop -t 2` allows before
-`SIGKILL` -- the timing itself is the proof that one path ran a graceful
+`SIGKILL`: the timing itself is the proof that one path ran a graceful
 shutdown and the other waited out a timeout.
 
 ## What you learned
@@ -496,30 +497,30 @@ shutdown and the other waited out a timeout.
   runtime (24.3 MB measured) and copying one static-linked binary across
   keeps the final image within a few MB of the bare runtime base.
 - A container's PID 1 gets no default signal action for anything it has
-  not explicitly handled -- `naive`'s absent handler is why `podman stop`
+  not explicitly handled: `naive`'s absent handler is why `podman stop`
   has to wait out the full grace period and fall back to `SIGKILL`, and
   why `serve`'s explicit forward-then-reap sequence is not optional
   ceremony.
 - "How many CPUs do I have" has three real answers under the same
   `--cpus=2` constraint: C++'s `hardware_concurrency()` reports the host's
   16, while Go's cgroup-aware `GOMAXPROCS` default and Rust's
-  `available_parallelism()` both report the true 2 -- confirmed live on
+  `available_parallelism()` both report the true 2, confirmed live on
   this host, not merely documented.
 - `podman exec`, `podman unshare nsenter`, and even a direct `gdb -p`
   attach (because rootless podman's user namespace shares the host uid)
   all reach the same container PID 1 from different starting points, while
-  the default seccomp profile silently denies `io_uring` calls that a
-  chapter-10-style program might depend on.
+  the default seccomp profile silently denies `io_uring` calls that an
+  io_uring-based program might depend on.
 
-Next, **virtualization and KVM**: the same daemons run a rung further out
--- inside a full guest kernel instead of sharing the host's -- and
+Next, **virtualization and KVM**: the same daemons run a rung further out,
+inside a full guest kernel instead of sharing the host's, and
 `overheadbench` prices the difference in nanoseconds, gigabytes per
 second, and operations per second, across the bare host, this chapter's
 containers, and a real `systems-target` guest.
 
 ---
 
-<p><span class="status status--verified">verified</span> -- every
+<p><span class="status status--verified">verified</span>: every
 transcript and number above was produced this session on this host
 (Fedora Linux 44, kernel <code>7.1</code>, 16 cpus,
 podman 5.8.4 rootless): <code>python3 scripts/test-all-examples.py --only

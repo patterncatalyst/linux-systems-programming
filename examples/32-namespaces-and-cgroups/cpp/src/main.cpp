@@ -1,4 +1,4 @@
-// pmon v6 — namespaces & cgroups (chapter 32).
+// pmon v6: namespaces & cgroups (chapter 32).
 //
 // Subcommand:
 //   pmon containerize [--hostname NAME] [--mem-max BYTES|max]
@@ -8,13 +8,13 @@
 // `containerize` builds the two primitives every real container runtime is
 // made of, by hand:
 //
-//   1. NAMESPACES — unshare(2) with CLONE_NEWNS|CLONE_NEWUTS|CLONE_NEWNET|
+//   1. NAMESPACES: unshare(2) with CLONE_NEWNS|CLONE_NEWUTS|CLONE_NEWNET|
 //      CLONE_NEWPID puts the calling process into a fresh mount, UTS and
 //      network namespace immediately, and arranges for the NEXT clone3(2)
 //      child to become PID 1 of a fresh PID namespace (unshare(2) never
-//      moves the caller itself into a new PID namespace — only its future
+//      moves the caller itself into a new PID namespace: only its future
 //      children).
-//   2. CGROUP v2 LIMITS — a dedicated cgroup gets memory.max and cpu.max
+//   2. CGROUP v2 LIMITS: a dedicated cgroup gets memory.max and cpu.max
 //      written before the child is ever created, so the limits are already
 //      live the instant CMD execs.
 //
@@ -22,7 +22,7 @@
 // no fork()/vfork() distinction to reason about, and it is the syscall the
 // chapter is actually teaching). RAII closes every fd; std::expected carries
 // every syscall failure; single-threaded throughout (mixing threads with
-// unshare()/clone3() is its own footgun — see the Go build's comment for
+// unshare()/clone3() is its own footgun: see the Go build's comment for
 // what goes wrong when a runtime does that under you).
 
 #include <array>
@@ -63,7 +63,7 @@ std::expected<void, SysErr> checked(long rc, std::string_view what) {
   return {};
 }
 
-// RAII owner for a file descriptor — closed exactly once on scope exit.
+// RAII owner for a file descriptor: closed exactly once on scope exit.
 class Fd {
  public:
   explicit Fd(int fd) noexcept : fd_(fd) {}
@@ -83,7 +83,7 @@ class Fd {
 };
 
 // clone3(2)'s argument struct. We deliberately declare only the
-// CLONE_ARGS_SIZE_VER0 prefix (through `tls`) — <linux/sched.h> redefines
+// CLONE_ARGS_SIZE_VER0 prefix (through `tls`): <linux/sched.h> redefines
 // the CLONE_NEW* macros already pulled in by <sched.h>, so we avoid including
 // it and hand-roll the layout the syscall actually reads.
 struct clone_args_v0 {
@@ -118,7 +118,7 @@ std::expected<std::string, SysErr> read_file(const std::string& path) {
 }
 
 // Whether `tokens` (a whitespace-separated list, as cgroupfs writes it)
-// contains `word` as a whole token — "cpu" must not match inside "cpuset".
+// contains `word` as a whole token: "cpu" must not match inside "cpuset".
 bool has_token(std::string_view tokens, std::string_view word) {
   std::size_t pos = 0;
   while (pos < tokens.size()) {
@@ -132,7 +132,7 @@ bool has_token(std::string_view tokens, std::string_view word) {
 
 // The root cgroup is exempt from the "no internal process" constraint, so we
 // can enable controllers there even though it holds every process on the
-// box — this is exactly how a fresh sibling cgroup gets memory/cpu control
+// box: this is exactly how a fresh sibling cgroup gets memory/cpu control
 // without first relocating ourselves into a leaf.
 std::expected<void, SysErr> ensure_root_controllers() {
   auto have = read_file("/sys/fs/cgroup/cgroup.subtree_control");
