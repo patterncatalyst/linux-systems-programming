@@ -1,4 +1,4 @@
-// caps.cpp — PR_CAPBSET_DROP for every known capability, then
+// caps.cpp: PR_CAPBSET_DROP for every known capability, then
 // PR_SET_NO_NEW_PRIVS. See the Go caps.go for the full rationale: this
 // shrinks the bounding set inherited by every fork/exec descendant, whether
 // or not the calling process currently holds any capability at all.

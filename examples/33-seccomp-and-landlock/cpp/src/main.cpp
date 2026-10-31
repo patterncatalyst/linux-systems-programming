@@ -1,14 +1,14 @@
-// fwatch v3 — the ch09 watcher, now sandboxed.
+// fwatch v3: the ch09 watcher, now sandboxed.
 //
 // `watch --sandbox DIR` applies two independent kernel access-control layers
 // before the epoll loop ever runs:
 //
-//   Landlock  — a ruleset that restricts filesystem READS to DIR and nothing
+//   Landlock: a ruleset that restricts filesystem READS to DIR and nothing
 //               else. It is an unprivileged, self-imposed sandbox: the kernel
 //               enforces it against this process and every descendant, and it
 //               cannot be lifted short of exec-ing something that never asked
 //               for it in the first place.
-//   seccomp   — a syscall allowlist (libseccomp) covering only the syscalls
+//   seccomp: a syscall allowlist (libseccomp) covering only the syscalls
 //               the watch loop actually issues (epoll/inotify/timerfd/
 //               signalfd plumbing, read/write/close, the allocator). Anything
 //               else returns EPERM instead of running.
@@ -21,7 +21,7 @@
 // Landlock ABI has no libc wrapper; every call here goes through the raw
 // syscall(2) numbers in <linux/landlock.h> / <sys/syscall.h>. The ABI is
 // probed at runtime (LANDLOCK_CREATE_RULESET_VERSION) rather than assumed, in
-// line with "don't hardcode the ABI" — a program built against a newer
+// line with "don't hardcode the ABI": a program built against a newer
 // kernel's headers must still degrade sanely on an older one.
 
 #include <algorithm>
@@ -72,7 +72,7 @@ constexpr auto kDebounce = milliseconds{100};
 }
 
 // ---------------------------------------------------------------------------
-// RAII file descriptor — the only owner of every fd in this program.
+// RAII file descriptor: the only owner of every fd in this program.
 // ---------------------------------------------------------------------------
 
 class Fd {
@@ -111,7 +111,7 @@ private:
 }
 
 // ---------------------------------------------------------------------------
-// Landlock — raw syscalls, no libc wrapper exists.
+// Landlock: raw syscalls, no libc wrapper exists.
 // ---------------------------------------------------------------------------
 
 [[nodiscard]] long sys_landlock_create_ruleset(const landlock_ruleset_attr* attr, std::size_t size,
@@ -138,8 +138,8 @@ private:
 
 // Create a ruleset that handles READ_FILE + READ_DIR (available since ABI
 // v1), add one path-beneath rule granting exactly those rights under `dir`,
-// then restrict_self. On success the calling process — and everything it
-// execs from here on — can only read inside `dir`.
+// then restrict_self. On success the calling process, and everything it
+// execs from here on, can only read inside `dir`.
 [[nodiscard]] std::expected<void, std::error_code> apply_landlock(const std::string& dir) {
     constexpr std::uint64_t access = LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR;
     landlock_ruleset_attr attr{.handled_access_fs = access, .handled_access_net = 0, .scoped = 0};
@@ -171,7 +171,7 @@ private:
 }
 
 // ---------------------------------------------------------------------------
-// seccomp — libseccomp allowlist covering exactly what the watch loop needs.
+// seccomp: libseccomp allowlist covering exactly what the watch loop needs.
 // ---------------------------------------------------------------------------
 
 // Syscalls the epoll/inotify/timerfd/signalfd watch loop issues, empirically
@@ -315,7 +315,7 @@ int cmd_diff(const std::string& old_path, const std::string& new_path) {
 }
 
 // ---------------------------------------------------------------------------
-// v1: watch — one epoll loop, three fds, zero threads beyond main.
+// v1: watch: one epoll loop, three fds, zero threads beyond main.
 // ---------------------------------------------------------------------------
 
 enum class Kind : std::uint8_t { created, modified, deleted };
@@ -551,7 +551,7 @@ int cmd_watch(const std::string& dir, int timeout_ms, bool sandbox) {
 }
 
 // ---------------------------------------------------------------------------
-// probes — negative controls, one Landlock, one seccomp, exercised alone.
+// probes: negative controls, one Landlock, one seccomp, exercised alone.
 // ---------------------------------------------------------------------------
 
 // Exit codes for the probes are distinct from the ordinary 0/1/2 contract so
@@ -559,7 +559,7 @@ int cmd_watch(const std::string& dir, int timeout_ms, bool sandbox) {
 // control) apart from "ran into some other error" or "was NOT denied" (a
 // sandbox bug).
 constexpr int kProbeDenied = 20;    // Landlock/seccomp did deny it, as expected
-constexpr int kProbeNotDenied = 21; // sandbox failed to deny it — a real bug
+constexpr int kProbeNotDenied = 21; // sandbox failed to deny it: a real bug
 
 int cmd_probe_outside(const std::string& sandbox_dir, const std::string& outside_path) {
     const int abi = landlock_abi();

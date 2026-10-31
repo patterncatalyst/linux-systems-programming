@@ -1,7 +1,7 @@
 -- Verify 16-mmap-and-shared-mappings: shmkv v0, an mmap-backed KV store with
 -- ONE on-disk format shared by all three languages. Asserts behavior: exact
 -- header bytes (od), file sizes (stat), CLI stdout/stderr shapes and exit
--- codes — and, the point of the example, CROSS-LANGUAGE INTEROP: a store
+-- codes, and, the point of the example, CROSS-LANGUAGE INTEROP: a store
 -- created and written by the Rust binary is read by the Go and C++ binaries
 -- (byte-identical dumps), then the reverse (created by C++, read by Rust),
 -- with cmp(1) proving the store files themselves are byte-identical.

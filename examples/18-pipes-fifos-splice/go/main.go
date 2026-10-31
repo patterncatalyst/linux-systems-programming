@@ -1,10 +1,10 @@
-// pmon v4 — the process supervisor becomes a log pipeline.
+// pmon v4: the process supervisor becomes a log pipeline.
 //
 // v0 (`run`) spawns a command, waits, and mirrors its exit status.
 // v1 (`supervise --engine sigchld`) restarts a crashing child via SIGCHLD
 // through signal.Notify, reaped with wait4(WNOHANG).
 // v2 (`supervise --engine pidfd`, the DEFAULT) supervises through
-// unix.PidfdOpen + unix.Poll + waitid(P_PIDFD) — no pid-reuse race.
+// unix.PidfdOpen + unix.Poll + waitid(P_PIDFD); no pid-reuse race.
 // v4 (this chapter) keeps both engines and adds pipes:
 //   - supervise captures the child's stdout AND stderr through two pipes
 //     into a log file as "[out] ..."/"[err] ..." lines. Where C++/Rust add
@@ -12,7 +12,7 @@
 //     goroutine per pipe feeds a channel of prefixed lines into the same
 //     select loop that already multiplexes exit, signals, and the deadline;
 //   - `tail --log F --fifo PATH` creates a FIFO and relays log bytes into
-//     whatever reader attaches — io.Copy per reader session, rewinding the
+//     whatever reader attaches: io.Copy per reader session, rewinding the
 //     log offset to start+written on EPIPE so nothing is lost; SIGPIPE
 //     ignored, the detach reported as "pmon: tail reader detached".
 package main
@@ -64,7 +64,7 @@ func fromWaitStatus(ws syscall.WaitStatus) childStatus {
 }
 
 // ---------------------------------------------------------------------------
-// v0: run — spawn, wait, mirror (stdio inherited, no capture).
+// v0 (run): spawn, wait, mirror (stdio inherited, no capture).
 // ---------------------------------------------------------------------------
 
 func cmdRun(cmdline []string) int {
@@ -89,7 +89,7 @@ func cmdRun(cmdline []string) int {
 }
 
 // ---------------------------------------------------------------------------
-// v2 plumbing: waitid(P_PIDFD) with an explicit siginfo_t layout — x/sys
+// v2 plumbing: waitid(P_PIDFD) with an explicit siginfo_t layout; x/sys
 // keeps the union opaque, and the CLD_* fields are what we need.
 // ---------------------------------------------------------------------------
 
@@ -107,7 +107,7 @@ type siginfoChld struct {
 const cldExited = 1 // si_code: child called _exit
 
 // reapPidfd blocks in waitid(P_PIDFD) until the process behind pidfd is
-// reaped — it can never collect a recycled pid.
+// reaped; it can never collect a recycled pid.
 func reapPidfd(pidfd int) (childStatus, error) {
 	var si siginfoChld
 	for {
@@ -187,7 +187,7 @@ func writeLine(logw *os.File, l logLine) error {
 }
 
 // capture wires both stdio streams of an un-started command into the log.
-// lines closes when both pipes hit EOF — i.e. the capture is complete.
+// lines closes when both pipes hit EOF, meaning the capture is complete.
 func capture(c *exec.Cmd) (<-chan logLine, error) {
 	outp, err := c.StdoutPipe()
 	if err != nil {
@@ -379,7 +379,7 @@ func cmdSupervise(engine string, maxRestarts int, timeout time.Duration,
 }
 
 // ---------------------------------------------------------------------------
-// v4: tail — follow the log, relay into a FIFO, survive reader churn.
+// v4 (tail): follow the log, relay into a FIFO, survive reader churn.
 // ---------------------------------------------------------------------------
 
 // ensureFifo creates PATH as a FIFO, tolerating an existing FIFO at PATH.
@@ -463,7 +463,7 @@ reader:
 			}
 			// One copy session: on EPIPE (reader detached) io.Copy reports
 			// how many bytes actually reached the pipe, so the log offset is
-			// rewound to the first unwritten byte — the next reader loses
+			// rewound to the first unwritten byte; the next reader loses
 			// nothing.
 			start, serr := logf.Seek(0, io.SeekCurrent)
 			if serr != nil {

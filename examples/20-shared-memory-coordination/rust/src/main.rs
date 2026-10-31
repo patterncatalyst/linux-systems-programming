@@ -1,4 +1,4 @@
-// shmkv v1 — cross-process coordination over a shared-memory key-value file.
+// shmkv v1: cross-process coordination over a shared-memory key-value file.
 //
 // Same SHKV2 layout as the C++ and Go versions:
 //
@@ -10,13 +10,13 @@
 //   24      40    reserved
 //   64      512   8 slots x 64 bytes: key[24] NUL-padded, value[40] NUL-padded
 //
-// The file is opened through rustix (OwnedFd — the descriptor closes on
+// The file is opened through rustix (OwnedFd, the descriptor closes on
 // drop), the mapping is a small RAII type that munmaps on drop, and the
-// futex is the raw syscall via libc::syscall — no wrapper crate, so the
+// futex is the raw syscall via libc::syscall: no wrapper crate, so the
 // FUTEX_WAIT/FUTEX_WAKE contract stays visible. The header words are
 // accessed as &AtomicU32/&AtomicU64 references into the mapping; the slot
 // bytes are copied non-atomically under the seqlock, and a torn copy is
-// detected by the seq re-check and retried — the standard seqlock trade-off.
+// detected by the seq re-check and retried: the standard seqlock trade-off.
 
 use std::os::fd::{AsFd, OwnedFd};
 use std::process::ExitCode;
@@ -195,7 +195,7 @@ fn futex_wake_all(word: &AtomicU32) {
 
 // --- POSIX message queue (libc wrappers) -----------------------------------
 
-/// mq_close + mq_unlink on drop — no queue name survives a bench run.
+/// mq_close + mq_unlink on drop: no queue name survives a bench run.
 struct MessageQueue {
     mqd: libc::mqd_t,
     name: std::ffi::CString,
@@ -388,7 +388,10 @@ fn cmd_bench(path: &str, rounds: u64, channel: &str) -> Result<()> {
                         }
                     },
                     _ => {
-                        mq_receive_id(mq.as_ref().unwrap())?;
+                        mq_receive_id(
+                            mq.as_ref()
+                                .expect("mq channel guarantees a MessageQueue"),
+                        )?;
                     }
                 }
                 recv[i as usize - 1] = Instant::now();
@@ -409,7 +412,10 @@ fn cmd_bench(path: &str, rounds: u64, channel: &str) -> Result<()> {
             }
             send_ts[i as usize - 1] = Instant::now();
             if channel == "mq" {
-                mq_send_id(mq.as_ref().unwrap(), i)?;
+                mq_send_id(
+                    mq.as_ref().expect("mq channel guarantees a MessageQueue"),
+                    i,
+                )?;
             } else {
                 seqlock_write(&shm, || shm.counter().store(i, Ordering::Relaxed));
                 shm.futex_word().store(i as u32, Ordering::Release);

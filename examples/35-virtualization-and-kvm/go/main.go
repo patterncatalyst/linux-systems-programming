@@ -1,5 +1,5 @@
 // overheadbench: three host-local microbenchmarks used to talk about
-// virtualization/container overhead in chapter 35 —
+// virtualization/container overhead in chapter 35.
 //
 //	(a) syscall latency: a tight getpid(2) loop, ns/call
 //	(b) memory bandwidth: sequential read of a big buffer, GB/s
@@ -8,7 +8,7 @@
 //	overheadbench [--bench syscall|mem|io|all] [--iters N]
 //
 // Prints one line per bench: "bench=<name> metric=<value> unit=<unit>".
-// This binary always measures wherever it runs (host, VM, or container) —
+// This binary always measures wherever it runs (host, VM, or container);
 // the chapter runs the *same* binary in all three places and tabulates the
 // numbers; this example itself only asserts the host numbers are sane.
 package main
@@ -91,7 +91,7 @@ func benchSyscallRun(iters uint64) float64 {
 	start := time.Now()
 	for i := uint64(0); i < iters; i++ {
 		// unix.Getpid issues the raw getpid(2) syscall on every call (the Go
-		// runtime does not cache it) — every iteration really crosses into
+		// runtime does not cache it), every iteration really crosses into
 		// the kernel, the syscall-boundary cost this chapter contrasts
 		// against VM (vmexit trap) and container (near-zero extra) overhead.
 		unix.Getpid()

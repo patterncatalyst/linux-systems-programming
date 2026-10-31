@@ -9,7 +9,7 @@
 -- exact maxrss/user/sys/wall shape with plausible values (wall covers a real
 -- 200 ms sleep, maxrss is nonzero, user CPU registers for a busy loop); and
 -- an exec failure prints only "pmon: exec <cmd>: <reason>" on stderr with
--- exit 127 — no fate or rusage lines for a child that never ran.
+-- exit 127: no fate or rusage lines for a child that never ran.
 
 local script_dir = arg[0]:match("(.*/)") or "./"
 local repo_root = os.getenv("REPO_ROOT") or (script_dir .. "../..")

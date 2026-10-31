@@ -1,4 +1,4 @@
-// fwatch v1 — a file watcher growing chapter by chapter.
+// fwatch v1: a file watcher growing chapter by chapter.
 //
 // v0 subcommands (snapshot/diff) still work; v1 adds `watch`. Where the C++
 // and Rust versions run one explicit epoll loop over inotify + timerfd +
@@ -114,7 +114,7 @@ func cmdDiff(oldPath, newPath string) error {
 }
 
 // ---------------------------------------------------------------------------
-// v1: watch — goroutine + channels; the runtime owns the epoll loop.
+// v1 (watch): goroutine + channels; the runtime owns the epoll loop.
 // ---------------------------------------------------------------------------
 
 type fsEvent struct {

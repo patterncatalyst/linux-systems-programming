@@ -1,4 +1,4 @@
-// boostthread -- the reference program for ch52.
+// boostthread: the reference program for ch52.
 //
 // Boost.Thread is where std::thread came from: C++11 standardized it almost
 // wholesale. So the interesting question in 2026 is not "how do I use
@@ -7,16 +7,16 @@
 // This program answers that with four pillars, each a thing std:: cannot do
 // on this toolchain, and each verified rather than asserted:
 //
-//   continuations  boost::future::then() and when_all -- std::future has
-//                  neither, provable at compile time
+//   continuations  boost::future::then() and when_all (std::future has
+//                  neither, provable at compile time)
 //   upgrade        boost::upgrade_lock -> upgrade_to_unique_lock, promoting a
 //                  reader to a writer without releasing. std::shared_mutex
 //                  has no upgrade path at all; the name std::upgrade_lock
 //                  does not exist.
-//   interrupt      boost::thread::interrupt() -- the THIRD cancellation model
+//   interrupt      boost::thread::interrupt(): the THIRD cancellation model
 //                  in this book, sitting between ch50's pthread_cancel and
 //                  ch51's stop_token
-//   attributes     boost::thread::attributes::set_stack_size -- ch50's
+//   attributes     boost::thread::attributes::set_stack_size: ch50's
 //                  pthread_attr_setstacksize, portably
 //
 // BOOST_THREAD_VERSION and the continuation macros are set in CMakeLists.txt
@@ -52,7 +52,7 @@ std::uint64_t fnv1a(const std::uint8_t* data, std::size_t len) {
     std::uint64_t h = kFnvOffsetBasis;
     for (std::size_t i = 0; i < len; ++i) {
         h ^= data[i];
-        h *= kFnvPrime;  // uint64_t wraps by definition -- no UB to sanitize
+        h *= kFnvPrime;  // uint64_t wraps by definition, no UB to sanitize
     }
     return h;
 }
@@ -65,7 +65,7 @@ void report(const char* pillar) {
 // ── the compile-time contrast ────────────────────────────────────────────
 //
 // Whether a type has .then() is decidable at compile time, so this chapter
-// does not have to *claim* that std::future lacks continuations -- it can
+// does not have to *claim* that std::future lacks continuations: it can
 // compile a concept against both types and print the two answers. A reader
 // who doubts it can change the concept and watch the output change.
 
@@ -91,7 +91,7 @@ void pillar_versions() {
 void pillar_continuations() {
     boost::future<int> start = boost::async(boost::launch::async, [] { return 21; });
 
-    // .then() takes the READY FUTURE, not the value -- so the continuation can
+    // .then() takes the READY FUTURE, not the value, so the continuation can
     // inspect whether the antecedent held a value or an exception. That is
     // why the lambda's parameter is boost::future<int> and not int.
     boost::future<int> doubled = start.then([](boost::future<int> prev) { return prev.get() * 2; });
@@ -122,7 +122,7 @@ void pillar_when_all() {
 // The classic read-mostly pattern: take a shared lock, look at the data, and
 // occasionally discover you need to modify it. With std::shared_mutex you
 // must drop the shared lock and take a unique one, and in that gap another
-// writer can change what you just read -- so you have to re-check everything.
+// writer can change what you just read, so you have to re-check everything.
 //
 // boost::upgrade_lock is a third lock state: shared with respect to other
 // readers, exclusive with respect to other UPGRADERS. Promoting it to unique
@@ -137,7 +137,7 @@ void pillar_upgrade() {
     boost::upgrade_lock<boost::shared_mutex> up(sm);
 
     // A concurrent reader can still take a shared lock while we hold the
-    // UPGRADE lock -- that is the point: readers are not blocked yet.
+    // UPGRADE lock: that is the point, readers are not blocked yet.
     boost::thread reader([&] {
         boost::shared_lock<boost::shared_mutex> rd(sm);
         reader_saw_old.store(shared_value == 1, std::memory_order_release);
@@ -165,19 +165,19 @@ void pillar_upgrade() {
 //
 // ch50: pthread_cancel unwinds through a special exception that glibc
 //       requires to propagate. A catch (...) that does not rethrow ABORTS
-//       the process -- "FATAL: exception not rethrown", exit 134.
+//       the process: "FATAL: exception not rethrown", exit 134.
 // ch51: std::stop_token sets a flag. Nothing is thrown, so there is nothing
 //       to swallow, but a thread that never polls will never stop.
 // here: boost::thread::interrupt() throws an ORDINARY C++ exception,
 //       boost::thread_interrupted, at defined interruption points.
 //
 // Ordinary is the operative word, and it is what puts Boost between the two:
-// you get an exception you can catch, log, and translate -- and swallowing it
+// you get an exception you can catch, log, and translate, and swallowing it
 // is a bug rather than a process kill.
 //
 // The interruption points are a defined list (this_thread::sleep_for,
 // condition_variable::wait, thread::join, and interruption_point() among
-// others). A tight compute loop contains none of them and will not stop --
+// others). A tight compute loop contains none of them and will not stop,
 // which is a property to know rather than a defect to be surprised by.
 
 void interruptible_worker(std::atomic<bool>* caught) {
@@ -190,7 +190,7 @@ void interruptible_worker(std::atomic<bool>* caught) {
         caught->store(true, std::memory_order_release);
         std::printf("interrupt: worker caught boost::thread_interrupted\n");
         std::fflush(stdout);
-        // Rethrowing is optional here. Returning is fine -- and that is the
+        // Rethrowing is optional here. Returning is fine, and that is the
         // whole difference from ch50.
     }
 }
@@ -223,7 +223,7 @@ void swallowing_worker() {
 }
 
 // The other half of "defined interruption points": a thread with none of them
-// cannot be interrupted at all. This is not a defect -- it is the difference
+// cannot be interrupted at all. This is not a defect: it is the difference
 // between Boost's model and ch50's pthread_cancel, which CAN yank a thread out
 // of a compute loop because it is asynchronous. Boost trades that reach for
 // predictability: interruption happens where you can see it happening.
@@ -279,7 +279,7 @@ void pillar_interrupt_swallow() {
 // ── pillar 4: thread attributes ──────────────────────────────────────────
 //
 // ch50 set a thread's stack size with pthread_attr_setstacksize, and noted
-// that std::thread offers nothing equivalent. Boost.Thread does, portably --
+// that std::thread offers nothing equivalent. Boost.Thread does, portably,
 // and on Linux it lands on exactly the same POSIX call, which is why the
 // number below matches ch50's to the byte.
 

@@ -1,4 +1,4 @@
-// shmkv v1 — cross-process coordination over a shared-memory key-value file.
+// shmkv v1: cross-process coordination over a shared-memory key-value file.
 //
 // Same SHKV2 layout as the C++ and Rust versions:
 //
@@ -11,7 +11,7 @@
 //	64      512   8 slots x 64 bytes: key[24] NUL-padded, value[40] NUL-padded
 //
 // Go futex caveat: FUTEX_WAIT is a blocking syscall, so it parks the calling
-// OS thread inside the kernel — the goroutine scheduler cannot preempt it.
+// OS thread inside the kernel; the goroutine scheduler cannot preempt it.
 // The runtime notices the thread is gone (sysmon) and hands its P to another
 // thread, so the rest of the program keeps running, but every concurrent
 // waiter pins one kernel thread for the duration. Channels and the netpoller
@@ -371,7 +371,7 @@ func cmdBench(path string, rounds uint64, channel string) error {
 				}
 			case "poll":
 				// Sleep FIRST, then look: by construction every observation
-				// costs at least one full 1 ms nap — what futex wakes avoid.
+				// costs at least one full 1 ms nap, which futex wakes avoid.
 				for {
 					time.Sleep(time.Millisecond)
 					if atomic.LoadUint64(s.counter()) >= i {

@@ -1,5 +1,5 @@
 // overheadbench: three host-local microbenchmarks used to talk about
-// virtualization/container overhead in chapter 35 —
+// virtualization/container overhead in chapter 35:
 //   (a) syscall latency: a tight getpid(2) loop, ns/call
 //   (b) memory bandwidth: sequential read of a big buffer, GB/s
 //   (c) small-file IO: create/write/fsync/unlink loop, ops/s
@@ -7,7 +7,7 @@
 //   overheadbench [--bench syscall|mem|io|all] [--iters N]
 //
 // Prints one line per bench: "bench=<name> metric=<value> unit=<unit>".
-// This binary always measures wherever it runs (host, VM, or container) —
+// This binary always measures wherever it runs (host, VM, or container):
 // the chapter runs the *same* binary in all three places and tabulates the
 // numbers; this example itself only asserts the host numbers are sane.
 
@@ -95,7 +95,7 @@ fn bench_syscall(iters: u64) -> f64 {
     let start = Instant::now();
     for _ in 0..iters {
         // rustix::process::getpid issues the raw getpid(2) syscall every
-        // call — every iteration really crosses into the kernel, the
+        // call: every iteration really crosses into the kernel, the
         // syscall-boundary cost this chapter contrasts against VM (vmexit
         // trap) and container (near-zero extra) overhead.
         black_box(rustix::process::getpid());

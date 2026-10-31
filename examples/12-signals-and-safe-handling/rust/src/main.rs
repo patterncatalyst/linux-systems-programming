@@ -1,11 +1,11 @@
-// pmon v1 — a mini process supervisor (chapter 12: signals and safe handling).
+// pmon v1: a mini process supervisor (chapter 12: signals and safe handling).
 //
 //   pmon run -- CMD [ARGS...]
 //   pmon supervise [--max-restarts N] [--backoff-ms B] -- CMD [ARGS...]
 //
 // The Rust take on async-signal-safe design: the classic self-pipe trick,
 // with the unsafe parts delegated to the signal-hook crate. Each watched
-// signal is registered twice — flag::register sets a per-signal AtomicBool,
+// signal is registered twice: flag::register sets a per-signal AtomicBool,
 // and low_level::pipe::register_raw writes one byte to a "doorbell" pipe
 // (write(2) is async-signal-safe; the write end is non-blocking so a full
 // pipe can never wedge the handler). The main loop is then ordinary code:

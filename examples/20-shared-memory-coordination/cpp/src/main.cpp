@@ -1,4 +1,4 @@
-// shmkv v1 — cross-process coordination over a shared-memory key-value file.
+// shmkv v1: cross-process coordination over a shared-memory key-value file.
 //
 // The v0 file format (fixed slots in an mmap'd file) grows a v1 header with
 // SHKV2 magic:
@@ -12,9 +12,9 @@
 //   64      512   8 slots x 64 bytes: key[24] NUL-padded, value[40] NUL-padded
 //
 // Three coordination channels are demonstrated:
-//   serve  — writer: seqlock-protected publish + FUTEX_WAKE after each update
-//   watch  — reader: FUTEX_WAIT loop + seqlock-consistent snapshot reads
-//   bench  — latency shoot-out: futex wake vs POSIX message queue vs 1 ms
+//   serve (writer): seqlock-protected publish + FUTEX_WAKE after each update
+//   watch (reader): FUTEX_WAIT loop + seqlock-consistent snapshot reads
+//   bench: latency shoot-out: futex wake vs POSIX message queue vs 1 ms
 //            sleep-polling of the counter
 //
 // Seqlock protocol (single writer):
@@ -128,7 +128,7 @@ class Mapping {
   std::size_t len_ = 0;
 };
 
-// mq_close + mq_unlink on scope exit — no queue name survives a bench run.
+// mq_close + mq_unlink on scope exit, no queue name survives a bench run.
 class MessageQueue {
  public:
   MessageQueue(mqd_t d, std::string name) : d_(d), name_(std::move(name)) {}
@@ -390,7 +390,7 @@ int cmd_bench(const std::string& path, std::uint64_t rounds, Channel channel,
           break;
         case Channel::kPoll:
           // Sleep FIRST, then look: by construction every observation costs
-          // at least one full 1 ms nap — the cost futex wakeups avoid.
+          // at least one full 1 ms nap: the cost futex wakeups avoid.
           for (;;) {
             std::this_thread::sleep_for(1ms);
             if (shm->counter().load(std::memory_order_acquire) >= i) break;

@@ -79,7 +79,7 @@ RAW_CLOSE_RE = re.compile(r"\{%-?\s*endraw\s*-?%\}")
 
 
 def annotate_body(lines: list[str], start: int) -> tuple[list[bool], list[bool]]:
-    """Per line: (guarded, fence_open) — guarded means inside a fence or raw
+    """Per line: (guarded, fence_open), where guarded means inside a fence or raw
     region (delimiter lines count as guarded); fence_open marks lines that
     open a fenced code block outside raw."""
     n = len(lines)

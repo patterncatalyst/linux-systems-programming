@@ -1,4 +1,4 @@
-// allocbench — allocation-heavy index build/query (chapter 17: allocators
+// allocbench: allocation-heavy index build/query (chapter 17: allocators
 // and GC runtimes).
 //
 //   allocbench [--allocs N] [--variant default|arena]
@@ -8,7 +8,7 @@
 // strings, then query every distinct key back. What differs is where the
 // intermediates live:
 //
-//   default: every key/frag/value is a plain std::string — each a trip to
+//   default: every key/frag/value is a plain std::string: each a trip to
 //            the global heap (malloc), each freed individually when its
 //            batch scratch vector is destroyed.
 //   arena:   per batch of 1000 iterations, a std::pmr::monotonic_buffer_-
@@ -20,7 +20,7 @@
 //            long-lived index.
 //
 // Reports: "allocbench: variant=<v> allocs=<n> peak_rss=<kb>KB ms=<t>"
-// (peak_rss is getrusage(2) ru_maxrss — the VmHWM high-water mark — in KB).
+// (peak_rss is getrusage(2) ru_maxrss, the VmHWM high-water mark, in KB).
 
 #include <algorithm>
 #include <array>

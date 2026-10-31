@@ -1,4 +1,4 @@
-// sysagent v0 (chapter 36: /proc, /sys, and the agent) — a USE-method
+// sysagent v0 (chapter 36: /proc, /sys, and the agent): a USE-method
 // metrics collector reading /proc + /sys/fs/cgroup, no root required.
 //
 //	sysagent sample [--json] [--interval-ms N]
@@ -13,7 +13,7 @@
 // endpoint, one fresh sample per request.
 //
 // The field names in both the --json and /metrics output are the
-// deterministic, cross-language schema documented in README.md — C++ and
+// deterministic, cross-language schema documented in README.md; C++ and
 // Rust sysagent emit byte-for-byte the same keys.
 package main
 

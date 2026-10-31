@@ -4,14 +4,14 @@
 -- host: it builds the binary, runs `serve` in the background, drives N traced
 -- requests through it, sends SIGINT so the SDK flushes and shuts down, then
 -- proves the telemetry actually LANDED IN THE STACK by querying Prometheus
--- (metrics) and Tempo (traces) through Grafana's datasource proxy -- not by
+-- (metrics) and Tempo (traces) through Grafana's datasource proxy, not by
 -- trusting the program's own "I exported" claim.
 --
 -- The query surface: only Grafana (:3000, admin/admin) is published off the
 -- otel-lgtm container; it proxies to the internal Prometheus (uid=prometheus,
 -- metrics) and Tempo (uid=tempo, traces). Each language tags its telemetry
--- with a distinct service.name -- lsp-otel-cpp / lsp-otel-go / lsp-otel-rust
--- -- so the three languages' signals never collide in the shared stack and
+-- with a distinct service.name (lsp-otel-cpp / lsp-otel-go / lsp-otel-rust),
+-- so the three languages' signals never collide in the shared stack and
 -- each run is queried by its own service_name.
 --
 -- Asserts observable behavior, identical in shape across cpp/go/rust:

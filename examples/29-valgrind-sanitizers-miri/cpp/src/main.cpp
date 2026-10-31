@@ -1,4 +1,4 @@
-// bugfarm — chapter 29: valgrind, sanitizers, and miri.
+// bugfarm: chapter 29: valgrind, sanitizers, and miri.
 //
 //   app <leak|uaf|uninit|overflow|race>
 //
@@ -15,7 +15,7 @@
 //
 // Plain (uninstrumented) runs are deliberately left un-hardened: leak and
 // uninit stay silent, uaf usually "works" by accident, race just produces
-// a wrong count -- and overflow can abort with a glibc heap-corruption
+// a wrong count, and overflow can abort with a glibc heap-corruption
 // message when its write clobbers the next chunk's bookkeeping. That
 // unpredictability *is* the lesson: these bugs hide from a normal run and
 // need a tool that watches memory, not eyeballs on stdout.
@@ -115,7 +115,7 @@ int do_overflow() {
 
 int do_race() {
     {
-        std::jthread t1(bump); // RAII joins both on scope exit -- lifetime
+        std::jthread t1(bump); // RAII joins both on scope exit: lifetime
         std::jthread t2(bump); // is safe; the *data* race on `counter` is not
     }
     std::println("bugfarm: race: counter={} (expected 400000; a wrong value is the benign symptom)",

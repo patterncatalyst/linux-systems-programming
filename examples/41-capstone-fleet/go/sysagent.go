@@ -1,4 +1,4 @@
-// sysagent.go — the book's /proc-reading metrics agent (ch36), reduced to
+// sysagent.go: the book's /proc-reading metrics agent (ch36), reduced to
 // three signals (cpu%, mem%, load1) exported both as a stdout line (cheap,
 // always-on local observability) and as OTel gauges over OTLP when
 // OTEL_EXPORTER_OTLP_ENDPOINT is set. Also carries the chaos driver's
@@ -187,7 +187,7 @@ func sysagentRun(node string, intervalMs int, once bool, tel *telemetry) int {
 	return 0
 }
 
-// saturate — chaos helper: busy-spin goroutines (cpu) or hold allocated,
+// saturate: chaos helper; busy-spin goroutines (cpu) or hold allocated,
 // touched memory (mem) for --seconds, so a concurrently-running sysagent's
 // cpu_pct/mem_pct visibly rises (this is the fleet's USE-method callback).
 func saturate(resource string, seconds, workers, mb int) int {

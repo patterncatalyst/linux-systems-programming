@@ -5,7 +5,7 @@
 --      exit 2 with a usage line on stderr.
 --   2. `sample --json` emits every expected key with a numeric value, in the
 --      deterministic cross-language schema (README.md), with sane ranges.
---   3. A cpu-busy child measurably raises cpu_util_pct vs an idle baseline —
+--   3. A cpu-busy child measurably raises cpu_util_pct vs an idle baseline:
 --      compared with a robust margin and a couple of retries, since this
 --      runs on a real, possibly-noisy host rather than an isolated lab VM.
 --   4. `serve --port P` answers GET /metrics with the same JSON shape, 404s
@@ -121,7 +121,7 @@ checks.expect_match(margin_ok and "yes" or "no", "yes",
   lang .. ": a cpu-busy child raises cpu_util_pct vs idle (margin>=12pp or busy>=55%)")
 
 -- ---------------------------------------------------------------------------
--- 4. `serve` — /metrics answers, 404s elsewhere, agrees with a direct
+-- 4. `serve`: /metrics answers, 404s elsewhere, agrees with a direct
 --    /proc read, and shuts down cleanly on SIGINT.
 -- ---------------------------------------------------------------------------
 

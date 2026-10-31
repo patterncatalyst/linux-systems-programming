@@ -1,14 +1,14 @@
-// toolbox -- the reference C++23 program for ch46 (CMake presets, Conan
+// toolbox: the reference C++23 program for ch46 (CMake presets, Conan
 // lockfiles, GCC/clang parity, gdb pretty-printers, clang-tidy/clang-format,
 // ccache/mold).
 //
 // Subcommands:
-//   toolbox report           -- deterministic FNV-1a digest over a fixed
+//   toolbox report: deterministic FNV-1a digest over a fixed
 //                                embedded payload, integer/string output
 //                                only (no floats, addresses, timing, or
 //                                unordered-container iteration) so GCC and
 //                                clang builds are byte-identical.
-//   toolbox defect overflow  -- deliberately triggers signed-integer
+//   toolbox defect overflow: deliberately triggers signed-integer
 //                                overflow, for the UBSan recipe.
 #include <climits>
 #include <cstdio>
@@ -35,7 +35,7 @@ int cmd_report() {
 
 int cmd_defect_overflow() {
     // `volatile` blocks the compiler from constant-folding the overflow at
-    // compile time -- the point is a *runtime* UBSan trap, not a compiler
+    // compile time: the point is a *runtime* UBSan trap, not a compiler
     // diagnostic. This one statement is the entire seeded defect.
     volatile int max_value = INT_MAX;
     std::printf("toolbox defect overflow: max_value=%d\n", max_value);

@@ -1,20 +1,20 @@
 //go:generate go run ./internal/gen
 
-// toolbox -- the reference Go program for ch47 (go/toolchain version
+// toolbox: the reference Go program for ch47 (go/toolchain version
 // management, go generate discipline, gofmt vs gofumpt, go vet, pprof,
 // golangci-lint/staticcheck config authoring, delve, benchstat). Go's analog
 // of ch46's C++ toolbox: the Go toolchain itself is the subject.
 //
 // Subcommands:
 //
-//	toolbox report          -- deterministic FNV-1a digest over a fixed
+//	toolbox report:          deterministic FNV-1a digest over a fixed
 //	                            embedded payload, integer/string output
 //	                            only (no floats, addresses, timing, or map
 //	                            iteration) so the digest is reproducible.
-//	toolbox tools            -- prints the go-generate-produced tool table,
+//	toolbox tools:           prints the go-generate-produced tool table,
 //	                            proof that `go generate` output is real and
 //	                            checkable, not merely "it ran".
-//	toolbox defect divzero   -- deliberately triggers an integer
+//	toolbox defect divzero:  deliberately triggers an integer
 //	                            divide-by-zero panic (delve/panic-recovery
 //	                            narrative parity with ch46's UBSan defect).
 package main
@@ -44,7 +44,7 @@ func cmdTools() int {
 
 func cmdDefectDivZero() int {
 	// `int32` variables (not compile-time constants) so the compiler cannot
-	// fold the division at build time -- the point is a *runtime* panic,
+	// fold the division at build time; the point is a *runtime* panic,
 	// not a compiler diagnostic. This one statement is the entire seeded
 	// defect.
 	var divisor int32

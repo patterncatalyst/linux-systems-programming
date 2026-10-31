@@ -1,6 +1,6 @@
 """Conan 2 consumer for ch56's opt-in P2300 arm.
 
-Deliberately its own conanfile, separate from the default cpp/ build -- exactly
+Deliberately its own conanfile, separate from the default cpp/ build, exactly
 as ch46 did. `./demo.sh cpp build` and the `release` preset never evaluate this
 file, so the six-model core needs no Conan, no network, and no third-party
 package at all, and fedora:44 CI (which has no Conan) stays green.

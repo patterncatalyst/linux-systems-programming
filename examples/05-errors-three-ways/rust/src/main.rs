@@ -1,8 +1,8 @@
-//! copyx SRC DST — file copier that establishes the book's error taxonomy.
+//! copyx SRC DST: file copier that establishes the book's error taxonomy.
 //!
-//!   exit 0 — success; "copied <N> bytes" on stdout
-//!   exit 2 — source-side failure (open/read SRC); "copyx: <reason>" on stderr
-//!   exit 3 — destination-side failure (open/write/close DST); same shape
+//!   exit 0: success; "copied <N> bytes" on stdout
+//!   exit 2: source-side failure (open/read SRC); "copyx: <reason>" on stderr
+//!   exit 3: destination-side failure (open/write/close DST); same shape
 //!
 //! EINTR on read(2)/write(2) is retried (the syscall was interrupted before
 //! completing; reissuing it is the only correct policy), and short writes are
@@ -42,7 +42,7 @@ impl CopyError {
 
 /// Render an errno the way glibc's strerror(3) does, so all three
 /// implementations print identical reason text. `Errno`'s own Display goes
-/// through `std::io::Error`, which appends " (os error N)" — strip it.
+/// through `std::io::Error`, which appends " (os error N)"; strip it.
 fn strerror(errno: Errno) -> String {
     let s = std::io::Error::from(errno).to_string();
     match s.rfind(" (os error ") {

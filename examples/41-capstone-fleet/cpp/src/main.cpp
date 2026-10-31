@@ -1,11 +1,11 @@
-// 41-capstone-fleet — pmon supervises chatterd + sysagent + fwatch across two
+// 41-capstone-fleet: pmon supervises chatterd + sysagent + fwatch across two
 // lab hosts, capability-dropped and Landlock-sandboxed, all telemetry
 // exported to the host LGTM stack. One binary, four subcommands (the same
 // self-re-exec shape ch34's container entrypoint uses): pmon is the fleet's
 // init; chatterd/sysagent/fwatch are the services it supervises.
 //
 // This file is a direct, line-for-line port of go/main.go's flag parsing
-// (argFlag/hasFlag/firstPositional/atoiOr) and dispatch table — the usage
+// (argFlag/hasFlag/firstPositional/atoiOr) and dispatch table: the usage
 // banner text below is byte-identical to the Go reference's, since
 // verify.lua and every language's demo.sh depend on it matching exactly.
 #include <cstdio>
@@ -40,7 +40,7 @@ void usage() {
 
 // argFlag scans args for "--name value" and returns (value, true), or
 // (def, true) if absent, or (_, false) if the flag is present but has no
-// following value — mirrors go/main.go's argFlag exactly.
+// following value: mirrors go/main.go's argFlag exactly.
 std::pair<std::string, bool> arg_flag(const std::vector<std::string>& args, const std::string& name,
                                        const std::string& def) {
     for (std::size_t i = 0; i < args.size(); ++i) {
@@ -65,7 +65,7 @@ bool has_flag(const std::vector<std::string>& args, const std::string& name) {
 
 // firstPositional: walks args, treating every "--xxx" token as consuming
 // exactly one following token (its value), and returns the first token that
-// survives that skipping — mirrors go/main.go's firstPositional exactly,
+// survives that skipping: mirrors go/main.go's firstPositional exactly,
 // including its "skip the very next token no matter what it is" quirk.
 std::string first_positional(const std::vector<std::string>& args) {
     bool skip = false;

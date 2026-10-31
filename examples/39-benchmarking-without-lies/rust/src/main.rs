@@ -1,4 +1,4 @@
-// benchlab (Rust) — proper benchmarking of the chatterd frame codec (ch21).
+// benchlab (Rust): proper benchmarking of the chatterd frame codec (ch21).
 //
 // Usage:
 //   app --op encode|decode|roundtrip --iters N [--warmup W]   # the real thing
@@ -7,19 +7,19 @@
 // The "real thing" times each iteration individually with a monotonic clock,
 // discards a warmup phase, and reports min/median/p99/max plus a
 // coordinated-omission-corrected p99 (see co_correct below). `--lie` times a
-// single unwarmed call with wall-clock and reports one number — exactly the
+// single unwarmed call with wall-clock and reports one number: exactly the
 // benchmark the rest of this example exists to discredit.
 //
 // Wire format (canonical chatterd chat frame, introduced ch21):
 //   [ magic 0x43 0x48 ][ version 0x01 ][ type u8 ][ length u16 be ][ payload ]
-// This file re-implements only encode_frame/decode_frame — the codec under
-// test — not the daemon; see ch21/22/27 for the networked version.
+// This file re-implements only encode_frame/decode_frame (the codec under
+// test), not the daemon; see ch21/22/27 for the networked version.
 
 use std::process::ExitCode;
 use std::time::Instant;
 
 // ---------------------------------------------------------------------------
-// Frame codec under test — canonical chatterd chat frame (see file header).
+// Frame codec under test: canonical chatterd chat frame (see file header).
 // ---------------------------------------------------------------------------
 const HEADER_LEN: usize = 6;
 const MAGIC0: u8 = 0x43;
@@ -39,7 +39,7 @@ fn encode_frame(typ: u8, body: &[u8]) -> Vec<u8> {
     out
 }
 
-// Decodes exactly one frame that fills `buf` completely — no partial-read
+// Decodes exactly one frame that fills `buf` completely: no partial-read
 // reassembly here, that lives in the networked chatterd (ch21/22/27); this
 // harness only measures the codec's per-call cost.
 fn decode_frame(buf: &[u8]) -> Result<(u8, Vec<u8>), String> {
@@ -103,7 +103,7 @@ impl Op {
 
 // One iteration of the requested op against the fixed workload. Returns a
 // small scalar derived from the result so the caller can fold it into a
-// checksum — this is what keeps the optimizer from proving the call's result
+// checksum: this is what keeps the optimizer from proving the call's result
 // is unused and deleting it. Propagates a codec bug (should never trigger on
 // this fixed workload) via `?` up to main.
 fn run_once(op: Op, body: &[u8], prebuilt_frame: &[u8]) -> Result<u64, String> {
@@ -133,7 +133,7 @@ fn percentile(sorted: &[i64], p: f64) -> i64 {
 }
 
 // Coordinated-omission correction (HdrHistogram's recordValueWithExpectedInterval):
-// this harness is a closed loop — iteration N+1 never starts until N returns —
+// this harness is a closed loop (iteration N+1 never starts until N returns),
 // so a stall (a page fault, a context switch, a scheduling hiccup) is
 // recorded as a single slow sample. A fixed-rate caller would instead have
 // had many requests queue up behind that stall, each experiencing a similar
@@ -280,7 +280,7 @@ fn main() -> ExitCode {
     let min_ns = sorted[0];
     let median_ns = percentile(&sorted, 0.5);
     let p99_ns = percentile(&sorted, 0.99);
-    let max_ns = *sorted.last().unwrap();
+    let max_ns = *sorted.last().expect("iters >= 2 guarantees at least one sample");
 
     let expected_interval_ns = if median_ns > 0 { median_ns } else { 1 };
     const CO_CAP: usize = 5_000_000;

@@ -1,9 +1,9 @@
-//! toolbox -- the reference Rust program for ch48 (rustup/rust-toolchain.toml
+//! toolbox: the reference Rust program for ch48 (rustup/rust-toolchain.toml
 //! pinning, rustfmt, clippy, cargo test, and the skip-if-present
 //! nextest/deny/llvm-cov/audit accelerators).
 //!
 //! Subcommands:
-//!   toolbox report  -- deterministic FNV-1a digest over a fixed embedded
+//!   toolbox report: deterministic FNV-1a digest over a fixed embedded
 //!                       payload, integer/string output only (no floats,
 //!                       addresses, timing, or hash-map iteration), so the
 //!                       output is bit-for-bit reproducible across runs.

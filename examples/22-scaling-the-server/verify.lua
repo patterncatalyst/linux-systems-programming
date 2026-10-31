@@ -1,15 +1,15 @@
 -- Verify chatterd v1 (22-scaling-the-server) for LSP_LANG.
 --
 -- Asserts observable behavior, identical across cpp/go/rust:
---   1. epoll engine, two-party transcript — a listener receives the exact
+--   1. epoll engine, two-party transcript: a listener receives the exact
 --      "alice: hello world" line the sender broadcast; server stop summary
 --      reports messages=1 peak_conns=2; clean exit
---   2. epoll engine, load — `flood 50` opens 50 concurrent connections and one
+--   2. epoll engine, load: `flood 50` opens 50 concurrent connections and one
 --      broadcast is DELIVERED to all 50 (delivered==connected==50, no dropped
 --      frames), exit 0; server stop summary reports messages=1 peak_conns=50
---   3. threaded engine — the same two-party transcript and 50-client flood
+--   3. threaded engine: the same two-party transcript and 50-client flood
 --      still work and shut down cleanly
---   4. error shapes — no subcommand and bad flags exit 2; a client against a
+--   4. error shapes: no subcommand and bad flags exit 2; a client against a
 --      dead port exits 1
 --
 -- Each scenario runs its own fresh daemon so the message and peak counts are
@@ -81,7 +81,7 @@ cat @WD@/flood.out
 ]]
 
 -- ---------------------------------------------------------------------------
--- 1. epoll engine — two-party transcript
+-- 1. epoll engine: two-party transcript
 -- ---------------------------------------------------------------------------
 
 local e1 = scenario("epoll", two_party)
@@ -98,7 +98,7 @@ checks.expect_match(e1.out, "chatterd: stopped engine=epoll messages=1 peak_conn
   lang .. ": epoll stop summary reports 1 message across 2 peak connections")
 
 -- ---------------------------------------------------------------------------
--- 2. epoll engine — 50-connection flood, broadcast delivered to all
+-- 2. epoll engine: 50-connection flood, broadcast delivered to all
 -- ---------------------------------------------------------------------------
 
 local e2 = scenario("epoll", flood)
@@ -112,7 +112,7 @@ checks.expect_match(e2.out, "chatterd: stopped engine=epoll messages=1 peak_conn
   lang .. ": epoll stop summary reports 1 message across 50 peak connections")
 
 -- ---------------------------------------------------------------------------
--- 3. threaded engine — same transcript and flood still work
+-- 3. threaded engine: same transcript and flood still work
 -- ---------------------------------------------------------------------------
 
 local t1 = scenario("threaded", two_party)

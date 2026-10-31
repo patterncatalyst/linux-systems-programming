@@ -1,21 +1,21 @@
-// fwatch v3 — the ch09 watcher, now sandboxed.
+// fwatch v3: the ch09 watcher, now sandboxed.
 //
 // `watch --sandbox DIR` applies two independent kernel access-control layers
 // before the epoll loop ever runs:
 //
-//   Landlock  — a ruleset (the `landlock` crate) restricting filesystem READS
-//               to DIR. Unprivileged, self-imposed, enforced by the kernel
-//               against this process and every descendant.
-//   seccomp   — a syscall allowlist (the `seccompiler` crate — Firecracker's
-//               BPF compiler) covering only what the watch loop needs.
-//               Everything else returns EPERM.
+//   Landlock: a ruleset (the `landlock` crate) restricting filesystem READS
+//             to DIR. Unprivileged, self-imposed, enforced by the kernel
+//             against this process and every descendant.
+//   seccomp:  a syscall allowlist (the `seccompiler` crate, Firecracker's
+//             BPF compiler) covering only what the watch loop needs.
+//             Everything else returns EPERM.
 //
 // Landlock's own syscall numbers have no libc wrapper; probing the running
 // kernel's ABI (`landlock_abi()` below) goes through the raw syscall(2)
 // numbers directly, mirroring the C++ and Go versions of this example. Those
 // numbers are part of the kernel's frozen syscall table (once assigned they
 // never change, unlike a struct field offset), so hardcoding them per
-// architecture is the same thing glibc's own <bits/syscall.h> does — but the
+// architecture is the same thing glibc's own <bits/syscall.h> does, but the
 // ABI *version* returned by the call is always probed at runtime, never
 // assumed.
 
@@ -38,7 +38,7 @@ use seccompiler::{BpfProgram, SeccompAction, SeccompFilter, TargetArch};
 const DEBOUNCE: Duration = Duration::from_millis(100);
 
 // ---------------------------------------------------------------------------
-// Landlock ABI probe — raw syscall, no libc/crate wrapper exists for this.
+// Landlock ABI probe: raw syscall, no libc/crate wrapper exists for this.
 // ---------------------------------------------------------------------------
 
 #[cfg(target_arch = "x86_64")]
@@ -78,7 +78,7 @@ fn apply_landlock(dir: &str) -> Result<()> {
 }
 
 // ---------------------------------------------------------------------------
-// seccomp — a `seccompiler` allowlist covering exactly what the watch loop
+// seccomp: a `seccompiler` allowlist covering exactly what the watch loop
 // needs (empirically confirmed with `strace -f` across a full watch
 // session: create/modify/delete + debounce flush + timeout/signal exit).
 // Anything else returns EPERM once the filter loads.
@@ -176,7 +176,7 @@ fn cmd_diff(old_path: &str, new_path: &str) -> Result<()> {
 }
 
 // ---------------------------------------------------------------------------
-// v1: watch — one epoll loop, three fds, zero threads beyond main.
+// v1 (watch): one epoll loop, three fds, zero threads beyond main.
 // ---------------------------------------------------------------------------
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -289,7 +289,7 @@ fn run_watch_loop(dir: &str, timeout_ms: u64) -> Result<()> {
 
     loop {
         // One timer covers both jobs: it is always armed to whichever comes
-        // first — the overall timeout or the earliest per-path debounce.
+        // first: the overall timeout or the earliest per-path debounce.
         let next = pending.values().map(|p| p.due).min().map_or(deadline, |d| d.min(deadline));
         arm_timer(&timer, next.saturating_duration_since(Instant::now()))?;
 
@@ -361,7 +361,7 @@ fn cmd_watch(dir: &str, timeout_ms: u64, sandbox: bool) -> Result<()> {
 }
 
 // ---------------------------------------------------------------------------
-// probes — negative controls, one Landlock, one seccomp, exercised alone.
+// probes: negative controls, one Landlock, one seccomp, exercised alone.
 // ---------------------------------------------------------------------------
 
 // Exit codes distinct from the ordinary 0/1/2 contract: a verifier can tell

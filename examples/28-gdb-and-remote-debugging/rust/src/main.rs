@@ -1,8 +1,8 @@
-//! app -- bugfarm scenario 1: a crashing pmon-like supervisor
+//! app, bugfarm scenario 1: a crashing pmon-like supervisor
 //! (chapter 28: gdb and remote debugging).
 //!
-//!   app run    -- normal operation: reap a child, report its exit, exit 0
-//!   app crash  -- the SAME call path, fed a child record whose exit-status
+//!   app run:   normal operation: reap a child, report its exit, exit 0
+//!   app crash: the SAME call path, fed a child record whose exit-status
 //!                 slot was never populated (as if handle_child ran before
 //!                 the reaper filled it in) -> Option::unwrap() on a None
 //!                 three frames down:
@@ -15,7 +15,7 @@
 //! Rust's answer to the C++ null-pointer bug class: there is no raw pointer
 //! to leave dangling, so the equivalent defect is an `Option` that should
 //! have been filled in by now and was not. `.unwrap()` on that `None` panics
-//! rather than segfaulting -- with `panic = "unwind"` (this crate's default)
+//! rather than segfaulting; with `panic = "unwind"` (this crate's default)
 //! gdb sees the unwinder's machinery, not a clean SIGSEGV, so
 //! `RUST_BACKTRACE=1` is the idiomatic tool here, printing every frame below
 //! by name. Each frame function below is `#[inline(never)]` so release
@@ -30,7 +30,7 @@ struct ChildRecord {
 #[inline(never)]
 fn deref(child: &ChildRecord) {
     // BUG: unwrap() with no check. In "crash" mode exit_slot is None because
-    // handle_child ran before the reaper recorded the exit status -- exactly
+    // handle_child ran before the reaper recorded the exit status: exactly
     // the kind of race a real supervisor can hit.
     println!(
         "pmon: child {} exited status={}",

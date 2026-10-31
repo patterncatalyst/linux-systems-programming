@@ -1,4 +1,4 @@
-// fwatch v0 — snapshot/diff a directory tree with dirfd-relative syscalls.
+// fwatch v0: snapshot/diff a directory tree with dirfd-relative syscalls.
 //
 //   fwatch snapshot DIR              one "<relpath> <size> <mtime>" line per
 //                                    regular file, sorted by path
@@ -7,7 +7,7 @@
 //                                    summary
 //
 // The walk is deliberately explicit: rustix::fs::openat relative to the
-// parent directory fd (an OwnedFd — closed exactly once, on drop),
+// parent directory fd (an OwnedFd, closed exactly once, on drop),
 // rustix::fs::Dir to enumerate, and rustix::fs::statat with
 // SYMLINK_NOFOLLOW to classify entries.
 
@@ -24,7 +24,7 @@ struct Info {
     mtime: i64,
 }
 
-/// Sorted by path, bytewise — BTreeMap keeps snapshot output deterministic.
+/// Sorted by path, bytewise: BTreeMap keeps snapshot output deterministic.
 type Tree = BTreeMap<String, Info>;
 
 const DIR_FLAGS: OFlags = OFlags::RDONLY

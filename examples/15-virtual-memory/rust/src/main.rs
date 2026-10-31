@@ -1,4 +1,4 @@
-// memmap: self-inspecting virtual-memory tool — perform one kind of
+// memmap: self-inspecting virtual-memory tool. Perform one kind of
 // allocation, touch its pages, then report what the kernel now shows for
 // this very process: the /proc/self/maps region backing the allocation,
 // the VmRSS growth, and the getrusage(2) page-fault deltas.
@@ -194,21 +194,14 @@ fn report(addr: usize, len: usize, mode: &str, base: &Baseline) -> Result<()> {
 // ---------------------------------------------------------------------------
 
 fn touch_writable(mem: &mut [u8], page: usize) {
-    let mut i = 0;
-    while i < mem.len() {
+    for i in (0..mem.len()).step_by(page) {
         mem[i] = 1;
-        i += page;
     }
     black_box(mem);
 }
 
 fn touch_readable(mem: &[u8], page: usize) {
-    let mut sum = 0u64;
-    let mut i = 0;
-    while i < mem.len() {
-        sum += u64::from(mem[i]);
-        i += page;
-    }
+    let sum: u64 = (0..mem.len()).step_by(page).map(|i| u64::from(mem[i])).sum();
     black_box(sum);
 }
 
@@ -417,7 +410,12 @@ fn main() {
             run_mmap_anon(bytes, page)
         }
         // Prints its own header line (size comes from the file).
-        Mode::MmapFile => run_mmap_file(opts.file.as_deref().unwrap(), page),
+        Mode::MmapFile => run_mmap_file(
+            opts.file
+                .as_deref()
+                .expect("parse_args guarantees FILE is set for mmap-file mode"),
+            page,
+        ),
         Mode::FaultWalk => {
             let bytes = opts.mb * MIB;
             println!(

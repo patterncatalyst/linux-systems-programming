@@ -1,4 +1,4 @@
-// caps.rs — capability-bounding-set drop, the cheap, always-available half of
+// caps.rs: capability-bounding-set drop, the cheap, always-available half of
 // this chapter's sandboxing story (the other half, Landlock, lives in
 // fwatch.rs). See go/caps.go for the full rationale.
 //
@@ -6,7 +6,7 @@
 // execve of a setuid-root binary can never regain it, for this process and
 // every descendant (the bounding set is inherited across fork/exec and can
 // only shrink). It is meaningful regardless of whether the calling process
-// currently holds any capabilities at all — that is exactly pmon's case when
+// currently holds any capabilities at all: that is exactly pmon's case when
 // deployed unprivileged on a lab guest.
 
 // lastKnownCap is CAP_CHECKPOINT_RESTORE (40) on a 6.x+ kernel; probing past

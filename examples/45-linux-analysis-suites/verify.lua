@@ -1,5 +1,5 @@
 -- Verify 45-linux-analysis-suites. LOCAL but requires podman: builds the
--- Containerfile, runs pmcd, and asserts observable PCP behavior -- not
+-- Containerfile, runs pmcd, and asserts observable PCP behavior: not
 -- merely that the container started.
 --
 -- No per-language behavior exists (see demo.sh's header note); the manifest
@@ -7,7 +7,7 @@
 -- three times, per scripts/manifest.yaml.
 --
 -- What's asserted, and why each item is real rather than assumed:
---   1. the image builds -- and the build-time smoke stage inside the
+--   1. the image builds, and the build-time smoke stage inside the
 --      Containerfile already failed once (loudly) during development when
 --      a PMDA didn't register, so a green build here is a real gate, not
 --      just "podman build exited 0".
@@ -15,11 +15,11 @@
 --   3. BOTH layered PMDAs (openmetrics, podman) appear in `pcp`'s summary.
 --   4. a REAL scraped openmetrics value: `openmetrics.lsp45.lsp45_answer`
 --      comes from a `file://` config.d source shipped in this example
---      (config/lsp45.prom), not a live network scrape -- deliberately, so
+--      (config/lsp45.prom), not a live network scrape, deliberately, so
 --      the check has no external dependency, but the value is genuinely
 --      parsed by the PMDA each time, not hardcoded.
 --   5. a real core PCP metric sample, `kernel.all.load`, independent of
---      anything this chapter added -- proves pmcd's base collection works
+--      anything this chapter added: proves pmcd's base collection works
 --      on its own.
 --   6. the podman PMDA registers its namespace (21 metrics). This script
 --      does NOT assert live container VALUES from it: that requires
@@ -53,7 +53,7 @@ end
 cleanup() -- in case a previous run left something behind
 
 -- ---------------------------------------------------------------------------
--- 1. build -- the Containerfile's own smoke stage already gates this: if
+-- 1. build: the Containerfile's own smoke stage already gates this: if
 --    either PMDA failed to register at build time, this fails right here.
 -- ---------------------------------------------------------------------------
 
@@ -83,7 +83,7 @@ checks.expect_match(pcp_summary.out, "podman", "pcp summary lists the podman PMD
 
 -- ---------------------------------------------------------------------------
 -- 4. a REAL scraped openmetrics value, from the file:// source this example
---    ships (config/lsp45.prom) -- not a live network scrape, but a real
+--    ships (config/lsp45.prom), not a live network scrape, but a real
 --    parse of a real file, every time.
 -- ---------------------------------------------------------------------------
 
@@ -104,7 +104,7 @@ checks.expect_match(pminfo_podman.out, "podman%.container%.",
 
 -- ---------------------------------------------------------------------------
 -- 6. pmrep: a real numeric sample for a stable, well-known CORE PCP metric
---    (not one of the layered PMDAs -- proves pmcd's base collection works
+--    (not one of the layered PMDAs, proves pmcd's base collection works
 --    independent of anything this chapter added).
 -- ---------------------------------------------------------------------------
 

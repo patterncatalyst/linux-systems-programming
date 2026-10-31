@@ -8,7 +8,7 @@
 --   2. a fixed run (P=4 C=4 N=100000, default seed) prints
 --        workq: produced=100000 consumed=100000 checksum=42b3746c6cee7465 ms=<t>
 --      the checksum is the SAME 64-bit constant for all three languages
---   3. determinism: the checksum does not depend on P, C, or the queue cap —
+--   3. determinism: the checksum does not depend on P, C, or the queue cap:
 --      four different shapes over the same (N, seed) all yield that constant,
 --      and every run reports produced==consumed==N
 --   4. a different seed yields a different-but-shared constant, and N=0 yields

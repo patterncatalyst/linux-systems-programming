@@ -1,4 +1,4 @@
--- policy-v2.lua -- the "edited" policy the demo drops in before sending SIGHUP.
+-- policy-v2.lua: the "edited" policy the demo drops in before sending SIGHUP.
 --
 -- Identical in shape to policy.lua; only CONFIG and POLICY_VERSION change. The
 -- host re-reads its --policy path on SIGHUP, so swapping this file in and

@@ -1,4 +1,4 @@
-// chatterd v0 — a thread-per-connection TCP chat room.
+// chatterd v0: a thread-per-connection TCP chat room.
 //
 // One binary, two subcommands:
 //
@@ -258,7 +258,7 @@ fn listen_tcp(host: &str, port: u16) -> Result<TcpListener> {
     .context("socket")?;
     setsockopt(&fd, ReuseAddr, &true).context("SO_REUSEADDR")?;
     bind(fd.as_raw_fd(), &SockaddrIn::from(addr)).with_context(|| format!("bind {host}:{port}"))?;
-    listen(&fd, Backlog::new(128).unwrap()).context("listen")?;
+    listen(&fd, Backlog::new(128).expect("128 is a valid backlog size")).context("listen")?;
     Ok(TcpListener::from(fd))
 }
 

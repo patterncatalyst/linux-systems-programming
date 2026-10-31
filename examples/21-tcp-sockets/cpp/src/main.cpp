@@ -1,4 +1,4 @@
-// chatterd v0 — a thread-per-connection TCP chat room.
+// chatterd v0: a thread-per-connection TCP chat room.
 //
 // One binary, two subcommands:
 //
@@ -91,7 +91,7 @@ template <typename T>
 using Result = std::expected<T, std::string>;
 
 // ---------------------------------------------------------------------------
-// RAII Socket — the sole owner of every descriptor in this program.
+// RAII Socket: the sole owner of every descriptor in this program.
 // ---------------------------------------------------------------------------
 
 class Socket {

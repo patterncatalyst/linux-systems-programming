@@ -1,9 +1,9 @@
-// telemetry.hpp — OpenTelemetry wiring for lsp-otel-cpp (chapter 38:
+// telemetry.hpp: OpenTelemetry wiring for lsp-otel-cpp (chapter 38:
 // OpenTelemetry to LGTM). Mirrors the Go reference's initTelemetry: a
 // TracerProvider batching spans over OTLP/HTTP, a MeterProvider exporting a
 // counter and a histogram on the same short interval, and one Handle that
-// owns both so serve's signal path can flush-then-shutdown them explicitly
-// -- the C++ RAII equivalent of the Go program's deferred cleanup func,
+// owns both so serve's signal path can flush-then-shutdown them explicitly:
+// the C++ RAII equivalent of the Go program's deferred cleanup func,
 // called out by hand rather than left to a destructor because "flush before
 // exit" has a deadline the process must observe (see flush_and_shutdown).
 #pragma once
@@ -37,7 +37,7 @@ inline constexpr std::chrono::milliseconds export_interval{2000};
 
 // Handle owns the trace/metric providers plus the two instruments serve
 // records against; it is move-only (Counter/Histogram are non-copyable
-// nostd::unique_ptr) and deliberately has no destructor-driven shutdown --
+// nostd::unique_ptr) and deliberately has no destructor-driven shutdown:
 // flush_and_shutdown() must be called explicitly from the signal path so the
 // caller controls the timeout instead of an unobservable process-exit race.
 struct Handle {
@@ -57,11 +57,11 @@ struct Handle {
 
 // init sets up the resource (service.name/version/deployment.environment),
 // the OTLP/HTTP trace and metric exporters against `endpoint` (a full URL,
-// e.g. "http://localhost:4318" -- the /v1/traces and /v1/metrics paths are
+// e.g. "http://localhost:4318": the /v1/traces and /v1/metrics paths are
 // appended here), and the requests_total counter + request_duration
 // histogram instruments. Aborts the process via die() semantics is the
 // caller's job; init itself only throws opentelemetry-cpp's own exceptions
-// (none, in practice -- the factories are noexcept-safe by construction).
+// (none, in practice: the factories are noexcept-safe by construction).
 Handle init(const std::string& endpoint);
 
 } // namespace telemetry

@@ -1,4 +1,4 @@
-// pmon v2 — a tiny process supervisor grown chapter by chapter.
+// pmon v2: a tiny process supervisor grown chapter by chapter.
 //
 // v0 (`run`) spawns a command, waits, and mirrors its exit status.
 // v1 (`supervise --engine sigchld`) restarts a crashing child, driven by
@@ -7,7 +7,7 @@
 // entirely: unix.PidfdOpen turns the child into a pollable file descriptor,
 // a goroutine parked in unix.Poll reports the exit over a channel, a raw
 // waitid(P_PIDFD, ...) reaps exactly that child, and the stop path signals
-// through the fd with unix.PidfdSendSignal — no pid-reuse race anywhere.
+// through the fd with unix.PidfdSendSignal; no pid-reuse race anywhere.
 package main
 
 import (
@@ -57,7 +57,7 @@ func spawn(cmdline []string) (*exec.Cmd, error) {
 }
 
 // ---------------------------------------------------------------------------
-// v0: run — spawn, wait, mirror.
+// v0 (run): spawn, wait, mirror.
 // ---------------------------------------------------------------------------
 
 func cmdRun(cmdline []string) int {
@@ -81,7 +81,7 @@ func cmdRun(cmdline []string) int {
 }
 
 // ---------------------------------------------------------------------------
-// v2 plumbing: waitid(P_PIDFD) with an explicit siginfo_t layout — x/sys
+// v2 plumbing: waitid(P_PIDFD) with an explicit siginfo_t layout; x/sys
 // keeps the union opaque, and the CLD_* fields are what we need.
 // ---------------------------------------------------------------------------
 
@@ -99,7 +99,7 @@ type siginfoChld struct {
 const cldExited = 1 // si_code: child called _exit
 
 // reapPidfd blocks in waitid(P_PIDFD) until the process behind pidfd is
-// reaped — it can never collect a recycled pid.
+// reaped; it can never collect a recycled pid.
 func reapPidfd(pidfd int) (childStatus, error) {
 	var si siginfoChld
 	for {
@@ -151,7 +151,7 @@ func blockingReap(pid int) (childStatus, error) {
 }
 
 // ---------------------------------------------------------------------------
-// v1/v2: supervise — two engines, one restart policy.
+// v1/v2 (supervise): two engines, one restart policy.
 // ---------------------------------------------------------------------------
 
 func cmdSupervise(engine string, maxRestarts int, timeout time.Duration, cmdline []string) int {

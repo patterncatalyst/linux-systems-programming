@@ -1,12 +1,12 @@
-// fwatch v1 — a file watcher growing chapter by chapter.
+// fwatch v1: a file watcher growing chapter by chapter.
 //
 // v0 subcommands (snapshot/diff) still work; v1 adds `watch`, built exactly
 // like the C++ version: ONE epoll loop over three kernel file descriptors on
-// a single thread —
+// a single thread:
 //
-//   inotify fd   — filesystem events for the watched directory
-//   timerfd      — the debounce (100 ms per path) AND the overall timeout
-//   signalfd     — SIGINT/SIGTERM delivered as ordinary readable data
+//   inotify fd   : filesystem events for the watched directory
+//   timerfd      : the debounce (100 ms per path) AND the overall timeout
+//   signalfd     : SIGINT/SIGTERM delivered as ordinary readable data
 //
 // nix wraps each fd in an owning type (OwnedFd underneath), so every resource
 // closes on drop; the readiness model stays explicit.
@@ -88,7 +88,7 @@ fn cmd_diff(old_path: &str, new_path: &str) -> Result<()> {
 }
 
 // ---------------------------------------------------------------------------
-// v1: watch — one epoll loop, three fds, zero threads beyond main.
+// v1 watch: one epoll loop, three fds, zero threads beyond main.
 // ---------------------------------------------------------------------------
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -198,7 +198,7 @@ fn cmd_watch(dir: &str, timeout_ms: u64) -> Result<()> {
 
     loop {
         // One timer covers both jobs: it is always armed to whichever comes
-        // first — the overall timeout or the earliest per-path debounce.
+        // first: the overall timeout or the earliest per-path debounce.
         let next = pending.values().map(|p| p.due).min().map_or(deadline, |d| d.min(deadline));
         arm_timer(&timer, next.saturating_duration_since(Instant::now()))?;
 

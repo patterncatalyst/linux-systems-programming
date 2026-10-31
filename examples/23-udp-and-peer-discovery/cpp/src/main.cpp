@@ -1,9 +1,9 @@
-// chatterd v2 (C++23) — UDP multicast peer discovery + a TCP chat exchange.
+// chatterd v2 (C++23): UDP multicast peer discovery + a TCP chat exchange.
 // Grows the same chatterd program introduced in chapter 21: the TCP frame is
 // the canonical chatterd chat frame (2-byte magic "CH" + 1-byte version +
 // 1-byte type + 2-byte big-endian length + UTF-8 payload) shared by every
 // chatterd version (ch21-ch27). The UDP discovery beacon below is a
-// completely separate wire object — a plain ASCII datagram, no relation to
+// completely separate wire object: a plain ASCII datagram, no relation to
 // the chat frame's magic/version/type/length header.
 //
 //   chatterd discover --group 239.7.7.7 --port 51888 --name alice \
@@ -43,7 +43,7 @@ constexpr std::string_view kBeaconMagic = "CHATTERD1";  // UDP beacon tag only
 // 0..65535), payload (UTF-8, type-specific). This header is byte-identical
 // across every chatterd version; ch23's post-discovery greeting uses only
 // JOIN (announce the dialer's name) and DELIVER (name + NUL + text, the
-// listener's reply) — the same types chapters 21/22/24/27 share.
+// listener's reply): the same types chapters 21/22/24/27 share.
 constexpr std::uint8_t kFrameMagic0 = 0x43;  // 'C'
 constexpr std::uint8_t kFrameMagic1 = 0x48;  // 'H'
 constexpr std::uint8_t kFrameVersion = 0x01;

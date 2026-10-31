@@ -4,12 +4,12 @@
 //
 // A producer goroutine pushes N u64 values (0..N-1) through a bounded ring of
 // K slots; the consumer (main goroutine) pops and sums them. head and tail are
-// atomic.Uint64 monotonic counters (Lamport's SPSC queue) — no mutex.
+// atomic.Uint64 monotonic counters (Lamport's SPSC queue); no mutex.
 //
 // What Go's sync/atomic gives you: unlike C++ or Rust there is NO per-operation
 // memory-order argument. Every Load/Store/Add is sequentially consistent, and
 // the Go memory model promises that an atomic write is "synchronized before"
-// the atomic read that observes it — that happens-before edge is exactly the
+// the atomic read that observes it; that happens-before edge is exactly the
 // acquire/release pairing we need, just without the ability to relax it. So the
 // plain buf[] writes before tail.Store are visible to the consumer that reads
 // tail, and the -race detector (see demo.sh) understands that edge and stays

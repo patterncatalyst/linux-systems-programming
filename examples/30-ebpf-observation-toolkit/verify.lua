@@ -1,4 +1,4 @@
--- Verify the eBPF observation toolkit (chapter 30) — a VM example. This is
+-- Verify the eBPF observation toolkit (chapter 30), a VM example. This is
 -- TOOLING (bcc-tools + bpftrace) observing our userspace binary via uprobes
 -- and tracepoints; we write no kernel-side eBPF program of our own.
 --
@@ -8,12 +8,12 @@
 -- assertion below is the OBSERVABLE proof that a specific tool really saw a
 -- real event our program produced, not just that the tool ran without error:
 --
---   1. opensnoop  — shows our bait file's path opened by comm "app".
---   2. execsnoop  — shows a "true" child with PPID == our workload's pid.
---   3. funccount  — a nonzero per-call count for busy_hash() via uprobe.
---   4. offcputime — a stack naming comm "app" (the sleep between iterations
+--   1. opensnoop  : shows our bait file's path opened by comm "app".
+--   2. execsnoop  : shows a "true" child with PPID == our workload's pid.
+--   3. funccount  : a nonzero per-call count for busy_hash() via uprobe.
+--   4. offcputime : a stack naming comm "app" (the sleep between iterations
 --                   put it off-CPU during the trace window).
---   5. bpftrace   — a one-liner uprobe on busy_hash() reports @calls > 0.
+--   5. bpftrace   : a one-liner uprobe on busy_hash() reports @calls > 0.
 --
 -- funccount/bpftrace both target the pattern "<bin>:*busy_hash*", which
 -- matches the plain symbol "busy_hash" (cpp/rust) and the Go runtime's
@@ -21,7 +21,7 @@
 --
 -- Runs under the runner's vm mode (TARGET=systems-target). Staging goes
 -- straight through ssh/scp (not deploy-to-vm.sh, which only shells out a
--- single binary+args — this needs a custom root-run driver script too).
+-- single binary+args, this needs a custom root-run driver script too).
 
 local script_dir = arg[0]:match("(.*/)") or "./"
 local repo_root = os.getenv("REPO_ROOT") or (script_dir .. "../..")
@@ -62,7 +62,7 @@ local ssh_opts =
   "-o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=" .. home .. "/.ssh/known_hosts"
 
 -- Stage the binary under a per-language directory so the deployed file's
--- basename — and therefore its /proc comm — is exactly "app" regardless of
+-- basename (and therefore its /proc comm) is exactly "app" regardless of
 -- which language built it, matching the book-wide "binary stays app" rule.
 local remote_dir = "/tmp/lsp30-" .. lang
 local remote_bin = remote_dir .. "/app"

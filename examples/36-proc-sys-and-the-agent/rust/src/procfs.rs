@@ -21,7 +21,7 @@ pub struct NetStat {
 }
 
 /// One fully-formed sample. Field names here are the canonical, deterministic
-/// names shared with the C++ and Go implementations (see README.md) — only
+/// names shared with the C++ and Go implementations (see README.md): only
 /// the encoding (Rust struct vs C++ struct vs Go struct) differs.
 #[derive(Default)]
 pub struct Snapshot {
@@ -272,7 +272,7 @@ fn read_psi() -> Option<Psi> {
 }
 
 /// Takes two /proc/stat readings `interval_ms` apart and fills in every other
-/// field concurrently in between, via scoped threads — the Rust analogue of
+/// field concurrently in between, via scoped threads: the Rust analogue of
 /// the C++ jthread pool and the Go goroutines fanned in over a channel.
 pub fn take_snapshot(interval_ms: u64) -> Result<Snapshot, String> {
     let t0 = read_cpu_ticks()?;

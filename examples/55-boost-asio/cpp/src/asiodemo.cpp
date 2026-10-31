@@ -1,14 +1,14 @@
-// asiodemo -- the reference program for ch55.
+// asiodemo: the reference program for ch55.
 //
 // ch09 built an epoll loop by hand. ch22 wrote the nonblocking/EAGAIN state
 // machine. ch27 drove a hand-rolled coroutine reactor over epoll. All three
 // own the readiness model, and NOTHING here repeats it.
 //
-// This program is about what a library adds on top of that reactor -- the
+// This program is about what a library adds on top of that reactor: the
 // concepts Asio has that a hand-written loop does not, each measured:
 //
 //   work-guard    why io_context::run() returns immediately, and the fix
-//   strand        serialized handlers WITHOUT a mutex -- and the data race
+//   strand        serialized handlers WITHOUT a mutex, and the data race
 //   nostrand      the same code without it, losing increments for real
 //   strand-cost   strand vs mutex, counted in futex calls (ch51's method)
 //   mutex-cost    the comparison arm
@@ -54,7 +54,7 @@ std::uint64_t fnv1a(const std::uint8_t* data, std::size_t len) {
     std::uint64_t h = kFnvOffsetBasis;
     for (std::size_t i = 0; i < len; ++i) {
         h ^= data[i];
-        h *= kFnvPrime;  // uint64_t wraps by definition -- no UB to sanitize
+        h *= kFnvPrime;  // uint64_t wraps by definition, no UB to sanitize
     }
     return h;
 }
@@ -71,7 +71,7 @@ constexpr int kCostPosts = 20000;
 // ── work guard: why run() returns immediately ────────────────────────────
 //
 // The most common first surprise in Asio. io_context::run() returns when the
-// context has no OUTSTANDING WORK -- not when you have finished with it. A
+// context has no OUTSTANDING WORK, not when you have finished with it. A
 // freshly constructed context has none, so run() returns instantly and every
 // async operation you were about to start never happens.
 //
@@ -102,7 +102,7 @@ void case_work_guard() {
 // ── the strand ───────────────────────────────────────────────────────────
 //
 // A strand is an executor that guarantees the handlers posted through it never
-// run concurrently -- and never overlap even when eight threads are pulling
+// run concurrently, and never overlap even when eight threads are pulling
 // from the same io_context.
 //
 // The counter below is a plain `long`, deliberately NOT atomic and NOT under
@@ -113,7 +113,7 @@ struct Observed {
     std::atomic<int> inflight{0};
     std::atomic<int> max_inflight{0};
     std::atomic<int> overlaps{0};
-    long unguarded = 0;  // intentionally unsynchronized -- that is the point
+    long unguarded = 0;  // intentionally unsynchronized: that is the point
 };
 
 void bump_max(Observed& o, int now) {
@@ -180,7 +180,7 @@ void case_nostrand() {
     // The counter is reported but NEVER asserted on: an unsynchronized
     // increment is a data race, which is undefined behavior, and the number
     // of lost updates is not reproducible. What IS a real observation is that
-    // handlers overlapped -- that is measured with atomics and is well defined.
+    // handlers overlapped: that is measured with atomics and is well defined.
     std::printf("nostrand: posts=%d counter=%ld expected=%d lost=%ld\n", kPosts, o.unguarded, kPosts,
                 static_cast<long>(kPosts) - o.unguarded);
     std::printf("nostrand: max_inflight=%d overlaps=%d serialized=%s\n", o.max_inflight.load(),
@@ -194,7 +194,7 @@ void case_nostrand() {
 // Both of these produce the correct count. The difference is what they do to
 // a thread that loses the race for the shared resource:
 //
-//   mutex   BLOCKS the thread -- and ch51 measured what blocking costs:
+//   mutex   BLOCKS the thread, and ch51 measured what blocking costs:
 //           futex(FUTEX_WAIT) into the kernel, then FUTEX_WAKE to get out
 //   strand  DEFERS the handler and returns the thread to the pool, where it
 //           picks up other work. Nothing blocks, so nothing sleeps.
@@ -235,7 +235,7 @@ void case_mutex_cost() {
 //
 // Asio's buffer sequences are not a convenience wrapper around a loop. A
 // sequence maps onto the kernel's iovec form, so four buffers leave in ONE
-// syscall -- which is the same readv/writev machinery Part 5 covered, reached
+// syscall, the same readv/writev machinery Part 5 covered, reached
 // without assembling an iovec array by hand.
 //
 // A socketpair rather than a real socket: nothing binds, nothing listens,
@@ -292,7 +292,7 @@ void case_separate() {
 //
 // ch49 asked how many CPUs a workload occupied; ch54 asked how many threads
 // fibers migrated across. Same question, same instrument (gettid()), applied
-// to an I/O runtime -- and in Asio the answer is entirely your choice of how
+// to an I/O runtime, and in Asio the answer is entirely your choice of how
 // you call run().
 
 std::mutex g_tid_mutex;
@@ -357,7 +357,7 @@ void case_topology(const std::string& shape) {
 //
 // ch51 measured std::stop_token: a flag the target polls, nothing thrown.
 // ch52 measured boost::thread::interrupt(): an ordinary exception at defined
-// points. Asio's model is a third shape again -- a cancellation_signal whose
+// points. Asio's model is a third shape again: a cancellation_signal whose
 // slot the OPERATION subscribes to, so cancellation is delivered as a
 // completion with an error code rather than as an exception or a flag.
 //

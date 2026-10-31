@@ -1,5 +1,5 @@
 -- Verify 48-rust-toolbox (Rust only): the Rust toolchain itself is the
--- subject -- rustup/rust-toolchain.toml pinning, rustfmt, clippy, cargo
+-- subject: rustup/rust-toolchain.toml pinning, rustfmt, clippy, cargo
 -- test, and the skip-if-present nextest/deny/llvm-cov/audit accelerators.
 -- Rust's analog of ch46's C++ toolbox and ch47's Go toolbox. Every
 -- assertion below checks a real, tool-produced effect, never merely a
@@ -15,7 +15,7 @@
 --   A. rust-toolchain.toml pins channel "1.97.1" and Cargo.toml sets
 --      edition "2024"; the resolved `rustc --version` really is 1.97.1;
 --      `toolbox report` (an integer/string-only FNV-1a digest) equals a
---      known literal (0x481984990deee5ff -- the same value as ch46's C++
+--      known literal (0x481984990deee5ff, the same value as ch46's C++
 --      and ch47's Go toolbox, since all three reuse the identical 16-byte
 --      payload).
 --   B. `cargo fmt --check` is clean across the crate's module tree, and
@@ -32,11 +32,11 @@
 --
 -- Gated-if-present (E, F, G, H): this host has none of cargo-nextest,
 -- cargo-deny, or cargo-llvm-cov installed, and cargo-audit is installed but
--- its RustSec advisory database is not fetched -- all four are excluded by
+-- its RustSec advisory database is not fetched, all four are excluded by
 -- this example's offline constraint (no `cargo install`, no network). Each
 -- gate degrades to an informational "SKIP: ..." print, never a
--- checks.skip() (which would abort the whole script) and never a hard FAIL
--- -- A-D must still run regardless. A reader who has installed these tools
+-- checks.skip() (which would abort the whole script) and never a hard FAIL:
+-- A-D must still run regardless. A reader who has installed these tools
 -- exercises the real gate against the committed deny.toml/clippy.toml.
 --
 -- Not gated at all: cargo-watch (interactive/never terminates), cargo-

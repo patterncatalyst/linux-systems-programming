@@ -1,7 +1,7 @@
 -- Verify fwatch v1 (09-event-loops-epoll-inotify) for LSP_LANG.
 --
 -- Asserts observable behavior, identical across cpp/go/rust:
---   1. v0 regression — snapshot format and diff created/modified/deleted lines
+--   1. v0 regression: snapshot format and diff created/modified/deleted lines
 --   2. watch: background run, mutate the directory after ~400 ms, expect one
 --      debounced event line per path and a clean "(timeout)" exit, exit 0
 --   3. watch: SIGTERM produces the "(signal)" exit line, exit 0

@@ -1,4 +1,4 @@
-// memmap: self-inspecting virtual-memory tool — perform one kind of
+// memmap: self-inspecting virtual-memory tool: perform one kind of
 // allocation, touch its pages, then report what the kernel now shows for
 // this very process: the /proc/self/maps region backing the allocation,
 // the VmRSS growth, and the getrusage(2) page-fault deltas.

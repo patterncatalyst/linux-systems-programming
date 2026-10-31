@@ -1,4 +1,4 @@
-// sysagent v0 (chapter 36: /proc, /sys, and the agent) — a USE-method
+// sysagent v0 (chapter 36: /proc, /sys, and the agent): a USE-method
 // metrics collector reading /proc + /sys/fs/cgroup, no root required.
 //
 //   sysagent sample [--json] [--interval-ms N]
@@ -13,7 +13,7 @@
 // HTTP/1.1 /metrics endpoint, one fresh sample per request.
 //
 // The field names in both the --json and /metrics output are the
-// deterministic, cross-language schema documented in README.md — Go and
+// deterministic, cross-language schema documented in README.md: Go and
 // Rust sysagent emit byte-for-byte the same keys.
 #include <cstdio>
 #include <cstdlib>
@@ -32,7 +32,7 @@ void usage() {
                           "serve --port P [--interval-ms N]");
 }
 
-// Minimal hand-rolled flag scan — no getopt_long, to keep the three
+// Minimal hand-rolled flag scan, no getopt_long, to keep the three
 // languages' argument handling directly comparable.
 struct Flags {
     bool json = false;

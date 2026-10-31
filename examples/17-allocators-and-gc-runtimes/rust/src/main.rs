@@ -1,4 +1,4 @@
-// allocbench — allocation-heavy index build/query (chapter 17: allocators
+// allocbench: allocation-heavy index build/query (chapter 17: allocators
 // and GC runtimes).
 //
 //   allocbench [--allocs N] [--variant default|arena]
@@ -8,7 +8,7 @@
 // strings, then query every distinct key back. What differs is where the
 // intermediates live:
 //
-//   default: every key/frag/value is a plain String — each a trip to the
+//   default: every key/frag/value is a plain String: each a trip to the
 //            global allocator, each freed individually when its batch
 //            scratch Vec is dropped.
 //   arena:   a bumpalo::Bump arena. Per batch of 1000 iterations the
@@ -20,7 +20,7 @@
 //            the long-lived index.
 //
 // Reports: "allocbench: variant=<v> allocs=<n> peak_rss=<kb>KB ms=<t>"
-// (peak_rss is getrusage(2) ru_maxrss — the VmHWM high-water mark — in KB).
+// (peak_rss is getrusage(2) ru_maxrss, the VmHWM high-water mark, in KB).
 
 use std::collections::HashMap;
 use std::fmt::Write as _;
@@ -81,8 +81,7 @@ fn parse_args() -> Result<Config, String> {
 /// default variant: plain heap strings, freed one by one at batch end.
 fn build_default(allocs: usize) -> HashMap<String, String> {
     let mut index = HashMap::with_capacity(KEYSPACE);
-    let mut start = 0;
-    while start < allocs {
+    for start in (0..allocs).step_by(BATCH) {
         let end = (start + BATCH).min(allocs);
         let mut scratch: Vec<String> = Vec::with_capacity(end - start);
         for i in start..end {
@@ -96,7 +95,6 @@ fn build_default(allocs: usize) -> HashMap<String, String> {
             index.insert(key, value);
             scratch.push(frag); // keeps the churn alive per batch
         }
-        start = end;
     } // drop(scratch): one deallocation per surviving string
     index
 }
@@ -106,8 +104,7 @@ fn build_default(allocs: usize) -> HashMap<String, String> {
 fn build_arena(allocs: usize) -> HashMap<String, String> {
     let mut bump = Bump::with_capacity(SLAB_BYTES);
     let mut index = HashMap::with_capacity(KEYSPACE);
-    let mut start = 0;
-    while start < allocs {
+    for start in (0..allocs).step_by(BATCH) {
         let end = (start + BATCH).min(allocs);
         {
             let mut scratch: BumpVec<BumpString> = BumpVec::with_capacity_in(end - start, &bump);
@@ -126,7 +123,6 @@ fn build_arena(allocs: usize) -> HashMap<String, String> {
             }
         } // borrows on the bump end here...
         bump.reset(); // ...so the whole batch vanishes in O(1)
-        start = end;
     }
     index
 }

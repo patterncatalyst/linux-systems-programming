@@ -1,4 +1,4 @@
-// app work --seconds N — a small, observable workload for the eBPF
+// app work --seconds N: a small, observable workload for the eBPF
 // observation toolkit (chapter 30). It does four things in a loop, each one
 // deliberate bait for a specific bcc-tools/bpftrace probe:
 //
@@ -50,7 +50,7 @@ func busy_hash(x uint64) uint64 {
 // Every call is a fresh open(2) on the same path.
 func openBait(iter int) error {
 	// 0666: the bait file may get created by a root-run observe.sh one time
-	// and an unprivileged demo.sh run the next — world-writable avoids a
+	// and an unprivileged demo.sh run the next; world-writable avoids a
 	// permission mismatch between those two ownership scenarios.
 	f, err := os.OpenFile(baitPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o666)
 	if err != nil {
@@ -116,7 +116,7 @@ func runWorkload(seconds int, done chan<- result) {
 func cmdWork(seconds int) int {
 	fmt.Printf("work: start seconds=%d pid=%d bait=%s\n", seconds, os.Getpid(), baitPath)
 
-	// The goroutine is the worker; the channel is its "join" — main blocks
+	// The goroutine is the worker; the channel is its "join"; main blocks
 	// on the result rather than sharing counters behind a mutex.
 	done := make(chan result, 1)
 	go runWorkload(seconds, done)

@@ -1,4 +1,4 @@
--- Verify 47-go-toolbox (Go only): the Go toolchain itself is the subject --
+-- Verify 47-go-toolbox (Go only): the Go toolchain itself is the subject:
 -- go/toolchain version pinning, go generate, gofmt/gofumpt, go vet, pprof,
 -- golangci-lint/staticcheck config authoring, delve, benchstat. Go's analog
 -- of ch46's C++ toolbox. Every assertion below checks a real, tool-produced
@@ -8,7 +8,7 @@
 -- host with just `go` installed.
 --   A. go.mod pins "go 1.26" + "toolchain go1.26.5"; `toolbox report` (an
 --      integer/string-only FNV-1a digest) equals a known literal
---      (0x481984990deee5ff -- the same value as ch46's C++ toolbox, since
+--      (0x481984990deee5ff, the same value as ch46's C++ toolbox, since
 --      both reuse the identical 16-byte payload).
 --   B. `//go:generate go run ./internal/gen` regenerates tools_generated.go
 --      byte-identical to the committed copy. Checked without git: the
@@ -27,9 +27,9 @@
 --
 -- Gated-if-present (F, G, H, I, K): this host has none of gofumpt,
 -- golangci-lint, staticcheck, delve, or benchstat installed (offline
--- constraint -- no `go install`, no network). Each gate degrades to an
+-- constraint, no `go install`, no network). Each gate degrades to an
 -- informational "SKIP: <tool> absent" print, never a checks.skip() (which
--- would abort the whole script) and never a hard FAIL -- A-E must still run
+-- would abort the whole script) and never a hard FAIL: A-E must still run
 -- regardless. A reader who has these tools installed exercises the real
 -- gate. No govulncheck gate: it needs network access to the Go vulnerability
 -- database and a deliberately vulnerable dependency, both excluded by this

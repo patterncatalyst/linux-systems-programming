@@ -1,4 +1,4 @@
-// fiberdemo -- the reference program for ch54.
+// fiberdemo: the reference program for ch54.
 //
 // ch53 measured a C++20 coroutine frame: 32 bytes, heap-allocated, holding
 // only the locals that cross a suspension. A coroutine is STACKLESS.
@@ -9,12 +9,12 @@
 //
 //   stacks       stack_traits and the three allocators, including the guard page
 //   versus       the three-way memory table: thread (ch50) / fiber / frame (ch53)
-//   deep         a suspend from six frames deep inside ORDINARY functions --
+//   deep         a suspend from six frames deep inside ORDINARY functions:
 //                the thing a stackless coroutine cannot do at all
 //   roundrobin   16 fibers, default scheduler: how many OS threads?
 //   sharedwork   the same 16 fibers, work-sharing scheduler: how many now?
 //   guard-ok     a fiber that stays within its 64 KiB stack
-//   guard-overflow  the same fiber recursing 60x past it -- faults BY DESIGN
+//   guard-overflow  the same fiber recursing 60x past it: faults BY DESIGN
 //   versions     what Boost reports
 //
 // guard-overflow dies of SIGSEGV on purpose and is its own subcommand for the
@@ -58,7 +58,7 @@ std::uint64_t fnv1a(const std::uint8_t* data, std::size_t len) {
     std::uint64_t h = kFnvOffsetBasis;
     for (std::size_t i = 0; i < len; ++i) {
         h ^= data[i];
-        h *= kFnvPrime;  // uint64_t wraps by definition -- no UB to sanitize
+        h *= kFnvPrime;  // uint64_t wraps by definition, no UB to sanitize
     }
     return h;
 }
@@ -144,12 +144,12 @@ void case_versus() {
 //
 // This is the functional difference, not a performance one. `leaf` is an
 // ordinary function. So is `level`. Neither is a coroutine, and neither
-// returns anything special -- yet the fiber suspends from inside `leaf`, six
+// returns anything special, yet the fiber suspends from inside `leaf`, six
 // frames below where the fiber body started, and resumes exactly there.
 //
 // A stackless coroutine cannot do this at any price. `co_await` is only valid
 // in the body of a coroutine, so every frame between the suspension and the
-// scheduler must itself be a coroutine -- the "function colouring" problem.
+// scheduler must itself be a coroutine: the "function colouring" problem.
 // Suspending from a plain function nested in a plain function is the one
 // thing 128 KiB of stack buys that 32 bytes of frame cannot.
 
@@ -192,7 +192,7 @@ void case_deep() {
 //
 // Both cases below run the SAME 16 fibers doing the SAME work. The only
 // difference is one call to use_scheduling_algorithm, and the observable is
-// how many OS threads those fibers were seen running on -- gettid(), the same
+// how many OS threads those fibers were seen running on: gettid(), the same
 // kernel task id ch50 established.
 
 constexpr int kFibers = 16;
@@ -289,7 +289,7 @@ void burn_stack(int remaining) {
 
 // 5 frames * ~4 KiB is comfortably inside 64 KiB.
 constexpr int kInBudgetFrames = 5;
-// 1000 frames is ~4 MiB against a 64 KiB stack -- 60x past it, so this cannot
+// 1000 frames is ~4 MiB against a 64 KiB stack: 60x past it, so this cannot
 // accidentally fit on a host with different frame padding.
 constexpr int kOverflowFrames = 1000;
 
@@ -313,7 +313,7 @@ void case_guard_overflow() {
     f.join();
 
     // Not reached. Whatever a process prints after running off its stack is
-    // undefined, so nothing asserts on this line -- the gate checks the exit
+    // undefined, so nothing asserts on this line: the gate checks the exit
     // signal instead, exactly as ch49's oob_unchecked was gated statically
     // rather than on its output.
     std::printf("guard-overflow: SURVIVED -- the guard page did not fault\n");

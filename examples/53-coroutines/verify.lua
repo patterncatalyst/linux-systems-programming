@@ -1,6 +1,6 @@
 -- Verify 53-coroutines (C++ only): what a suspended computation COSTS.
 --
--- ch27 already built a working coroutine engine -- promise_type, the awaitable
+-- ch27 already built a working coroutine engine: promise_type, the awaitable
 -- protocol, symmetric transfer, an epoll reactor that parks and resumes
 -- handles. That chapter owns the MECHANISM and nothing here repeats it.
 --
@@ -14,18 +14,18 @@
 -- allocation count, or a computed value. No threads, no Boost, no network.
 --
 -- Hard-gated (A-E):
---   A. Every case computes the same digest, 0x481984990deee5ff -- ch46's C++,
+--   A. Every case computes the same digest, 0x481984990deee5ff, ch46's C++,
 --      ch47's Go, ch48's Rust, ch49's conc, ch50's pthreads, ch51's stdthread,
 --      ch52's boostthread.
 --   B. Frames track what is LIVE ACROSS A SUSPENSION: a trivial coroutine's
 --      frame is overhead only, one carrying a char[4096] exceeds 4096, and the
 --      middle case sits between them. The RELATIONSHIPS are gated, never the
---      exact byte counts -- those are ABI- and compiler-dependent, and the
+--      exact byte counts: those are ABI- and compiler-dependent, and the
 --      chapter prints them rather than asserting them.
 --   C. HALO is MEASURED, not assumed. Heap allocation elision is PERMITTED by
 --      the standard and required by nothing, and on this host GCC 16 elides
 --      none while clang 22 elides all of them from -O1 up. So this gate
---      asserts only that the measurement is internally consistent -- the count
+--      asserts only that the measurement is internally consistent: the count
 --      never exceeds the number of calls, and the work still happened. It
 --      deliberately does NOT assert that elision does or does not occur, so a
 --      future GCC that starts eliding will not fail it. The clang contrast is
@@ -35,12 +35,12 @@
 --   E. The comparison this chapter exists for: a coroutine frame is at least
 --      three orders of magnitude smaller than ch50's measured thread stack.
 --      Gated as a ratio, so it holds on any host where the relationship holds.
---   Plus: the lifetime trap -- an abandoned frame is allocated and never
+--   Plus: the lifetime trap: an abandoned frame is allocated and never
 --      freed, while an owned one is freed exactly once. Counted through
 --      operator delete, because "did anyone call destroy()" is the real
 --      question and allocation counts cannot answer it.
 --
--- Gated-if-present (F): clang++ parity on the digest, AND the HALO contrast --
+-- Gated-if-present (F): clang++ parity on the digest, AND the HALO contrast:
 -- if clang is installed, its elision count must be no greater than GCC's.
 
 local script_dir = arg[0]:match("(.*/)") or "./"

@@ -8,16 +8,16 @@
 -- NOTHING HERE IS TIMED (ch39) and nothing binds a port.
 --
 -- Hard-gated (A-D, F):
---   A. Every arm computes the digest 0x481984990deee5ff -- ch46-ch55's.
+--   A. Every arm computes the digest 0x481984990deee5ff, ch46-ch55's.
 --   B. THE CAPSTONE GATE. Every model folds the identical workload to the
 --      IDENTICAL total. This runs before any comparison is drawn, because a
 --      model that produced a different total would not be a differently-priced
---      answer to the same question -- it would be a wrong one, and the whole
+--      answer to the same question: it would be a wrong one, and the whole
 --      chapter would be comparing incomparable things.
 --   C. Instrument 1 (ch50's gettid, ch49's vocabulary): the three single-
 --      threaded models report exactly 1 tid, and the four multi-threaded ones
 --      report more than 1. `sequential`, `coroutine` and `fiber` occupy one CPU
---      while holding eight tasks in flight -- ch49's "concurrent, not parallel"
+--      while holding eight tasks in flight: ch49's "concurrent, not parallel"
 --      as a count rather than an assertion.
 --   D. Instrument 2 (ch51's strace method): the single-threaded models never
 --      reach the futex at all; the lock-based models reach it hundreds of
@@ -27,7 +27,7 @@
 --   F. clang parity on the digest and on the total.
 --
 -- Gated-if-present (E): the seventh model, P2300 senders. Requires Conan AND
--- (on a cold cache) the network, so it is skip-if-absent -- a machine with
+-- (on a cold cache) the network, so it is skip-if-absent: a machine with
 -- neither still passes A-D and F. NOTE it links the NVIDIA stdexec REFERENCE
 -- IMPLEMENTATION: __cpp_lib_senders is still undefined in this toolchain's
 -- standard library, which ch49 measured and the `versions` arm re-reports.
