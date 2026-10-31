@@ -16,19 +16,20 @@ By the end of this chapter you can:
 - Spawn five interval samplers concurrently and join them once so an N-second checklist costs N seconds, not five times N
 - Scale a saturation threshold to the machine it runs on (`run_queue >= cpus + 2`) where that is the accurate signal, instead of a flat constant
 - Rank resources by Saturation-value-to-threshold ratio rather than raw Saturation value, so a high-scale metric doesn't always win
-- Diagnose a `std::jthread` RAII ordering bug (`request_stop()` firing before a worker's own deadline) and fix it by holding the parent scope open with `sleep_until`
+- Reason about `std::jthread`'s RAII order (`request_stop()` runs before `join()`) and hold the parent scope open with `sleep_until` so a worker pool runs its full deadline instead of stopping at scope exit
 
 ## Why this matters
 
-Most engineers triaging a live system reach for `uptime`, `vmstat`, `mpstat`, `iostat`, and `pidstat`, not a custom collector, because those tools are already trusted and already parse a running kernel correctly. `loadmix analyze` encodes that exact workflow as a program, so understanding how it parses tool output and scales its thresholds is understanding how an on-call engineer's checklist actually works under the hood.
+Most engineers triaging a live system reach for `uptime`, `vmstat`, `mpstat`, `iostat`, and `pidstat`, not a custom collector, because those tools are already trusted and already parse a running kernel correctly. `loadmix analyze` encodes that exact workflow as a program, so understanding how it parses tool output and scales its thresholds is understanding how an on-call engineer's checklist works under the hood.
 
 The column-name parsing discipline and the concurrent-sampler design generalize past this one tool: any program that wraps an external CLI's plain-text output needs the same defense against a version bump reordering fields, and any program running several blocking interval samples needs the same concurrency shape to avoid turning a one-minute checklist into a five-minute one.
 
-Chapter 36's `sysagent` built a USE-method collector from first principles:
-reading `/proc/stat`, `/proc/net`, `/proc/diskstats`, and cgroup PSI directly,
-no external process, no tool you'd have to trust. That is the right call for a
-program that runs continuously in production. But it is not how most engineers
-actually triage a system that's in trouble *right now*: they SSH in and reach
+The proc/sys-reading collector built earlier, `sysagent`, built a USE-method
+collector from first principles: reading `/proc/stat`, `/proc/net`,
+`/proc/diskstats`, and cgroup PSI directly, no external process, no tool
+you'd have to trust. That is the right call for a program that runs
+continuously in production. But it is not how most engineers triage a
+system that's in trouble *right now*: they SSH in and reach
 for `uptime`, `vmstat 1`, `mpstat -P ALL 1`, `iostat -xz 1`, `pidstat 1`, and
 `free`, running the checklist Brendan Gregg popularized as "the USE method":
 for every resource, ask whether it's **Utilized**, **Saturated**, or
@@ -70,8 +71,8 @@ app analyze [--seconds N]                    run the checklist and name
 
 `--resource cpu` spins a pool of worker threads doing nothing but xorshift
 arithmetic, no syscalls, no allocation in the hot loop, pure CPU. `--resource
-mem` touches 1.35× the guest's `MemTotal` across a worker pool, deliberately
-overshooting available RAM to push real pages into swap. `--resource io`
+mem` touches 1.35× the guest's `MemTotal` across a worker pool, overshooting
+available RAM to push real pages into swap. `--resource io`
 opens one file per worker with `O_DSYNC` and `pwrite`s a 16 KiB buffer of
 xorshift-generated (non-compressible) bytes to the same offset in a loop,
 forcing a synchronous write to the block device on every call. `--resource
@@ -91,7 +92,7 @@ that every parser reads a tool's header row first and looks fields up by
 *name* against that row, never by a hardcoded index. `Row` (C++), `row` (Go),
 and `Row` (Rust) all express the same idea: a table row is a name list zipped
 with a value list, and `get`/`getOr` walks the name list linearly to find the
-column a caller actually asked for.
+column a caller asked for.
 
 {% include codetabs.html langs="C++|Go|Rust" %}
 
@@ -365,7 +366,7 @@ line exists so the U/S/E triple is complete and so a future chapter that
 The verdict is whichever resource has the highest `Saturation value /
 Saturation threshold` ratio, not the highest raw Saturation value, which
 would let net's `8000`-scale threshold always lose to cpu's `4`-scale one
-regardless of which resource is actually worse off.
+regardless of which resource is worse off.
 
 ## Errors, three ways
 
@@ -376,8 +377,9 @@ error** (no `--resource`/`--seconds` given at all, an unrecognized
 funnels every parse path through `usage()` and returns `2` from `main`; Go
 calls `usage()` then `os.Exit(2)`; Rust calls `usage()` then
 `std::process::exit(2)`. There is no separate "runtime error" exit code here,
-unlike Chapter 39's codec-bug path or Chapter 40's connection-refused path;
-`analyze`'s subprocess calls are designed to degrade gracefully instead of
+unlike the benchmarking chapter's codec-bug path or the low-latency-fastpath
+chapter's connection-refused path; `analyze`'s subprocess calls are designed
+to degrade gracefully instead of
 failing the whole run: a denied `dmesg`, an empty `ss -s`, or a sampler that
 produces no data rows all show up as a `0.00`/`denied`/empty field in the
 output rather than a non-zero exit, because the entire point of a diagnostic
@@ -398,13 +400,13 @@ identical atomic counters accumulated across the pool.
 
 Where the three languages diverge is in how the parent thread stays
 alive long enough for that deadline to matter. C++'s `std::jthread` runs
-`request_stop()` *before* `join()` in its destructor, which means the instant
+`request_stop()` *before* `join()` in its destructor, so the instant
 the enclosing scope's spawn loop finishes, every worker is told to stop,
 before the deadline the workers are checking has had any chance to arrive.
-Left alone, this was a real bug in the first cut of this example: every
-saturator exited in single-digit milliseconds regardless of `--seconds`,
-because `request_stop()` fired essentially at thread-creation time. The fix
-is `std::this_thread::sleep_until(deadline)` in the parent, holding the
+Left to that default, every saturator would exit in single-digit
+milliseconds regardless of `--seconds`, since `request_stop()` fires at
+thread-creation time. The pattern that works is
+`std::this_thread::sleep_until(deadline)` in the parent, holding the
 enclosing scope open for the full requested duration before it's allowed to
 close and trigger the RAII-driven stop-then-join:
 
@@ -438,7 +440,7 @@ close and trigger the RAII-driven stop-then-join:
 Go and Rust never needed this hack, because in both ports each worker checks
 its *own* deadline directly inside its loop condition (`time.Now().Before(deadline)`,
 `Instant::now() < deadline`) rather than waiting on an external stop signal
-raised by the parent; the parent simply calls `wg.Wait()` / lets
+raised by the parent; the parent calls `wg.Wait()` / lets
 `thread::scope` return, which blocks until every worker's own loop condition
 has already become false on its own. There is no analogue of `jthread`'s
 stop-before-join ordering to fight, because nothing external tells these
@@ -489,7 +491,7 @@ analyze: done
 `dmesg status=denied` is expected: the guest's unprivileged `fedora` user
 gets `Operation not permitted` from `dmesg`, and `analyze` reports it
 rather than failing. This run finished in **10.417s** wall-clock for
-a `--seconds 10` window, confirming the five samplers really do run
+a `--seconds 10` window, confirming the five samplers run
 concurrently; five serial `<tool> 1 10` invocations would have taken close
 to 50 seconds.
 
@@ -546,7 +548,7 @@ example                        cpp   go    rust
 The load-attribution run above is itself a cross-check: `analyze`'s verdict
 is only trustworthy if it agrees with what you already know is true, since
 you launched the saturator yourself. But it's worth pairing `analyze`'s own
-report against `top`'s independent view, captured in the very same run: `top
+report against `top`'s independent view, captured in the same run: `top
 -b -n1`'s `%Cpu(s)` line read `97.8 us, 2.2 sy, 0.0 id` while `mpstat`'s
 `busy_pct` (100.0 − `%idle`) read `100.00`. The two numbers come from
 different tools sampling at different instants over different windows
@@ -555,7 +557,7 @@ different tools sampling at different instants over different windows
 place, and they don't; what they agree on is the story: this guest's CPUs are
 saturated, not idle, not lightly loaded. A verdict that `mpstat` alone
 disagreed with `top` about (one reporting near-idle while the other reported
-saturated) would be the sign of a parsing bug, not measurement noise, since
+saturated) would be the sign of a parsing error, not measurement noise, since
 both tools are reading the same underlying `/proc/stat` counters through
 different sampling windows.
 
@@ -580,20 +582,21 @@ different sampling windows.
   guest's own core count, unlike net's flat `8000 pkts/s`, because "threads
   waiting for a CPU" only means something relative to how many CPUs exist.
 - **`std::jthread`'s RAII order (`request_stop()` before `join()`) can silence
-  a worker before its own deadline ever fires**: the fix is holding the
-  parent scope open with `sleep_until(deadline)`; Go and Rust never needed
-  the workaround because each worker checks its own deadline directly rather
-  than waiting on an externally raised stop signal.
+  a worker before its own deadline ever fires**: holding the parent scope
+  open with `sleep_until(deadline)` keeps every worker alive for its full
+  duration; Go and Rust don't need that pattern because each worker checks
+  its own deadline directly rather than waiting on an externally raised stop
+  signal.
 - **`analyze`, run concurrently against a background `--resource cpu`
   saturator it knows nothing about, correctly attributed the load**:
   `busy_pct` 1.34 → 100.00, `run_queue` 3.00 → 7.00–8.00, Utilization fired
   true, verdict `cpu`, stable across three independent attempts on the lab
   guest.
 
-Chapter 38 takes the numbers this checklist prints to a terminal and sends
-them somewhere durable: OpenTelemetry into the LGTM stack Chapter 3 stood up,
-so the next time a resource saturates you don't have to be watching when it
-happens.
+The OpenTelemetry pipeline covered next takes the numbers this checklist
+prints to a terminal and sends them somewhere durable: into the LGTM stack
+stood up early in the book, so the next time a resource saturates you don't
+have to be watching when it happens.
 
 ---
 

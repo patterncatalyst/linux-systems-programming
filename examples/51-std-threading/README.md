@@ -1,20 +1,21 @@
-# 51 — the standard threading library, and what it costs
+# 51: the standard threading library, and what it costs
 
-Chapter 25 already showed that a mutex is a futex whose uncontended fast path
-stays in user space, measuring ~98% of acquisitions never reaching the kernel.
-This example starts there and pushes on three things ch25 did not cover:
+The futex chapter already showed that a mutex is a futex whose uncontended
+fast path stays in user space, measuring ~98% of acquisitions never reaching
+the kernel. This example starts there and pushes on three things that chapter
+did not cover:
 
-- **how far "nearly free" goes** — with the blocking stripped away and a control
+- **how far "nearly free" goes**: with the blocking stripped away and a control
   to subtract, an uncontended `std::mutex` costs *zero* syscalls, not merely few
-- **the family** — `condition_variable`, `latch`, `barrier`,
+- **the family**: `condition_variable`, `latch`, `barrier`,
   `counting_semaphore`, and `atomic::wait` are one mechanism, not five
-- **what the library adds over the futex** — `std::scoped_lock` will not
-  deadlock where `lock_guard` will, and `std::stop_token` answers ch50's
-  cancellation problem
+- **what the library adds over the futex**: `std::scoped_lock` will not
+  deadlock where `lock_guard` will, and `std::stop_token` answers the pthreads
+  chapter's cancellation problem
 
 ## The headline
 
-Three cases, all performing exactly the same 200,000 increments — only the
+Three cases, all performing exactly the same 200,000 increments; only the
 contention differs:
 
 ```
@@ -27,7 +28,7 @@ uncontended  futex=1
 contended    futex=2360
 ```
 
-`baseline` uses no mutex at all, and it still reports 1 — that call is the
+`baseline` uses no mutex at all, and it still reports 1: that call is the
 dynamic loader, not a lock. `uncontended` performs 200,000 `lock_guard`
 acquisitions and reports **the same 1**. Its entire syscall profile is 61
 calls, all `execve`/`mmap`/`openat`/`read`/`close`:
@@ -40,13 +41,13 @@ calls, all `execve`/`mmap`/`openat`/`read`/`close`:
 ```
 
 An uncontended `std::mutex` is an atomic compare-exchange in user space. The
-cost people attribute to "locking" is really the cost of **contention**.
+cost people attribute to "locking" is the cost of **contention**.
 
 ## The subcommands
 
 | subcommand | what it measures | futex calls (3 runs) |
 | --- | --- | --- |
-| `baseline` | 200,000 increments, no mutex — the control | 1, 1, 1 |
+| `baseline` | 200,000 increments, no mutex (the control) | 1, 1, 1 |
 | `uncontended` | the same 200,000, each under a `lock_guard`, one thread | 1, 1, 1 |
 | `contended` | the same 200,000, split across 8 threads | 2360, 2199, 2469 |
 | `condvar` | `condition_variable::wait` with a predicate | 5, 5, 5 |
@@ -54,17 +55,17 @@ cost people attribute to "locking" is really the cost of **contention**.
 | `barrier` | `std::barrier` (reusable, with a completion function) | 5, 4, 6 |
 | `semaphore` | `std::counting_semaphore::acquire` | 4, 4, 4 |
 | `atomic-wait` | `std::atomic<int>::wait` / `notify_one` (C++20) | 4, 4, 4 |
-| `stoptoken` | `jthread` + `request_stop()` — the ch50 contrast | 2, 2, 2 |
-| `deadlock-safe` | `scoped_lock(a,b)` vs `scoped_lock(b,a)`, 100,000 acquisitions | — |
-| `deadlock-naive` | the same with `lock_guard` — **hangs on purpose** | — |
+| `stoptoken` | `jthread` + `request_stop()` (the pthreads-chapter contrast) | 2, 2, 2 |
+| `deadlock-safe` | `scoped_lock(a,b)` vs `scoped_lock(b,a)`, 100,000 acquisitions | n/a |
+| `deadlock-naive` | the same with `lock_guard` (**hangs by design**) | n/a |
 
 Five different type names for the blocking primitives, one mechanism
 underneath. A thread that must sleep until further notice has to tell the
 kernel; there is no other way to do it.
 
-Every non-hanging subcommand prints `digest=0x481984990deee5ff` over the payload
-`The quick brown.` — the value ch46's C++, ch47's Go, ch48's Rust, ch49's
-`conc`, and ch50's `pthreads` all produce.
+Every non-hanging subcommand prints `digest=0x481984990deee5ff` over the
+payload `The quick brown.`: the same value every earlier toolbox and
+concurrency-model example in this book produces.
 
 ## Deadlock, both directions
 
@@ -78,7 +79,7 @@ exit=124
 ```
 
 `std::scoped_lock` takes all its mutexes at once with a deadlock-avoidance
-algorithm — try, back off, retry — rather than locking them in argument order.
+algorithm (try, back off, retry) rather than locking them in argument order.
 So `scoped_lock(a, b)` on one thread and `scoped_lock(b, a)` on the other is
 safe. `lock_guard` in those same orders is the textbook deadlock.
 
@@ -100,8 +101,8 @@ Three threads, not two: both workers plus the main thread blocked in `join()`.
 All of them parked in the same kernel function, readable unprivileged.
 
 **`deadlock-naive` never returns.** It is its own subcommand for the same reason
-ch50's `cancel-swallow` was, and `verify.lua` only ever invokes it under
-`timeout(1)`.
+the pthreads chapter's `cancel-swallow` was, and `verify.lua` only ever
+invokes it under `timeout(1)`.
 
 ## Layout
 
@@ -116,8 +117,8 @@ ch50's `cancel-swallow` was, and `verify.lua` only ever invokes it under
     └── src/stdthread.cpp
 ```
 
-C++-only, like ch49 and ch50. Standard library only — no Boost, no Conan, no
-network, no VM, no root.
+C++-only, like the concurrency-vs-parallelism and pthreads chapters. Standard
+library only: no Boost, no Conan, no network, no VM, no root.
 
 ## Build and run
 
@@ -143,18 +144,18 @@ any subcommand:
 
 Gates A–F are hard:
 
-- **A** — every non-hanging subcommand computes the expected digest, and the
+- **A**: every non-hanging subcommand computes the expected digest, and the
   three cost cases each report `acc=200000` so their syscall counts are
   comparable in the first place.
-- **B** — the headline: `uncontended` costs no more futex calls than the
-  no-mutex `baseline`, while `contended` — the identical work — costs hundreds,
+- **B**: the headline: `uncontended` costs no more futex calls than the
+  no-mutex `baseline`, while `contended` (the identical work) costs hundreds,
   more than two orders of magnitude more.
-- **C** — `condvar`, `latch`, `barrier`, `semaphore`, and `atomic-wait` each
+- **C**: `condvar`, `latch`, `barrier`, `semaphore`, and `atomic-wait` each
   issue at least one futex call.
-- **D** — `deadlock-safe` completes 100,000 acquisitions in opposing orders.
-- **E** — `deadlock-naive` times out (exit 124), and while hung every task's
+- **D**: `deadlock-safe` completes 100,000 acquisitions in opposing orders.
+- **E**: `deadlock-naive` times out (exit 124), and while hung every task's
   `wchan` reads a futex wait.
-- **F** — `stoptoken`'s worker returns normally after `request_stop()`: no
+- **F**: `stoptoken`'s worker returns normally after `request_stop()`: no
   `PTHREAD_CANCELED`, no forced unwind.
 
 **G** (clang parity) runs if `clang++` is present, otherwise prints an
@@ -166,6 +167,6 @@ skipped; if `/proc/<tid>/wchan` is unreadable, the wchan half of gate E is.
 Neither ever becomes a false PASS.
 
 **Not gated:** the absolute futex count for the contended case. It is
-scheduling-dependent — 1844–3111 observed across runs on the reference host —
-so only the *sign* of the comparison is asserted, per ch39. `verify.lua` prints
-a line saying so.
+scheduling-dependent (1844-3111 observed across runs on the reference host),
+so only the *sign* of the comparison is asserted, per the benchmarking
+chapter's rule. `verify.lua` prints a line saying so.

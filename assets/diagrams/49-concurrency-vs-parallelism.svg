@@ -46,5 +46,5 @@
 <path d="M220,440 L430,492" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <path d="M595,440 L595,488" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <text x="40" y="566" font-size="11" fill="#1d1d1d" text-anchor="start">Concurrency is STRUCTURE (how many tasks are in flight); parallelism is EXECUTION (how many CPUs are occupied). They are independent axes, which is why all four cells exist.</text>
-<text x="40" y="590" font-size="11" fill="#1d1d1d" text-anchor="start">Numbers are from real runs on the 16-CPU reference host. Nothing here is a duration: every observable is a count or a set cardinality (see ch39).</text>
+<text x="40" y="590" font-size="11" fill="#1d1d1d" text-anchor="start">Numbers are from real runs on the 16-CPU reference host. Nothing here is a duration: every observable is a count or a set cardinality.</text>
 </svg>

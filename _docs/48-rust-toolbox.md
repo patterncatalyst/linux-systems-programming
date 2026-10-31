@@ -2,19 +2,20 @@
 title: "The Rust toolbox: rust-toolchain.toml pins, rustfmt and clippy as toolchain components, and the cargo-test-to-nextest workflow"
 order: 48
 part: "Appendices: Tooling"
-description: "rust-toolbox is one zero-dependency crate and the toolchain wrapped around it -- rust-toolchain.toml pinning channel and components so rustup resolves the same rustc, rustfmt, and clippy for everyone, an isolated misformatted fixture and a feature-gated clippy bait that make the format and lint gates assert real findings, and cargo test asserting the digest literal -- with committed deny.toml and clippy.toml for the cargo-nextest/cargo-deny/cargo-llvm-cov/cargo-audit tier shown as reference but absent on the host. Verified on the Fedora 44 host: verify.lua PASS 20/FAIL 0 fully offline, toolbox report digest=0x481984990deee5ff (byte-identical to ch46's C++ and ch47's Go digest), cargo fmt --check clean while rustfmt flags the fixture, cargo clippy -D warnings clean by default and naming needless_return under --features lintbait, and cargo test passing the digest unit test."
+description: "rust-toolbox is one zero-dependency crate and the toolchain wrapped around it (rust-toolchain.toml pinning channel and components so rustup resolves the same rustc, rustfmt, and clippy for everyone, an isolated misformatted fixture and a feature-gated clippy bait that make the format and lint gates assert real findings, and cargo test asserting the digest literal) with committed deny.toml and clippy.toml for the cargo-nextest/cargo-deny/cargo-llvm-cov/cargo-audit tier shown as reference but absent on the host. Verified on the Fedora 44 host: verify.lua PASS 20/FAIL 0 fully offline, toolbox report digest=0x481984990deee5ff (byte-identical to the C++ toolbox's and the Go toolbox's digest), cargo fmt --check clean while rustfmt flags the fixture, cargo clippy -D warnings clean by default and naming needless_return under --features lintbait, and cargo test passing the digest unit test."
 duration: "50 minutes"
 ---
 
-Chapter 46 pointed every C++ tool it could find at one small binary; Chapter
-47 did the same for Go and found the depth had moved: out of the build
-system and into `go.mod`'s own toolchain directives. Rust closes the arc, and
-it moves the line one step further in the same direction. Go pins its
-compiler in the module file; Rust pins its compiler *and its formatter and
-its linter*, in a file `rustup` reads before `cargo` has done anything at
-all. That single fact reorganizes this whole chapter. In Chapter 47,
-`gofumpt`, `golangci-lint`, and `staticcheck` had to be gated-if-present,
-because they are separate downloads that a given host may simply not have. In
+The C++ toolbox chapter pointed every C++ tool it could find at one small
+binary; the Go toolbox chapter did the same for Go and found the depth had
+moved: out of the build system and into `go.mod`'s own toolchain directives.
+Rust closes the arc, and it moves the line one step further in the same
+direction. Go pins its compiler in the module file; Rust pins its compiler
+*and its formatter and its linter*, in a file `rustup` reads before `cargo`
+has done anything at all. That single fact reorganizes this whole chapter. In
+the Go toolbox chapter, `gofumpt`, `golangci-lint`, and `staticcheck` had to
+be gated-if-present, because they are separate downloads that a given host
+may not have. In
 Rust, `rustfmt` and `clippy` are *components of the pinned channel*: if the
 pin resolves, they are there, at exactly the version the pin names. So the
 formatter and the linter graduate out of the "shown as reference" tier and
@@ -45,8 +46,8 @@ never just a clean exit.
 > `examples/48-rust-toolbox` is `mode: local` in `examples/manifest.yaml`.
 
 Because the Rust toolchain is itself the subject, `examples/48-rust-toolbox/`
-ships `langs: [rust]` only, the same way Chapter 43's macro chapter, Chapter
-46's C++ chapter, and Chapter 47's Go chapter each stayed inside one
+ships `langs: [rust]` only, the same way the Rust-macros chapter, the C++
+toolbox chapter, and the Go toolbox chapter each stayed inside one
 language: a C++ or Go build has nothing to say about a
 `rust-toolchain.toml` component list or a `clippy.toml` MSRV. Every code
 block below is a plain fenced `rust`/`toml`/`console` block; there is no
@@ -106,8 +107,9 @@ $ cd /tmp && rustup show active-toolchain
 stable-x86_64-unknown-linux-gnu (default)
 ```
 
-That is the property Chapter 47 got from `GOTOOLCHAIN` and Chapter 46 had to
-build by hand out of seven `CMakePresets.json` configurations: the version
+That is the property the Go toolbox chapter got from `GOTOOLCHAIN` and the
+C++ toolbox chapter had to build by hand out of seven `CMakePresets.json`
+configurations: the version
 decision lives with the source, not with whoever checked it out. What Rust
 adds on top is that the *tools* travel with it too. Every binary in the chain
 reports the same release:
@@ -136,7 +138,7 @@ as the inclusions. `llvm-tools` (needed by `cargo-llvm-cov`) and `rust-src`
 (needed by miri and rust-analyzer) are left out, because `rustup` fetches any
 missing component **over the network, on the first `cargo` invocation in this
 directory**. Pinning a component a reader does not have turns `cargo build
---offline` into a download: exactly the failure this example exists
+--offline` into a download: the failure this example exists
 to avoid. The chapter's own draft hit it: an earlier `components` list
 included `llvm-tools`, and the first build in a fresh checkout printed
 `info: downloading component llvm-tools` before compiling anything. The file
@@ -204,13 +206,13 @@ mechanism for changing language semantics without breaking old code: a 2024
 crate and a 2015 crate can link together in one binary, each compiled under
 its own rules. Editions are per-crate, the channel is per-repository, and
 they are set in different files: `Cargo.toml` and `rust-toolchain.toml`
-respectively. Both of ch48's gates check both, because getting one right and
+respectively. Both of this chapter's gates check both, because getting one right and
 the other wrong is the common failure: a 2024 crate compiled by a toolchain
 too old to know that edition fails with a confusing error about an unknown
 edition, not an obviously-wrong one.
 
-The payload and the hash are lifted byte-for-byte from Chapter 46's C++ and
-Chapter 47's Go toolbox, which is the whole point:
+The payload and the hash are lifted byte-for-byte from the C++ and Go
+toolbox chapters, which is the whole point:
 
 ```rust
 /// ch46/ch47's exact 16-byte payload (`"The quick brown."`), reused
@@ -241,9 +243,9 @@ pub fn fnv1a(data: &[u8]) -> Digest {
 `*` on `u64` panics on overflow in a debug build and wraps in a release
 build, so the same source would compute the digest in release and abort in
 `cargo test`, which builds with debug assertions on. `wrapping_mul` states
-the intent the algorithm actually requires (FNV-1a is defined modulo 2⁶⁴) and
+the intent the algorithm requires (FNV-1a is defined modulo 2⁶⁴) and
 makes the two profiles agree. C++ got this behavior by using `uint64_t`,
-where wrapping is simply what the language does; Go got it the same way. Rust
+where wrapping is what the language does; Go got it the same way. Rust
 is the only one of the three where you must ask for it, and the only one
 where forgetting is caught rather than silent.
 
@@ -343,7 +345,7 @@ that output: nonzero exit, a `Diff in …fixtures/misformatted.rs` line, and
 the specific reformatted signature `pub fn classify(n: i64) -> &'static str
 {`, because any one of them alone could pass for the wrong reason. A nonzero
 exit could be a missing file; a `Diff in` line could name some other file;
-only the reformatted signature proves `rustfmt` actually parsed this source
+only the reformatted signature proves `rustfmt` parsed this source
 and produced this rewrite.
 
 ## `clippy`: clean by default, loud behind a feature
@@ -492,7 +494,7 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 ```
 
 The gate asserts the named test line and the `test result: ok. 1 passed; 0
-failed` summary, not the process exit code — a `cargo test` run that compiled
+failed` summary, not the process exit code: a `cargo test` run that compiled
 zero tests also exits 0, and would sail past a weaker check.
 
 Watching the gate fail matters too, because a gate nobody has
@@ -523,8 +525,8 @@ test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; 
 
 One byte, and `assert_eq!` prints both sides in decimal because that is how
 `Digest`'s derived `Debug` formats a `u64`. `5195329438047200767` is
-`0x481984990deee5ff`: the identical decimal Chapter 47's `delve` gate
-printed when it read the Go struct's field out of a live process. Two
+`0x481984990deee5ff`: the identical decimal the Go toolbox chapter's `delve`
+gate printed when it read the Go struct's field out of a live process. Two
 languages, two entirely different tools, one number.
 
 This is also why the test gate is separate from the report gate rather than
@@ -593,7 +595,7 @@ not been "fixed."
 
 {% include excalidraw.html
    file="48-rust-tool-gates"
-   alt="One Rust crate box splits into two gate lanes. The amber hard lane lists the rustup pin at channel 1.97.1 and edition 2024, the FNV-1a digest gate at 0x481984990deee5ff, cargo fmt --check clean on tracked sources and nonzero on the fixture, cargo clippy -D warnings with --features lintbait naming needless_return, and cargo test asserting the digest literal -- all running offline from the pinned toolchain alone because rustfmt and clippy ship as toolchain components. A dashed ghost lane beside it lists cargo-nextest, cargo-deny with its deny.toml, cargo-llvm-cov asserting a filename, and cargo-audit marked advisory-db slash network, plus cargo-watch, cargo-flamegraph, and sccache marked not gated, all shown as reference and not verified on this host."
+   alt="One Rust crate box splits into two gate lanes. The amber hard lane lists the rustup pin at channel 1.97.1 and edition 2024, the FNV-1a digest gate at 0x481984990deee5ff, cargo fmt --check clean on tracked sources and nonzero on the fixture, cargo clippy -D warnings with --features lintbait naming needless_return, and cargo test asserting the digest literal: all running offline from the pinned toolchain alone because rustfmt and clippy ship as toolchain components. A dashed ghost lane beside it lists cargo-nextest, cargo-deny with its deny.toml, cargo-llvm-cov asserting a filename, and cargo-audit marked advisory-db slash network, plus cargo-watch, cargo-flamegraph, and sccache marked not gated, all shown as reference and not verified on this host."
    caption="Figure 48.2: one crate, two gate lanes: the pinned-toolchain hard gates (rustup pin, digest, cargo fmt, cargo clippy, cargo test) that need no cargo install, beside the gated-if-present tools (cargo-nextest, cargo-deny, cargo-llvm-cov, cargo-audit) and the shown-not-gated accelerators (cargo-watch, cargo-flamegraph, sccache)" %}
 
 ## Errors, three ways
@@ -639,9 +641,9 @@ panic. `toolbox` has no `Result` in it, which is itself the design decision:
 the report path has nothing that can fail (a fixed array, an infallible hash,
 a `println!`), so introducing a `Result` would be inventing an error case to
 have one. The panics that do appear are all in test code, where a panic *is*
-the reporting mechanism. Chapter 5 (the book's own "Errors, three ways")
-and Chapter 43 cover `Result` propagation and `?` at length for code that has
-real fallible I/O; a tooling chapter's
+the reporting mechanism. The errors chapter (the book's own "Errors, three
+ways" section) and the Rust-macros chapter cover `Result` propagation and
+`?` at length for code that has real fallible I/O; a tooling chapter's
 contribution is the opposite observation: that a deterministic gate should
 have no error paths to test, because every branch it does not have is a
 branch that cannot drift.
@@ -661,8 +663,8 @@ reproducibility but not for speed: the graph's *shape* is fixed by
 single crate, `rustc` parallelizes differently again, by splitting the crate
 into codegen units (16 in the release profile by default, 1 under
 `lto = "fat"`), which trades compile time against optimization quality: the
-same trade `mold` and `ccache` addressed from the outside in Chapter 46, made
-from the inside here.
+same trade `mold` and `ccache` addressed from the outside in the C++
+toolbox chapter, made from the inside here.
 
 The second is the test harness. `cargo test` builds one test binary and
 libtest runs the `#[test]` functions **in threads, inside that one process**,
@@ -694,8 +696,9 @@ rather than the whole run, which for a book full of `mmap`, signal, and
 `rlimit` examples is not a marginal benefit. The cost is process-spawn
 overhead per test, which matters for thousands of microsecond-scale unit
 tests and does not matter here. Go made the opposite structural choice
-(one process per *package*, tests within a package sharing it), and Chapter
-47's `b.RunParallel` benchmark lived entirely inside that shared process. Same
+(one process per *package*, tests within a package sharing it), and the Go
+toolbox chapter's `b.RunParallel` benchmark lived entirely inside that shared
+process. Same
 problem, two different places to put the isolation boundary.
 
 ## The gated-if-present tier: `cargo-nextest`, `cargo-deny`, `cargo-llvm-cov`, `cargo-audit`
@@ -783,8 +786,8 @@ Solution:  Upgrade to >=0.4.3
 ```
 
 The durable token there is the `RUSTSEC-YYYY-NNNN` identifier: stable,
-citable, and the thing a policy actually references. Chapter 47 made the same
-call for `govulncheck` and for the same two reasons: network, and no
+citable, and the thing a policy references. The Go toolbox chapter made the
+same call for `govulncheck` and for the same two reasons: network, and no
 committed vulnerability.
 
 ## Shown, not gated: `cargo-watch`, `cargo-flamegraph`, `sccache`
@@ -799,26 +802,28 @@ A check that never returns is not a check.
 
 `cargo flamegraph --bin toolbox -- report` produces an SVG of where CPU time
 went. It needs `perf`, which needs `kernel.perf_event_paranoid` lowered or
-root, and it produces output that differs run to run by construction. Chapter
-31 already ran `cargo-flamegraph` against a Rust binary and taught
-how to read the result, and Chapter 26 hit the `perf_event_paranoid=2`
-privilege wall head-on; the reason it is not gated *here* is the same reason
-Chapter 46 did not gate `ccache`: sampling output is not a deterministic
-assertion.
+root, and it produces output that differs run to run by construction. The
+earlier Per-Language Toolbelts coverage already ran `cargo-flamegraph`
+against a Rust binary and taught how to read the result, and the atomics
+chapter hit the `perf_event_paranoid=2` privilege wall head-on; the reason it
+is not gated *here* is the same reason the C++ toolbox chapter did not gate
+`ccache`: sampling output is not a deterministic assertion.
 
 `sccache` caches compilation artifacts across builds
 (`RUSTC_WRAPPER=sccache`). It is a pure accelerator: a correct build and a
 correct cached build produce identical output, so there is nothing about
 correctness to assert. Its own metric (cache hit rate) depends on what you
-compiled five minutes ago, which is exactly the kind of number this book
-refuses to gate on. `ccache` and `mold` got the same treatment in Chapter 46.
+compiled five minutes ago, which is the kind of number this book
+refuses to gate on. `ccache` and `mold` got the same treatment in the C++
+toolbox chapter.
 
 **miri** deserves a pointer rather than a section: it interprets Rust at the
 MIR level and catches undefined behavior in `unsafe` code that no amount of
 formatting, linting, or testing will. It is not re-taught here because
-Chapters 29 and 43 already own it, and `toolbox` has no `unsafe` block for it
-to find anything in: which is the correct reason to omit a tool, as opposed
-to omitting it because it is inconvenient.
+earlier coverage of unsafe Rust and the Rust-macros chapter already own it,
+and `toolbox` has no `unsafe` block for it to find anything in: which is the
+correct reason to omit a tool, as opposed to omitting it because it is
+inconvenient.
 
 ## Build, run, observe
 
@@ -894,8 +899,8 @@ $ examples/48-rust-toolbox/rust/target/release/toolbox report
 toolbox report: payload_len=16 digest=0x481984990deee5ff
 ```
 
-(The C++ line carries an extra `label=[toolbox]` field from Chapter 46's
-argument-echo demo; the `payload_len` and `digest` fields are identical
+(The C++ line carries an extra `label=[toolbox]` field from the C++ toolbox
+chapter's argument-echo demo; the `payload_len` and `digest` fields are identical
 across all three.)
 
 FNV-1a is language-independent (a shift, an xor, and a multiply modulo
@@ -912,43 +917,45 @@ none of them did.
 ## Where this sits next to the book's other tooling chapters
 
 Part 13 covers tooling in four chapters and this is the last of them, so here
-is the arc. Chapter 45 handled the *analysis suites*: tools that observe a
-running system from outside it. Chapters 46, 47, and 48
-each took one language and pointed its whole toolchain at one small binary,
+is the arc. The Linux-analysis-suites chapter handled the *analysis suites*:
+tools that observe a running system from outside it. The C++, Go, and Rust
+toolbox chapters each took one language and pointed its whole toolchain at
+one small binary,
 and the interesting result is how differently the three languages distribute
 the same responsibilities:
 
-- **C++ (ch46)** puts almost nothing in the language distribution. CMake,
+- **C++** puts almost nothing in the language distribution. CMake,
   Conan, clang-tidy, clang-format, the sanitizers, gdb, ccache, and mold are
   eight separate projects with eight separate versions, and `CMakePresets.json`
   exists to make "which of these, configured how" an explicit, committed
   choice. The chapter's parity gate (GCC and clang producing byte-identical
   output) is a check the other two languages have no reason to run.
-- **Go (ch47)** puts the compiler, the formatter, the vetter, the test
+- **Go** puts the compiler, the formatter, the vetter, the test
   runner, the profiler, and the generator inside one `go` binary, and pins
   that binary's version in `go.mod`. What it leaves outside (gofumpt,
-  golangci-lint, staticcheck, delve, benchstat) is precisely what Chapter 47
-  had to gate as if-present.
-- **Rust (ch48)** pins a *toolchain* rather than a binary, and that toolchain
+  golangci-lint, staticcheck, delve, benchstat) is precisely what the Go
+  toolbox chapter had to gate as if-present.
+- **Rust** pins a *toolchain* rather than a binary, and that toolchain
   includes the formatter and the linter as components. The consequence is
   this chapter's structure: the hard, offline core covers formatting and
-  linting, which Chapter 47's could not, while the if-present tier is a
-  different set of tools entirely (nextest, deny, llvm-cov, audit), every
-  one of them a `cargo install` rather than a component.
+  linting, which the Go toolbox chapter's could not, while the if-present
+  tier is a different set of tools entirely (nextest, deny, llvm-cov, audit),
+  every one of them a `cargo install` rather than a component.
 
-Chapter 31 sits underneath all three: it ran each language's *profiling*
-toolbelt (`perf` for C++, the `pprof` ecosystem for Go, `cargo-flamegraph`
-and clippy for Rust) against one shared workload, which is why these three
-chapters could concentrate on the build-and-check side instead of re-teaching
-how to read a flamegraph.
+The earlier Per-Language Toolbelts coverage sits underneath all three: it ran
+each language's *profiling* toolbelt (`perf` for C++, the `pprof` ecosystem
+for Go, `cargo-flamegraph` and clippy for Rust) against one shared workload,
+which is why these three chapters could concentrate on the build-and-check
+side instead of re-teaching how to read a flamegraph.
 
 The dependency and supply-chain story splits the same way. C++ needed Conan
 lockfiles to have a dependency graph worth checking at all; Go's module
 system makes the graph free and `govulncheck` the tool that reads it; Rust
 gets the graph free too and splits the reading in two: `cargo-deny` for
 policy answerable from the lockfile, `cargo-audit` for the RustSec advisory
-database over the network. Chapters 47 and 48 made the identical call about
-that network half: show it, name the durable identifier, never gate it.
+database over the network. The Go and Rust toolbox chapters made the
+identical call about that network half: show it, name the durable
+identifier, never gate it.
 
 ## What you learned
 
@@ -957,7 +964,7 @@ that network half: show it, name the durable identifier, never gate it.
   installed. Because `rustfmt` and `clippy` are components, pinning the
   channel pins the formatter and the linter at the same commit as `rustc`:
   which is why this chapter's format and lint gates are hard and offline
-  where Chapter 47's equivalents could not be.
+  where the Go toolbox chapter's equivalents could not be.
 - **`rustup show` states the override.** `active because: overridden by
   '…/rust-toolchain.toml'` is the mechanism reported by the tool, and it
   disappears one directory outside the crate.
@@ -1016,8 +1023,8 @@ sets <code>edition = "2024"</code>; <code>rustc --version</code> resolved
 through the pin to <code>rustc 1.97.1 (8bab26f4f 2026-07-14)</code>;
 <code>cargo tree --offline</code> printed exactly one node;
 <code>./demo.sh rust run report</code> printed <code>toolbox report:
-payload_len=16 digest=0x481984990deee5ff</code>, byte-identical to Chapter
-46's C++ and Chapter 47's Go digest; <code>cargo fmt --check</code> exited 0
+payload_len=16 digest=0x481984990deee5ff</code>, byte-identical to the C++
+and Go toolbox chapters' digest; <code>cargo fmt --check</code> exited 0
 with no output while <code>rustfmt --edition 2024 --check
 fixtures/misformatted.rs</code> exited 1 with the diff quoted above;
 <code>cargo clippy --offline --all-targets -- -D warnings</code> exited 0
@@ -1045,6 +1052,7 @@ design and no vulnerable dependency will be committed to it.
 this host but not gated (never terminates / needs
 <code>perf</code> privileges and produces non-deterministic output), and
 <code>sccache</code>'s cache-hit rate is not a correctness property; miri is
-cross-referenced to Chapters 29 and 43 and has no <code>unsafe</code> block
-here to examine. <code>examples/manifest.yaml</code> marks this example
+cross-referenced to the earlier unsafe-Rust coverage and the Rust-macros
+chapter and has no <code>unsafe</code> block here to examine.
+<code>examples/manifest.yaml</code> marks this example
 <code>mode: local</code>: no VM or LGTM path applies.</p>

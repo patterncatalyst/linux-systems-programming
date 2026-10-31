@@ -2,7 +2,7 @@
 title: "Scaling the server"
 order: 22
 part: "Networking"
-description: "chatterd v1 holds many connections from one thread: nonblocking accept and per-connection read/write state machines, an outbound queue with EPOLLOUT backpressure reusing chapter 9's level-triggered epoll, then the chapter's central comparison, Go's goroutine-per-connection model with the runtime netpoller running epoll_pwait underneath, proven with per-process Threads counts, ss -tp, and strace."
+description: "chatterd v1 holds many connections from one thread: nonblocking accept and per-connection read/write state machines, an outbound queue with EPOLLOUT backpressure reusing the level-triggered epoll model, then the chapter's central comparison, Go's goroutine-per-connection model with the runtime netpoller running epoll_pwait underneath, proven with per-process Threads counts, ss -tp, and strace."
 duration: "55 minutes"
 ---
 
@@ -22,7 +22,7 @@ By the end of this chapter you can:
 - Guard a send to a dead peer with `MSG_NOSIGNAL`, and defer reaping dead
   connections to the end of an event batch instead of mid-iteration.
 - Read `/proc/<pid>/status` thread counts and `ss -tp` to confirm how many OS
-  threads actually back a given connection-handling design.
+  threads back a given connection-handling design.
 - Measure the C10K cost directly with `strace -c`, comparing `clone3` counts
   between the epoll and threaded engines under load.
 
@@ -43,15 +43,16 @@ lets you read a Go service's concurrency as threads parked on an epoll
 instance, not as magic, and lets you choose the right language for a given
 connection-handling budget instead of guessing.
 
-Chapter 21 gave `chatterd` a length-prefixed frame protocol and the obvious
-server: one OS thread per connection, each blocked in `recv`. That design is
-correct and it is easy to reason about, right up to the point a decade of
-network programmers named the **C10K problem**: ten thousand idle clients means
-ten thousand kernel threads, ten thousand stacks, and a scheduler run queue that
-spends more time context-switching than working. This chapter keeps the threaded
-engine (it still passes every test) and adds a second one that holds the same N
-connections from a *single* thread. The one new idea is the **readiness model
-from chapter 9, aimed at sockets**: put every fd in nonblocking mode, let one
+The TCP chat room design gave `chatterd` a length-prefixed frame protocol and
+the obvious server: one OS thread per connection, each blocked in `recv`. That
+design is correct and straightforward to reason about, right up to the point a
+decade of network programmers named the **C10K problem**: ten thousand idle
+clients means ten thousand kernel threads, ten thousand stacks, and a
+scheduler run queue that spends more time context-switching than working.
+This chapter keeps the threaded engine (it still passes every test) and adds
+a second one that holds the same N connections from a *single* thread. The
+one new idea is the **epoll-based readiness model, aimed at sockets**: put
+every fd in nonblocking mode, let one
 `epoll_wait` tell you which are ready, and make each connection a little state
 machine with an inbound buffer and an outbound queue so a partial read or a
 blocked write is just *state*, never a stalled thread. Then comes the payoff:
@@ -60,8 +61,8 @@ with it, because its runtime hides exactly this machinery underneath.
 
 The code is in `examples/22-scaling-the-server/`. `./demo.sh` there builds all
 three implementations and runs an end-to-end demo; its `README.md` specifies the
-CLI, the wire format (unchanged since chapter 21), and the exit codes all three
-languages share.
+CLI, the wire format (unchanged from the original frame protocol), and the
+exit codes all three languages share.
 
 {% include excalidraw.html
    file="22-connection-state-machine"
@@ -101,7 +102,7 @@ struct EConn {
 ```
 
 `inbuf` accumulates whatever `recv` returns until `take_frame` (the same
-6-byte-header parser from chapter 21) can lift a whole frame off the front;
+6-byte-header parser from the original TCP server) can lift a whole frame off the front;
 leftover bytes stay for next time. `outbuf` is the mirror image and the heart of
 the chapter: bytes we *want* to send but the kernel would not take. `want_write`
 records whether we currently have `EPOLLOUT` armed for this connection (so we
@@ -110,7 +111,7 @@ reap after the current event batch rather than deleting it mid-iteration. The
 connections live in `std::unordered_map<std::uint64_t, EConn>` keyed by an epoll
 **token**, `next_tok_` starting at 2 because tokens 0 and 1 are reserved for the
 listener and the `signalfd`, the same "let the kernel echo back a small integer
-so dispatch is a `switch`, not an fd lookup" trick chapter 9 used.
+so dispatch is a `switch`, not an fd lookup" trick epoll event loops use.
 
 ## How the code works
 
@@ -156,7 +157,7 @@ happen; deferring the actual erase to `reap_closed` at the end of the batch is
 how a single-threaded loop safely mutates the container it is iterating events
 from. `accept_ready` loops `accept4(…, SOCK_CLOEXEC | SOCK_NONBLOCK)` until
 `EAGAIN`: one `EPOLLIN` on the listener can mean *many* pending connections, and
-draining to `EAGAIN` is the level-triggered discipline from chapter 9 applied to
+draining to `EAGAIN` is the level-triggered epoll discipline applied to
 the backlog. Each new connection is registered `EPOLLIN`-only and immediately
 handed a `WELCOME` frame via `queue`, which is the client's proof it is in the
 fan-out set. `on_readable` drains `recv` into `inbuf` to `EAGAIN`, then pulls
@@ -166,7 +167,7 @@ connection.
 
 `queue` and `flush` are where backpressure lives, and where the three languages
 are worth reading side by side. `queue` appends to `outbuf` and calls `flush`;
-`flush` sends as much as the kernel will take and, crucially, *decides whether to
+`flush` sends as much as the kernel will take and *decides whether to
 arm `EPOLLOUT`* based on what is left over:
 
 {% include codetabs.html langs="C++|Go|Rust" %}
@@ -287,8 +288,9 @@ always drains to `EAGAIN` and parks on the transition.
 
 ## Errors, three ways
 
-The contract is chapter 21's: exit 0 on success, 1 on a runtime failure with one
-diagnostic line, 2 on a usage error, and `verify.lua` asserts all three per
+The contract carries over unchanged: exit 0 on success, 1 on a runtime failure
+with one diagnostic line, 2 on a usage error, and `verify.lua` asserts all
+three per
 language (24 checks each, 72 total). The interesting split is which side owns
 which error. A client against a dead port fails `connect` and exits 1 with
 `chatctl: cannot connect to 127.0.0.1:1: Connection refused`: `std::error_code`
@@ -314,12 +316,12 @@ mutex so two broadcasters can't interleave bytes on one wire, and `std::atomic`
 counters; simple per connection, but every message wakes N reader threads. Go is
 a bounded handful of runtime threads regardless of connection count, with
 `pending`-style state confined to the hub goroutine and everything else
-communicating by channel: chapter 6's "share memory by communicating" applied to
-I/O. Measured on this host with 50 connections held open: the C++ epoll daemon
-reports `Threads: 1`, the C++ threaded daemon `Threads: 51`, and the Go daemon
-`Threads: 7` (near, but not pinned to, this box's 16 CPUs; the runtime grows
-threads on demand up to `GOMAXPROCS` runnable). One process, one design decision,
-three very different rows in `/proc/<pid>/status`.
+communicating by channel: the "share memory by communicating" concurrency
+idiom applied to I/O. Measured on this host with 50 connections held open: the
+C++ epoll daemon reports `Threads: 1`, the C++ threaded daemon `Threads: 51`,
+and the Go daemon `Threads: 7` (near, but not pinned to, this box's 16 CPUs;
+the runtime grows threads on demand up to `GOMAXPROCS` runnable). One process,
+one design decision, three different rows in `/proc/<pid>/status`.
 
 ## Build, run, observe
 
@@ -436,8 +438,8 @@ counter, `clone3: 500` versus `clone3: 0`, *is* the C10K problem in one line.
   survives across wakeups rather than a thread blocked in `recv`.
 - Backpressure is the outbound queue plus `EPOLLOUT`: a slow reader fills its own
   `outbuf`, we arm write-interest, and the next `epoll_wait` drains it: no thread
-  blocks, no frame drops, no other client is affected. Level-triggered epoll from
-  chapter 9 makes this safe with only "consume what woke you" discipline.
+  blocks, no frame drops, no other client is affected. Level-triggered epoll
+  makes this safe with only "consume what woke you" discipline.
 - Go's goroutine-per-connection code is the same epoll engine with the loop
   hidden: the netpoller runs `epoll_pwait` (edge-triggered) underneath and parks
   goroutines, not threads: 1 vs 51 vs 7 threads in `/proc`, all serving 50

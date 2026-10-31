@@ -2,7 +2,7 @@
 title: "Rust macros for systems code: proc-macros, syn/quote, and what miri proves about unsafe"
 order: 43
 part: "Deep Dives"
-description: "sysmacros is chapter 43's proc-macro crate, powering two Rust-only techniques in the app binary -- #[derive(SysError)], a miniature thiserror built with syn 2.0's AST and quote's token emission, and #[instrument], a compile-time tracing attribute that times a function with Instant -- plus a sound unsafe unaligned read that cargo +nightly miri validates clean and, under the --oob-read path, catches as undefined behaviour. The book's first single-language deep dive, verified on the Fedora 44 host with verify.lua PASS 8/FAIL 0, the exact six-line stable stdout, and miri's own out-of-bounds diagnostic reproduced byte for byte."
+description: "sysmacros is this chapter's proc-macro crate, powering two Rust-only techniques in the app binary (#[derive(SysError)], a miniature thiserror built with syn 2.0's AST and quote's token emission, and #[instrument], a compile-time tracing attribute that times a function with Instant) plus a sound unsafe unaligned read that cargo +nightly miri validates clean and, under the --oob-read path, catches as undefined behaviour. The book's first single-language deep dive, verified on the Fedora 44 host with verify.lua PASS 8/FAIL 0, the exact six-line stable stdout, and miri's own out-of-bounds diagnostic reproduced byte for byte."
 duration: "35 minutes"
 ---
 
@@ -31,8 +31,9 @@ equally. This one breaks that pattern by design. Proc-macros are a Rust
 compiler feature with no C++ or Go equivalent worth building a codetab
 around, and `miri`, the interpreter that catches undefined behaviour a
 normal build would run right past, only exists because Rust's `unsafe`
-carries obligations the type system stops checking. Chapter 12 gave
-`pmon` a `PmonError`-shaped hierarchy by hand, written out field by field;
+carries obligations the type system stops checking. Signal-safe error
+handling earlier gave `pmon` a `PmonError`-shaped hierarchy by hand, written
+out field by field;
 this chapter asks how much of that boilerplate a macro can write for
 you, and how you prove the `unsafe` block sitting a few lines below it is
 still doing exactly what its comment claims.
@@ -50,7 +51,7 @@ skips the check, which is exactly the distinction `miri` exists to draw.
 
 {% include excalidraw.html
    file="43-proc-macro-pipeline"
-   alt="Two horizontal bands. Top band: the app crate, main.rs's annotated source (#[derive(SysError)] enum PmonError, #[instrument] fn hash_chunk) feeding rustc, which packages a TokenStream and hands it off; on the right, rustc splices tokens back into the AST, typechecks, and compiles the result into the app binary (generated Display + Error impls, the instrumented hash_chunk). Bottom band: sysmacros, a separate proc-macro crate compiled FIRST, containing two nodes -- syn::parse_macro_input! turning the TokenStream into a real DeriveInput/ItemFn AST, and quote! emitting a new TokenStream2 (the Display impl or the wrapped function). Arrows cross the band boundary labeled TokenStream (macro input) going down and TokenStream (macro output) coming back up. A note at the bottom reads: sysmacros never runs at app runtime -- it is pure tokens-in/tokens-out, executed only while rustc is compiling app."
+   alt="Two horizontal bands. Top band: the app crate, main.rs's annotated source (#[derive(SysError)] enum PmonError, #[instrument] fn hash_chunk) feeding rustc, which packages a TokenStream and hands it off; on the right, rustc splices tokens back into the AST, typechecks, and compiles the result into the app binary (generated Display + Error impls, the instrumented hash_chunk). Bottom band: sysmacros, a separate proc-macro crate compiled first, containing two nodes: syn::parse_macro_input! turning the TokenStream into a real DeriveInput/ItemFn AST, and quote! emitting a new TokenStream2 (the Display impl or the wrapped function). Arrows cross the band boundary labeled TokenStream (macro input) going down and TokenStream (macro output) coming back up. A note at the bottom reads: sysmacros never runs at app runtime; it is pure tokens-in/tokens-out, executed only while rustc is compiling app."
    caption="Figure 43.1: the compile-time-only pipeline: annotated source becomes a TokenStream, the separately-compiled sysmacros crate parses it with syn and re-emits new tokens with quote, and rustc splices the result into app" %}
 
 > **Tools used**: `cargo` (host, build/run the pinned stable toolchain,
@@ -75,7 +76,7 @@ execute the finished `app` binary; every line of it runs once, at build
 time, and produces tokens that rustc splices into the program in its
 place.
 
-The macro `PmonError` actually uses is the plainer of the two ideas:
+The macro `PmonError` uses is the plainer of the two ideas:
 each variant just needs a message:
 
 ```rust
@@ -126,11 +127,11 @@ fn read_record(buf: &[u8], oob: bool) -> Record {
 An `unsafe` block is a promise to the compiler: "I checked something the
 type system can't, and this operation is valid anyway." `read_unaligned`
 needs three things to be true: the pointer is readable for
-`size_of::<Record>()` bytes, those bytes form a valid `Record` (satisfied
-trivially here, since `Record` is `repr(C)` and made only of integers),
+`size_of::<Record>()` bytes, those bytes form a valid `Record` (true here
+because `Record` is `repr(C)` and made only of integers),
 and the read doesn't race another write. The `assert!` right above the
-`unsafe` block is what makes the sound path's promise true: it checks the
-buffer really does have 8 bytes before offset 0 is read from. `--oob-read`
+`unsafe` block is what makes the sound path's promise true: it checks that
+the buffer has 8 bytes before offset 0 is read from. `--oob-read`
 sets `off = 4` and, by design, skips that `assert!`; the read now reaches
 for offset `4..12` against an 8-byte `buf`, and nothing in a normal
 `cargo build`/`cargo run` will tell you that happened. That silence is the
@@ -140,7 +141,7 @@ the instant a read or write steps outside them.
 
 {% include excalidraw.html
    file="43-miri-bounds-check"
-   alt="An 8-byte buffer BUF: [u8; 8] drawn as eight numbered byte boxes 0 through 7, labeled above as magic: u32 (bytes 0..4) and slots: u32 (bytes 4..8), followed by four dashed ghost boxes numbered 8 through 11 marked past the end (never allocated). Below the real bytes, a blue SOUND window box spans bytes 0 through 7, labeled: read_record(buf, oob=false), read_unaligned::<Record>(ptr.add(0)), window [0..8) fully inside the 8-byte alloc, cargo +nightly miri run: exit 0, no UB. Below and offset right, an amber window box spans bytes 4 through 11 (crossing from the real buffer into the ghost bytes), labeled: --oob-read: read_record(buf, oob=true), read_unaligned::<Record>(ptr.add(4)), window [4..12) -- 4 bytes past the 8-byte alloc, miri: only 4 bytes from the end of the allocation (main.rs:57). Dashed amber boundary markers point from the OOB window up into the byte row at the offset-4 and offset-12 boundaries."
+   alt="An 8-byte buffer BUF: [u8; 8] drawn as eight numbered byte boxes 0 through 7, labeled above as magic: u32 (bytes 0..4) and slots: u32 (bytes 4..8), followed by four dashed ghost boxes numbered 8 through 11 marked past the end (never allocated). Below the real bytes, a blue SOUND window box spans bytes 0 through 7, labeled: read_record(buf, oob=false), read_unaligned::<Record>(ptr.add(0)), window [0..8) fully inside the 8-byte alloc, cargo +nightly miri run: exit 0, no UB. Below and offset right, an amber window box spans bytes 4 through 11 (crossing from the real buffer into the ghost bytes), labeled: --oob-read: read_record(buf, oob=true), read_unaligned::<Record>(ptr.add(4)), window [4..12), 4 bytes past the 8-byte alloc, miri: only 4 bytes from the end of the allocation (main.rs:57). Dashed amber boundary markers point from the OOB window up into the byte row at the offset-4 and offset-12 boundaries."
    caption="Figure 43.2: the same 8-byte Record read from two offsets: the SOUND window [0..8) miri accepts, and the --oob-read window [4..12) that runs 4 bytes past the allocation, exactly what miri's diagnostic names" %}
 
 ## How the code works
@@ -248,7 +249,7 @@ capture, so the arm binds synthetic identifiers (`f0`, `f1`, ...) and
 passes them to `write!` explicitly as `#(#idents),*` after the message.
 The whole function returns one `quote!` block containing both the
 `Display` impl and the `Error` impl, and that block (not `PmonError`'s
-own source) is what rustc actually type-checks and compiles into `app`.
+own source) is what rustc type-checks and compiles into `app`.
 
 `expand_instrument` takes the same shape and applies it to a function
 instead of an enum:
@@ -328,7 +329,7 @@ itself; the caller never sees a difference except the printed lines.
 
 Every earlier chapter's "errors, three ways" contrasted three languages;
 this one has only Rust, so the three ways are the three moments an error
-in this program can actually surface. **Compile time**: a malformed macro
+in this program can surface. **Compile time**: a malformed macro
 input (`#[derive(SysError)]` on a struct, or a variant missing
 `#[error("...")]`) becomes a `syn::Error`, and `derive_sys_error` turns
 that into real tokens with `err.to_compile_error().into()`, so a bad
@@ -433,7 +434,7 @@ in its interpreted heap; `+0x4` is the offset the failing read started at
 (`off = 4` on the `--oob-read` path); "only 4 bytes from the end of the
 allocation" is `miri` doing arithmetic a native run never does: `BUF` is
 8 bytes, the read needs 8 more bytes starting at offset 4, and offset 4
-plus 8 is 12, four bytes past where the allocation actually ends. The
+plus 8 is 12, four bytes past where the allocation ends. The
 line and column (`src/main.rs:57:14`) point at the exact `unsafe` block
 quoted above. On stable Rust this same `--oob-read` invocation runs to
 completion, silently reading whatever garbage bytes happen to sit past
@@ -463,8 +464,8 @@ the exact three lines `PmonError`'s variants must produce
 `policy rejected: sandbox blocked os.execute`), plus the `#[instrument]`
 entry/exit shape and the parsed `Record` fields, for `PASS 8 / FAIL 0`:
 eight assertions against behaviour, not "the binary exited 0." The second
-is that the sound `read_record` path really is sound and the
-`--oob-read` path really is a bug, and that claim is checked by an
+is that the sound `read_record` path is sound and the
+`--oob-read` path is a bug, and that claim is checked by an
 interpreter rather than taken on faith: the identical scenario run under
 `cargo +nightly miri run` exits 0 with no UB reported on the default path,
 and reports the precise out-of-bounds access (4 bytes past an 8-byte

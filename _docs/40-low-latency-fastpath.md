@@ -2,7 +2,7 @@
 title: "The low-latency fast path: pin a core, reuse one buffer, and stop asking the scheduler for permission"
 order: 40
 part: "Performance and Low Latency"
-description: "chatterd-fastpath strips the ch21 echo hot path down to a pinned core, one reused 64-byte buffer, and an optional busy-poll spin, then proves each move at the kernel level: Cpus_allowed_list and voluntary_ctxt_switches read from /proc/<pid>/status, not the program's own claim. The three languages reach identical behavior by three different shutdown mechanisms, and Go's CPU count lies about its container through a taskset mask rather than a cgroup."
+description: "chatterd-fastpath strips chatterd's echo hot path down to a pinned core, one reused 64-byte buffer, and an optional busy-poll spin, then proves each move at the kernel level: Cpus_allowed_list and voluntary_ctxt_switches read from /proc/<pid>/status, not the program's own claim. The three languages reach identical behavior by three different shutdown mechanisms, and Go's CPU count lies about its container through a taskset mask rather than a cgroup."
 duration: "50 minutes"
 ---
 
@@ -20,17 +20,17 @@ By the end of this chapter you can:
 
 ## Why this matters
 
-Chapter 39 earned the right to trust a `p99`. This chapter spends that trust on the next question: once you believe the number, how do you make it small? Pinning, zero allocation, and busy-poll each remove one specific, nameable source of tail latency, and each carries a real cost, most of all busy-poll's whole dedicated core, so the chapter's real lesson is picking the right trade for a latency-critical path rather than applying every trick everywhere.
+Benchmarking without lies earned the right to trust a `p99`. This chapter spends that trust on the next question: once you believe the number, how do you make it small? Pinning, zero allocation, and busy-poll each remove one specific, nameable source of tail latency, and each carries a real cost, most of all busy-poll's whole dedicated core, so the chapter's real lesson is picking the right trade for a latency-critical path rather than applying every trick everywhere.
 
 The proof discipline matters as much as the techniques. `Cpus_allowed_list` and `voluntary_ctxt_switches` come from the kernel's own accounting in `/proc/<pid>/status`, not from anything the server prints about itself, which is what turns "this server is pinned and never sleeps" from a claim into something you can check.
 
-Chapter 39 taught you to trust a latency number: warm the code, time each
+Benchmarking without lies covers how to trust a latency number: warm the code, time each
 iteration, correct for coordinated omission, and report the tail instead of the
 mean. This chapter spends that discipline. If you now believe a `p99` you
 measured, the next question is how to make it *small*, and the answer, on Linux,
 is a short list of moves that each remove one source of the multi-microsecond
-stalls Chapter 39's `co_p99` was busy accounting for. `chatterd-fastpath` is the
-same echo hot path from Chapter 21's `chatterd`, stripped to exactly those moves:
+stalls `co_p99` was busy accounting for. `chatterd-fastpath` is the
+same echo hot path from `chatterd`, stripped to exactly those moves:
 pin the process to one CPU, reuse a single stack buffer for every message so the
 loop never allocates, and, optionally, spin on a non-blocking `recv` instead of
 blocking, trading a whole core for the elimination of the sleep/wake round trip
@@ -84,7 +84,7 @@ front:
 The rest of the program is ordinary by design: a fixed 64-byte wire frame
 (magic `CF`, a version and type byte, a big-endian `seq`, and zero padding), a
 `measure` subcommand that runs `N` synchronous ping-pong round trips against
-either server and prints the same percentile table Chapter 39 built, and a
+either server and prints the same coordinated-omission-corrected percentile table, and a
 `run-latency-bench.sh` driver that races the two under identical `taskset`
 placement so the *only* variable is the in-server discipline.
 
@@ -173,7 +173,7 @@ the lab guest) and is blind to the caller's affinity mask. The obvious Go
 equivalent, `runtime.NumCPU()`, is *not* the same thing: it returns the size of
 the process's **CPU affinity mask**. Those two numbers agree on an idle machine
 and diverge the instant something narrows the mask, which is precisely what the
-benchmark driver does. Phase B of `run-latency-bench.sh` launches each server
+benchmark driver does. The second stage of `run-latency-bench.sh` launches each server
 under `taskset -c 1`, so the fastpath process starts life with a one-CPU mask,
 `runtime.NumCPU()` returns **1**, and the Go server's own range check rejects the
 `--pin 1` it was told to use:
@@ -186,7 +186,7 @@ This is the same failure mode as `hardware_concurrency()` reporting a container'
 cgroup quota instead of the host's core count (the running theme of this part of
 the book) reached through an unexpected door. Here the count lies not because a
 cgroup capped it but because a `taskset` affinity mask narrowed it, and the fix
-is the same in spirit: ask the kernel the question you actually mean.
+is the same in spirit: ask the kernel the question you mean.
 `onlineCPUs()` in the Go port reads `/sys/devices/system/cpu/online` and counts
 the ranges there, matching the `sysconf` semantics the other two languages get
 automatically:
@@ -208,7 +208,7 @@ goroutines over OS threads (Ms) and will migrate the one running your loop at
 will. `runtime.LockOSThread()` nails the hot loop's goroutine to one M and
 `GOMAXPROCS(1)` stops the runtime from parking worker threads on other cores; only
 then does pinning that thread mean anything. And the affinity call is made
-*twice*: once with `0` (the calling thread, which is what actually restricts the
+*twice*: once with `0` (the calling thread, which is what restricts the
 loop) and once with `os.Getpid()` (the thread-group leader, which is the mask
 `/proc/<pid>/status` reports and the benchmark reads back). C++ and Rust are
 single-threaded here, so one `sched_setaffinity(0, …)` both pins the loop and
@@ -295,7 +295,7 @@ There is nothing in the `EAGAIN` branch but a stop-flag check and `continue`. No
 `sched_yield`, no `nanosleep`, no `poll`: those would all, in different ways,
 hand the CPU back to the kernel, which is the exact cost busy-poll exists to
 avoid. The thread stays runnable and on its core, re-issuing `recv` as fast as the
-CPU will let it, so the instant a frame lands the very next `recv` returns it with
+CPU will let it, so the instant a frame lands the next `recv` returns it with
 no wakeup latency at all. The blocking path (`read_full_blocking`, not shown) is
 the ordinary alternative: a plain blocking `read` that the kernel parks on until
 data arrives.
@@ -336,14 +336,14 @@ it straight back; the naive loop `make_unique`s (C++), `make([]byte, …)`s (Go)
 `vec![0u8; …]`s (Rust) a fresh buffer every iteration and lets it fall out of
 scope, the deliberate pessimization the benchmark is built to expose.
 
-`measure` is the client half, and its percentile math is exactly Chapter 39's:
+`measure` is the client half, and its percentile math is the same nearest-rank approach:
 sort the samples, then nearest-rank index with `idx = ceil(p/100 · n)` clamped to
 `[1, n]`. It builds each frame with `seq = i`, times the round trip between two
 `CLOCK_MONOTONIC` reads, and, a correctness check, not a timing one, verifies
 the echo came back with the same `seq` before recording the sample, so a
 cross-wired or corrupted connection fails loudly rather than reporting fast
 garbage. Warmup round trips (500 by default in the benchmark) are discarded before
-recording starts, for the reasons Chapter 39 spent a section on.
+recording starts, to avoid measuring first-call warmup costs rather than the steady-state path.
 
 ## Errors, three ways
 
@@ -444,7 +444,7 @@ in flight to interrupt. So Go reaches identical behavior (`SIGINT`, then a clean
 `app: … shutting down` and exit 0) by a different route entirely: the
 `signal.Notify` goroutine sets the stop flag and then **closes the listener and
 the live connection**. Closing an fd is what wakes a poller-parked read; it is the
-`shutdown(2)`-driven wakeup Chapter 21's `chatterd` used, and it is the idiomatic
+same `shutdown(2)`-driven wakeup `chatterd` uses, and it is the idiomatic
 Go answer to "interrupt a blocked I/O wait." The busy-poll path needs one extra
 touch: its socket is a dup'd raw fd outside the poller, so `trigger` also calls
 `shutdown(SHUT_RDWR)` on it to break the spin. Three mechanisms (non-`SA_RESTART`
@@ -458,10 +458,10 @@ that *fails* to shut down surfaces as a clear failure rather than a hung run.
 [host]$ cd examples/40-low-latency-fastpath && ./demo.sh build
 ```
 
-The `run-latency-bench.sh` driver does the real work. Phase A brings up a naive
+The `run-latency-bench.sh` driver does the real work. It first brings up a naive
 and a fastpath server with no external pinning and reads each one's
 `Cpus_allowed_list` from `/proc/<pid>/status`: this is the pinning proof, taken
-from the kernel rather than from anything the program prints about itself. Phase B
+from the kernel rather than from anything the program prints about itself. It
 then races the two under identical `taskset` placement (both servers pinned to the
 same CPU, the client to the other), running three interleaved trials of each so a
 lone scheduling stall on this shared nested-KVM guest can't decide the outcome:
@@ -546,9 +546,9 @@ busy-poll buys and what it costs.
   network poller means no syscall is in flight to interrupt, so it closes the fd
   instead: same `SIGINT`, same exit 0, three different routes there.
 
-Chapter 41 takes everything from this part and the last (the USE checklist, the
+The fleet final project takes everything from this part and the last (the USE checklist, the
 LGTM pipeline, benchmarks you can trust, and this chapter's pinned, allocation-free
-hot path) and assembles it into the final project: a supervised, sandboxed, fully
+hot path) and assembles it into a supervised, sandboxed, fully
 observed two-VM fleet.
 
 ---

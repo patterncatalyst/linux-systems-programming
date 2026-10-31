@@ -42,11 +42,11 @@ never block, readers that retry on a torn copy instead of taking a lock,
 and a measured latency ladder that ranks every coordination channel this
 book has built so far.
 
-Chapter 16 (mmap and shared mappings) left `shmkv` in an awkward state: two
+The mmap and shared-mappings work left `shmkv` in an awkward state: two
 processes share a page of key-value slots, but a reader who wants to *notice*
 a change has no option except reading the page again, and again, and again.
 This chapter fixes that, and the one new idea is smaller than you expect: for
-coordination between processes, the kernel provides essentially **one
+coordination between processes, the kernel provides **one
 primitive**: `futex(2)`, "sleep until this 32-bit word changes; wake the
 sleepers queued on it." Everything you have ever called a mutex, condition
 variable, semaphore, or `WaitGroup` is userspace protocol wrapped around that
@@ -162,8 +162,8 @@ from a crashed writer) produces `seqlock read livelocked` instead of a hang.
 
 ## Process-shared atomics, three ways
 
-All of this only works if atomic operations on *mapped* memory are really
-atomic, and each language has its own rules for saying so. In C++, a
+All of this only works if atomic operations on *mapped* memory are atomic
+in practice, and each language has its own rules for saying so. In C++, a
 `std::atomic<T>` must be constructed, but our words live in a file another
 process formatted, so `Shm` binds `std::atomic_ref` onto the raw bytes:
 
@@ -194,12 +194,12 @@ from racing the same bytes non-atomically. The comment block at the top of
 `examples/20-shared-memory-coordination/go/main.go` spells the caveats out.
 
 > **Sidebar: where is eventfd?** `eventfd(2)` is a lighter kernel counter
-> that chapter 9's event loops already waited on, and it measures well (2 µs
+> that epoll-based event loops already wait on, and it measures well (2 µs
 > p50 on this host, same harness). But an eventfd is named by *file
 > descriptor*, not by anything in the shared page; to coordinate two
 > unrelated processes with one you must inherit it across `fork` or pass it
-> through a UNIX socket with `SCM_RIGHTS`, exactly the machinery chapter 19
-> (UNIX sockets and fd passing) built for pmon's `logfd`. The futex needs
+> through a UNIX socket with `SCM_RIGHTS`, exactly the fd-passing machinery
+> built for pmon's `logfd`. The futex needs
 > none of that: its rendezvous *is* the mapped file. That is the deep
 > difference: fd-based channels need an fd-passing bootstrap; a shared
 > mapping is its own bootstrap.
@@ -315,16 +315,15 @@ Same protocol, three idioms: acquire-load the word, refuse odd, copy the
 counter and all 512 slot bytes with a *plain* copy that is allowed to race,
 fence, re-check. Go leans on its sequentially-consistent atomics instead of
 explicit fences and yields to the goroutine scheduler rather than the OS.
-The copy being torn sometimes is not a bug, it is the design; the re-check
+The copy tears by design; the re-check
 is what makes it safe to have raced.
 
 `cmd_bench` is the measurement harness for the ladder. A consumer thread
 (`std::jthread`, a goroutine, a `thread::scope` spawn) blocks on one of the
-three channels; the producer publishes and, this is the part that keeps the
-numbers meaningful, **spins until the consumer acknowledges round `i-1`
-before sending round `i`**, through an `ack` atomic. Without that
-serialization, a fast producer queues ahead and you measure queue depth, not
-wakeup latency. The mq channel carries the id through a real POSIX queue
+three channels; the producer publishes and spins until the consumer
+acknowledges round `i-1` before sending round `i`, through an `ack` atomic:
+that serialization is what keeps the numbers meaningful. Without it, a fast
+producer queues ahead and you measure queue depth, not wakeup latency. The mq channel carries the id through a real POSIX queue
 (created `O_EXCL`, unlinked by RAII/defer on every path; `verify.lua`
 checks `/dev/mqueue` is clean afterwards); Go builds `mq_open`,
 `mq_timedsend`, `mq_timedreceive`, and `mq_unlink` from raw `Syscall6`
@@ -334,7 +333,7 @@ below confirms.
 
 A few fragile points: one writer per file is an unchecked assumption
 (two servers would interleave seqlock bumps and corrupt each other; a
-`flock` would fix it and chapter 25's futex-built locks are the deeper
+`flock` would fix it, and locks built from futexes are the deeper
 answer); the futex word is 32 bits, so a watcher blind for exactly 2³²
 updates would miss a wake until the 2 s timeout catches it; the ring
 back-fills at most 8 ids, and a watcher asleep for more sees only the latest
@@ -371,8 +370,9 @@ fine; a thousand goroutines each parked in `FUTEX_WAIT` would be a thousand
 OS threads, which is precisely the degenerate case channels and the
 netpoller exist to avoid. The comment at the top of `go/main.go` documents
 this trade so the pattern is not copied blindly. The second thing worth
-naming: the memory-ordering vocabulary of chapter 6 (acquire, release,
-fences) crossed a process boundary in this chapter without changing at all.
+naming: the memory-ordering vocabulary for concurrency primitives (acquire,
+release, fences) crossed a process boundary in this chapter without
+changing at all.
 Cache coherence does not know what a process is; orderings pair between any
 two threads that touch the same physical page, whichever address spaces they
 live in. That is why `seqlock_write`'s release fence in a Go server orders
@@ -428,18 +428,18 @@ bench: channel=poll rounds=2000 p50_us=1056 p99_us=1083
 ```
 
 The Go and Rust benches bracket the same values (Go: 0/4, 3/6, 1003/1021;
-Rust: 0/0, 2/5, 1061/1153 µs). Folding in the fd-based channels from
-chapters 18 and 19 (pipe, UNIX stream socketpair, and the eventfd from the
-sidebar), re-measured this session with the identical serialized-round
-harness rebuilt around `read(2)`, gives the matrix:
+Rust: 0/0, 2/5, 1061/1153 µs). Folding in the fd-based channels built
+earlier (pipe, UNIX stream socketpair, and the eventfd from the sidebar),
+re-measured this session with the identical serialized-round harness
+rebuilt around `read(2)`, gives the matrix:
 
-| Channel | Kernel object | p50 (µs) | p99 (µs) | Waiter blocks in | Chapter |
+| Channel | Kernel object | p50 (µs) | p99 (µs) | Waiter blocks in | Built from |
 |---|---|---|---|---|---|
-| futex wake | wait queue on (inode, offset) | <1 | 4 | `futex(FUTEX_WAIT)` | this one |
-| pipe | pipe buffer | 2 | 5 | `read(2)` | 18 |
-| eventfd | 64-bit counter | 2 | 6 | `read(2)` | 9, 19 |
-| POSIX mq | message queue | 2 | 14 | `mq_timedreceive(2)` | this one |
-| UNIX socket | socket buffer | 3 | 12 | `read(2)` | 19 |
+| futex wake | wait queue on (inode, offset) | <1 | 4 | `futex(FUTEX_WAIT)` | this chapter |
+| pipe | pipe buffer | 2 | 5 | `read(2)` | pipes/FIFOs |
+| eventfd | 64-bit counter | 2 | 6 | `read(2)` | event loops; UNIX sockets/fd passing |
+| POSIX mq | message queue | 2 | 14 | `mq_timedreceive(2)` | this chapter |
+| UNIX socket | socket buffer | 3 | 12 | `read(2)` | UNIX sockets/fd passing |
 | 1 ms poll loop | none | 1,056 | 1,083 | `nanosleep(2)` | rung 0 |
 
 {% include excalidraw.html
@@ -476,7 +476,7 @@ the layout puts the futex word), the op is plain `FUTEX_WAIT` (shared, no
 `_PRIVATE`), and `expected` climbs 0, 1, 2 as each observed update re-arms
 the next sleep. The serve side, traced in a separate run, is the mirror
 image: `futex(0x7f79491d300c, FUTEX_WAKE, 2147483647) = 1` three times: wake
-`INT_MAX`, one waiter actually woken. And the mq bench under
+`INT_MAX`, one waiter woken. And the mq bench under
 `-e trace=mq_open,mq_timedsend,mq_timedreceive,mq_unlink`:
 
 ```bash
@@ -487,7 +487,7 @@ image: `futex(0x7f79491d300c, FUTEX_WAKE, 2147483647) = 1` three times: wake
 2623348 mq_unlink("shmkv-bench-2623348") = 0
 ```
 
-The kernel-level name really has no leading slash, confirming the Go
+The kernel-level name has no leading slash, confirming the Go
 implementation's raw-syscall comment against the C++ binary going through glibc.
 Producer tid 2623348 sends, consumer tid 2623349 receives the same 8 bytes,
 and the unlink runs on exit. (That traced 5-round run reported
@@ -517,14 +517,14 @@ both runs but on this host counted zero: stock Fedora ships
 `kernel.perf_event_paranoid = 2`, which restricts unprivileged perf to
 user-space counting, and context switches happen in the kernel; the
 elapsed-time line still tells the story (0.004 s futex vs 2.125 s poll for
-the same 2,000 rounds), and the chapter 28 debugging toolbelt revisits perf
+the same 2,000 rounds), and the remote-debugging toolbelt revisits perf
 with `CAP_PERFMON`.
 
 > **On the lab VM** <span class="status status--unverified">unverified</span>:
 > the eBPF view of this chapter is `offcputime` proving the watcher's stack
 > is parked in `futex_wait_queue` (not spinning) and `futexctn` summarizing
 > contention fleet-wide; bcc-tools need privileges this host's lane does not
-> use, and chapter 30 (eBPF observation tools) exercises exactly that on the
+> use, and the eBPF observation toolkit exercises exactly that on the
 > `systems-target` VM.
 
 ## What you learned
@@ -563,6 +563,6 @@ runs performed now; the strace excerpts are real trimmed output (shared
 <code>FUTEX_WAKE</code> INT_MAX returning 1, slashless kernel mq names,
 <code>mq_unlink</code> on exit); the context-switch evidence (watch 2→10,
 poll 285→4,059 over 4 s; rusage 120 vs 2,002) was sampled live; and the
-<code>perf_event_paranoid = 2</code> limitation was observed, not assumed.
+<code>perf_event_paranoid = 2</code> restriction was observed, not assumed.
 The bcc-tools callout is unverified as marked, and all latency absolutes are
 bounded by this host.</p>

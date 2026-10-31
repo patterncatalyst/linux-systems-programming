@@ -39,7 +39,7 @@
 <text x="821.0" y="104.0" font-size="11" fill="#555" text-anchor="middle">same file, no inherits</text>
 <text x="110" y="286" font-size="11" fill="#1d1d1d" text-anchor="middle">verify: parity gate ①</text>
 <text x="262" y="286" font-size="11" fill="#1d1d1d" text-anchor="middle">gdb: .gdbinit + printers</text>
-<text x="414" y="286" font-size="11" fill="#1d1d1d" text-anchor="middle">cross-ref: ch29 matrix</text>
+<text x="414" y="286" font-size="11" fill="#1d1d1d" text-anchor="middle">cross-ref: tool coverage matrix</text>
 <text x="566" y="286" font-size="11" fill="#1d1d1d" text-anchor="middle">verify: UBSan gate</text>
 <text x="718" y="286" font-size="11" fill="#1d1d1d" text-anchor="middle">verify: parity gate ①</text>
 <text x="870" y="286" font-size="11" fill="#1d1d1d" text-anchor="middle">clang diagnostics (shown)</text>

@@ -58,5 +58,5 @@
 <path d="M765,390 L765,425" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M880,465 L930,400" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <text x="20" y="600" font-size="12" fill="#1d1d1d" text-anchor="start">Both gates are rust-native: cargo test and the deterministic report digest run inside the pinned toolchain, verified offline on this host.</text>
-<text x="20" y="618" font-size="12" fill="#555555" text-anchor="start">FNV-1a is language-independent: the same 0x481984990deee5ff digest appears in the ch46 C++ and ch47 Go toolbox reports.</text>
+<text x="20" y="618" font-size="12" fill="#555555" text-anchor="start">FNV-1a is language-independent: the same 0x481984990deee5ff digest appears in the C++ and Go toolbox reports.</text>
 </svg>

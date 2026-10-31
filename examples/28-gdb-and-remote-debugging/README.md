@@ -1,11 +1,11 @@
-# 28-gdb-and-remote-debugging — bugfarm scenario 1: a crashing pmon
+# 28-gdb-and-remote-debugging: bugfarm scenario 1, a crashing pmon
 
-Chapter 28 is the first of the "bugfarm" examples: `app` is deliberately
-dual-use. `app run` is a normal, well-behaved program. `app crash` is a
-debugging TARGET — it walks the identical three/four-frame call chain but
+This chapter is the first of the "bugfarm" examples: `app` is dual-use by
+design. `app run` is a normal, well-behaved program. `app crash` is a
+debugging TARGET: it walks the identical three/four-frame call chain but
 feeds it a value that was never filled in, and goes straight into the bug
-class this chapter is about: reading through a pointer/reference/`Option`
-that a concurrent-looking event handler assumed — wrongly — was already
+class central to this chapter: reading through a pointer/reference/`Option`
+that a concurrent-looking event handler assumed (wrongly) was already
 populated.
 
 ```
@@ -24,10 +24,10 @@ main -> run_supervisor -> handle_child -> deref
 `run_supervisor` fakes a supervisor that just reaped child pid 4242. In
 `run` mode the reaper filled in the child's exit-status slot before
 `handle_child` looks at it. In `crash` mode, `handle_child` runs as if it
-fired *before* the reaper got there — the slot was never populated — which
-is exactly the shape of race a real signal-driven supervisor (see chapter
-12's `pmon`) can hit if a `SIGCHLD` notification and the code that consumes
-it get out of step.
+fired *before* the reaper got there (the slot was never populated), which
+is exactly the shape of race a real signal-driven supervisor (see the
+signal-handling chapter's `pmon`) can hit if a `SIGCHLD` notification and
+the code that consumes it get out of step.
 
 - `app run` prints:
   ```
@@ -37,7 +37,7 @@ it get out of step.
   ```
   and exits 0.
 - `app crash` prints only `pmon: supervisor starting`, then hits the bug.
-  **What happens next is different in every language — that difference is
+  **What happens next is different in every language; that difference is
   the point of this chapter:**
 
 | | mechanism | exit | core? | name the frame with |
@@ -52,25 +52,25 @@ it get out of step.
 ### Why C++ gets a core and Go/Rust don't
 
 C++ has no runtime standing between your bug and the kernel: a null-pointer
-read simply generates a hardware page fault, the kernel delivers `SIGSEGV`,
+read generates a hardware page fault, the kernel delivers `SIGSEGV`,
 and the default disposition for an unhandled `SIGSEGV` is "dump core, then
 terminate." Go and Rust both interpose a runtime between your code and the
 raw fault. Go's runtime installs its own `SIGSEGV` handler, recognizes the
 fault came from ordinary code (not from inside the runtime itself), and
-converts it into a normal — if unrecovered — panic; there is no
+converts it into a normal (if unrecovered) panic; there is no
 `sigaction(SA_RESETHAND)` back to the default disposition, so no core.
 Rust's `.unwrap()` calls `panic!` directly: no signal is even involved,
 just the ordinary unwind-and-abort (here, unwind-and-`exit(101)`) machinery.
 `gdb` still attaches and runs both binaries fine, but there is no signal to
-catch — asking gdb for a backtrace after the fact gets you nothing useful,
+catch: asking gdb for a backtrace after the fact gets you nothing useful,
 which is why the Go/Rust checks below read the runtime's own trace instead.
 
-One more thing worth noticing once you're inside gdb on the C++ build: the
-`ShutdownGuard` RAII type in `cpp/src/main.cpp`, whose destructor prints the
-"exiting cleanly" line, never fires on the crash path. RAII buys you
-cleanup on every C++-level exit (`return`, an exception, `std::exit` via a
-`terminate` handler) — it buys you nothing against a hardware fault, because
-a signal doesn't unwind the stack. Frame `#0` in the release backtrace below
+Inside gdb on the C++ build, the `ShutdownGuard` RAII type in
+`cpp/src/main.cpp`, whose destructor prints the "exiting cleanly" line,
+never fires on the crash path. RAII buys you cleanup on every C++-level
+exit (`return`, an exception, `std::exit` via a `terminate` handler); it
+buys you nothing against a hardware fault, because a signal doesn't unwind
+the stack. Frame `#0` in the release backtrace below
 even lands a level *inside* `std::println`'s own formatting machinery,
 rather than exactly on `*child.exit_slot`: at `-O2`, forming the reference
 argument doesn't fault, only reading through it during formatting does.
@@ -79,8 +79,8 @@ argument doesn't fault, only reading through it during formatting does.
 
 Each language directory has a `demo.sh` with the book-wide interface:
 
-- `./demo.sh build` — build only
-- `./demo.sh run [args]` — run the built binary (builds first if needed)
+- `./demo.sh build`: build only
+- `./demo.sh run [args]`: run the built binary (builds first if needed)
 - With env `TARGET` set, `run` deploys the binary to that lab VM via
   `scripts/lab/deploy-to-vm.sh` instead of running locally.
 
@@ -89,7 +89,7 @@ All three builds keep debug info in an otherwise optimized binary: the C++
 emits DWARF, and Rust's `Cargo.toml` sets `[profile.release] debug = true`.
 Every frame function (`deref`, `handle_child`, `run_supervisor`) is marked
 noinline (`[[gnu::noinline]]` / `//go:noinline` / `#[inline(never)]`) so
-optimization can't fold the call chain away — Rust's `handle_child` also
+optimization can't fold the call chain away: Rust's `handle_child` also
 needs a `std::hint::black_box(())` after the call, or the optimizer turns it
 into a tail call and erases its own frame from the backtrace.
 
@@ -155,17 +155,17 @@ RUST_BACKTRACE=1 ./target/release/app crash
 `verify.lua` (run per language with `LSP_LANG` set) asserts:
 
 - `run` is identical across languages: exit 0, the three status lines.
-- bare / unknown subcommand: exit 2, usage block — identical across languages.
+- bare / unknown subcommand: exit 2, usage block, identical across languages.
 - `crash`, per language:
-  - **cpp** — exit 139 (SIGSEGV); the RAII cleanup line never appears; under
+  - **cpp**: exit 139 (SIGSEGV); the RAII cleanup line never appears; under
     `ulimit -c unlimited` in a scratch temp dir, `coredumpctl` finds and
     extracts a core for the crashed pid; a scripted
     `gdb --batch -ex run -ex bt` names `deref`, `handle_child`, and
     `run_supervisor` in the backtrace.
-  - **go** — exit 2 (not 139, no core); the panic message names the
+  - **go**: exit 2 (not 139, no core); the panic message names the
     standard nil-pointer-dereference text; the goroutine trace names
     `main.deref`, `main.handleChild`, `main.runSupervisor`.
-  - **rust** — exit 101 (not 139, no core) either way; with
+  - **rust**: exit 101 (not 139, no core) either way; with
     `RUST_BACKTRACE=1`, the backtrace names `app::deref`,
     `app::handle_child`, `app::run_supervisor`; without it, those names are
     absent (the backtrace is opt-in) but the exit code is unchanged.

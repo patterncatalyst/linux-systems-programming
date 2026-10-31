@@ -2,7 +2,7 @@
 title: "UDP and peer discovery"
 order: 23
 part: "Networking"
-description: "chatterd learns to find peers it was never told about: UDP multicast beacons on 239.23.7.1, the IP_ADD_MEMBERSHIP / IP_MULTICAST_TTL setsockopt dance, a small gossip protocol deduped by name, and the bridge from a discovered datagram to the canonical chatterd TCP chat frame (introduced ch21); proven across two libvirt guests with tcpdump, ss -uap, and both transcripts."
+description: "chatterd learns to find peers it was never told about: UDP multicast beacons on 239.23.7.1, the IP_ADD_MEMBERSHIP / IP_MULTICAST_TTL setsockopt dance, a small gossip protocol deduped by name, and the bridge from a discovered datagram to the canonical chatterd TCP chat frame; proven across two libvirt guests with tcpdump, ss -uap, and both transcripts."
 duration: "55 minutes"
 ---
 
@@ -24,7 +24,7 @@ By the end of this chapter you can:
 - Verify multicast group membership and socket state with `ip maddr` and
   `ss -uap`, and capture beacons on the wire with `tcpdump -X`.
 - Run a two-host discovery exchange across a libvirt bridge and explain why a
-  TTL-1 multicast beacon stays link-local without any NAT workaround.
+  TTL-1 multicast beacon stays link-local without any NAT configuration.
 
 ## Why this matters
 
@@ -42,9 +42,9 @@ ordering and reliability, so it belongs on TCP. Picking the wrong protocol for
 either half either drops messages you needed or pays connection overhead you
 did not.
 
-Chapters 21 and 22 built `chatterd` on TCP: the canonical chatterd chat
+`chatterd` already runs on TCP, carrying the canonical chat
 frame (magic `"CH"`, version, type, a big-endian length, and a payload)
-carried between two endpoints you already knew, since you typed the peer's
+between two endpoints you already knew, since you typed the peer's
 address on the command line. This chapter removes that assumption. `chatterd
 discover` finds peers it was never told about, and the primitive that makes
 that possible is the one TCP cannot offer: **UDP multicast**, a single
@@ -52,7 +52,7 @@ that possible is the one TCP cannot offer: **UDP multicast**, a single
 who (or how many) they are. The shape of the chapter is a bridge: a
 connectionless UDP beacon announces "I exist, dial me here," a receiver hears
 strangers and dedupes them, and the first time it meets a new name it opens
-an ordinary TCP connection and speaks the *same canonical chat frame ch21
+an ordinary TCP connection and speaks the *same canonical chat frame already
 introduced*: the header never changes; each version only adds message
 *types*. Discovery is UDP; the conversation stays TCP. The star of the
 run is real: two libvirt guests, `systems-target` and `systems-peer`, each
@@ -64,7 +64,7 @@ beacon and frame formats, and the exit codes all three languages share.
 
 {% include excalidraw.html
    file="23-two-vm-topology"
-   alt="A libvirt virbr0 bridge band on 192.168.124.0/24 holds a central amber multicast-group box for 239.23.7.1 port 51824 TTL 1, with systems-target at 192.168.124.7 on the left and systems-peer at 192.168.124.95 on the right, each joined to the group on enp1s0 and holding udp fd 4 and tcp 9241; two dashed amber bidirectional beacon arrows (35 bytes from target, 34 bytes from peer) reach the group, and a solid bidirectional TCP arrow labelled one ch21 chat frame each way joins the two guests directly."
+   alt="A libvirt virbr0 bridge band on 192.168.124.0/24 holds a central amber multicast-group box for 239.23.7.1 port 51824 TTL 1, with systems-target at 192.168.124.7 on the left and systems-peer at 192.168.124.95 on the right, each joined to the group on enp1s0 and holding udp fd 4 and tcp 9241; two dashed amber bidirectional beacon arrows (35 bytes from target, 34 bytes from peer) reach the group, and a solid bidirectional TCP arrow labelled one chat frame each way joins the two guests directly."
    caption="Figure 23.1: the two-guest lab topology: both VMs join 239.23.7.1, beacon to the group, and bridge each discovery to a direct TCP :9241 chat frame; every address, port, and byte-length here is from the two-host run later in the chapter" %}
 
 > **Tools used**: `ss`, `tcpdump`, `ip`, `strace` (host); `tcpdump`, `ss`,
@@ -112,7 +112,7 @@ two machines, where the packet is on the wire regardless.
 {% include excalidraw.html
    file="23-discovery-sequence"
    alt="Two horizontal bands. The upper blue band, UDP multicast discovery, holds three boxes left to right: announce loop sendto to group emitting CHATTERD1 target 9241; receive loop recv one datagram splitting four fields and checking magic; and an amber parse-and-dedup box that skips its own name and calls seen.first before dialing. An amber arrow labelled new peer bridge to TCP drops into the lower grey band, TCP bridge, whose boxes are connect with retry, write_frame slash read_frame with a 6-byte header (magic, version, type, 2-byte big-endian length) plus payload, and a dark stdout box printing discovered peer and peer says. A note reads loss and reorder tolerated."
-   caption="Figure 23.2: one peer's path from a connectionless beacon to a connection-oriented frame: recv, dedup by name, then dial and speak the canonical chat frame ch21 introduced (JOIN out, DELIVER back)" %}
+   caption="Figure 23.2: one peer's path from a connectionless beacon to a connection-oriented frame: recv, dedup by name, then dial and speak the canonical chat frame already introduced (JOIN out, DELIVER back)" %}
 
 ## How the code works
 
@@ -235,7 +235,7 @@ each dials once and each prints exactly one `peer … says:` line. The
 `<host-ip>` field is the one fragile
 convention to flag: a peer advertises the address it wants to be dialed
 at (its `--iface`), so behind NAT or on a different subnet it would advertise
-an unreachable address, a limitation a real gossip protocol solves with
+an unreachable address, a case a real gossip protocol handles with
 observed source addresses, out of scope here.
 
 ## Errors, three ways
@@ -266,7 +266,7 @@ in a `Seen` struct with a `std::mutex` (defensive, since a future second
 reader would need it), while Go confines its `map[string]bool` to the
 `recvLoop` goroutine and Rust confines its `HashSet` to the `recv_loop`
 thread, so neither needs a lock at all: the state is owned by one flow, which
-is Chapter 6's "share memory by communicating" reflex applied to sockets.
+is the "share memory by communicating" reflex, applied to sockets.
 Shutdown is the interesting coordination. There is no natural end to a
 `recv` loop, so each waits on a stop signal *and* a 200 ms socket read
 timeout: the timeout wakes the blocked `recv` often enough to observe the
@@ -310,7 +310,7 @@ UNCONN 0  0  0.0.0.0:51833  0.0.0.0:*  users:(("app",pid=2818975,fd=4))
 	inet  239.23.7.1
 ```
 
-Loopback multicast is the one quirk to know: `lo` is not flagged `MULTICAST`,
+Loopback multicast behaves differently from a normal link: `lo` is not flagged `MULTICAST`,
 but the IPv4 stack still loops group traffic when the multicast interface is
 set to `127.0.0.1`, which is why the local demo passes `--iface 127.0.0.1`.
 Output equality alone could be faked by a program that quietly skipped the
@@ -350,7 +350,7 @@ UNCONN 0  0  0.0.0.0:51824  0.0.0.0:*  users:(("chatterd",pid=2105,fd=4))
 	inet  239.23.7.1
 ```
 
-`ip maddr` proves the kernel actually joined the group on `enp1s0` (the
+`ip maddr` proves the kernel joined the group on `enp1s0` (the
 observable effect of `IP_ADD_MEMBERSHIP`), and `ss -uap` shows the same
 `UNCONN` fd-4 UDP socket as on the host. Third, the payoff: both guests'
 stdout, quoted verbatim from the two-host run:
@@ -368,7 +368,7 @@ peer target says: hello from target
 ```
 
 Each guest discovered the other exactly once and exchanged one TCP frame: the
-message crossed the network between two separate hosts. No libvirt workaround was needed: both
+message crossed the network between two separate hosts. No special libvirt configuration was needed: both
 guests sit on the same `virbr0` L2 segment, so a TTL-1 multicast beacon is
 delivered by the bridge as ordinary link-local traffic; libvirt's NAT only
 governs traffic *leaving* the host toward the internet, which discovery never
@@ -395,7 +395,7 @@ does.
   un-fragmented packet, and a receiver dedupes by name so one peer is
   announced once regardless of beacon count.
 - The bridge from discovery to conversation is a plain `connect` to the
-  advertised endpoint, reusing the canonical chat frame ch21 introduced (a
+  advertised endpoint, reusing the canonical chat frame already introduced (a
   JOIN out, a DELIVER back): proven across two guests, each printing one
   `discovered peer` and one `peer … says:` line.
 
@@ -422,6 +422,6 @@ IP-header TTL byte <code>01</code>); <code>ss -uanp</code> showed the joined
 <code>chatterd</code> fd-4 UDP socket and <code>ip maddr show enp1s0</code> the
 239.23.7.1 membership; and both guests' stdout printed one
 <code>discovered peer</code> and one <code>peer … says:</code> line as quoted.
-No libvirt NAT workaround was required: the guests share one <code>virbr0</code>
+No special libvirt NAT configuration was required: the guests share one <code>virbr0</code>
 L2 segment. The bcc-tools <code>tcpconnect</code>/<code>tcplife</code>/<code>offcputime</code>
 callout is unverified as marked and is exercised in Part 8.</p>

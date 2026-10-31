@@ -45,7 +45,7 @@
 <text x="696.0" y="100" font-size="11" fill="#555555" text-anchor="middle">text = hello bob</text>
 <text x="460" y="205" font-size="12" fill="#1d1d1d" text-anchor="middle">0f 00 00 00  =  0x0000000f  =  15  =  len(&quot;alice&quot;) + 1 (NUL) + len(&quot;hello bob&quot;)</text>
 <text x="30" y="250" font-size="12" fill="#1d1d1d" text-anchor="start" font-weight="700">Two frame kinds, told apart only by whether text is empty:</text>
-<text x="40" y="274" font-size="11" fill="#555555" text-anchor="start">JOIN   name  NUL              (empty text)  -- client sends exactly one at connect</text>
-<text x="40" y="294" font-size="11" fill="#555555" text-anchor="start">CHAT   name  NUL  text                       -- one per non-empty stdin line</text>
+<text x="40" y="274" font-size="11" fill="#555555" text-anchor="start">JOIN   name  NUL              (empty text): client sends exactly one at connect</text>
+<text x="40" y="294" font-size="11" fill="#555555" text-anchor="start">CHAT   name  NUL  text                       : one per non-empty stdin line</text>
 <text x="30" y="328" font-size="11" fill="#999999" text-anchor="start">len == 0 and len &gt; 1048576 (1 MiB) are rejected; the 4 header bytes are never counted.</text>
 </svg>

@@ -1600,13 +1600,13 @@
    "updated": 1,
    "link": null,
    "locked": false,
-   "text": "Numbers are from real runs on the 16-CPU reference host. Nothing here is a duration: every observable is a count or a set cardinality (see ch39).",
+   "text": "Numbers are from real runs on the 16-CPU reference host. Nothing here is a duration: every observable is a count or a set cardinality.",
    "fontSize": 11,
    "fontFamily": 1,
    "textAlign": "left",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "Numbers are from real runs on the 16-CPU reference host. Nothing here is a duration: every observable is a count or a set cardinality (see ch39).",
+   "originalText": "Numbers are from real runs on the 16-CPU reference host. Nothing here is a duration: every observable is a count or a set cardinality.",
    "lineHeight": 1.25,
    "baseline": 11
   }

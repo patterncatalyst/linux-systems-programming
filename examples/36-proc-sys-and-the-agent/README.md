@@ -1,8 +1,8 @@
-# 36-proc-sys-and-the-agent — sysagent v0
+# 36-proc-sys-and-the-agent: sysagent v0
 
 Chapter 36 opens Part 9 (observability). `sysagent` is a small USE-method
-metrics collector — the same tool the rest of the Part builds on (chapter 37's
-saturation drills, chapter 41's capstone fleet) — reading nothing but
+metrics collector, the same tool the rest of the Part builds on (later
+saturation drills and the final fleet exercise), reading nothing but
 `/proc`, `/proc/net`, `/proc/diskstats`, and cgroup PSI. No root, no
 `/dev/kmsg`, no eBPF: everything here is a plain file a normal user can open.
 
@@ -18,23 +18,23 @@ opts: --interval-ms N (default 200)  cpu utilization sampling window
 
 - **`sample`** takes exactly one snapshot: it reads `/proc/stat` once, sleeps
   `--interval-ms`, reads it again, and reports the CPU delta over that
-  window — alongside `/proc/loadavg`, `/proc/meminfo`, `/proc/diskstats`,
+  window, alongside `/proc/loadavg`, `/proc/meminfo`, `/proc/diskstats`,
   `/proc/net/dev`, and cgroup PSI, all gathered **concurrently** with the
   sleep (C++ `std::jthread`, Go goroutines fanned in over a channel, Rust
-  scoped threads — three languages, one idea: don't serialize five
+  scoped threads, three languages, one idea: don't serialize five
   independent file reads behind a timer). Default text output is
   `key=value` lines; `--json` emits the single-line JSON object below.
 - **`serve --port P`** exposes the identical snapshot over a hand-rolled
   HTTP/1.1 `GET /metrics` endpoint (Go uses `net/http`; C++ and Rust hand-roll
   the same tiny surface on raw sockets + `poll(2)`, in keeping with the
-  book's earlier chatterd examples) — one fresh sample per request. Any
+  book's earlier chatterd examples), serving one fresh sample per request. Any
   other path 404s. `SIGINT`/`SIGTERM` prints a shutdown line and exits 0.
 - No/bad arguments print a usage line on stderr and exit 2.
 
 ## The deterministic field schema
 
 Every field name below is byte-identical across `--json` and `/metrics` in
-all three languages — that's the contract this example exists to prove out:
+all three languages; that's the contract this example exists to prove out:
 you can point one Grafana dashboard or one test suite at any of the three.
 
 | field                 | type    | source                                          |
@@ -62,13 +62,13 @@ readings (a single reading of `/proc/stat` is a cumulative counter since
 boot, not a percentage).
 
 PSI (Pressure Stall Information) is read from **this process's own cgroup**
-first — resolved via the single `0::<path>` line in `/proc/self/cgroup`
-(cgroup v2 unified hierarchy) joined onto `/sys/fs/cgroup<path>/{cpu,memory,io}.pressure`
-— falling back to the system-wide `/proc/pressure/{cpu,memory,io}` files if
+first, resolved via the single `0::<path>` line in `/proc/self/cgroup`
+(cgroup v2 unified hierarchy) joined onto `/sys/fs/cgroup<path>/{cpu,memory,io}.pressure`,
+falling back to the system-wide `/proc/pressure/{cpu,memory,io}` files if
 the cgroup-scoped ones aren't there. If neither is readable (PSI disabled in
 the kernel, or a container without a cgroup-v2 delegate), `psi_available` is
-`false` and the three `avg10` fields are `0.0` — that's the "if available"
-in the chapter spec: a missing PSI source is not an error.
+`false` and the three `avg10` fields are `0.0`, matching the "if available"
+behavior in the chapter spec: a missing PSI source is not an error.
 
 ## Example output
 
@@ -91,25 +91,25 @@ $ kill -INT %1
 sysagent: shutting down
 ```
 
-(That `sample` line reflects real load on the box this was written on — a
+(That `sample` line reflects real load on the box this was written on: a
 concurrent `cc1plus`-heavy build was running in the background, which is
 exactly the kind of noise the verification below is built to tolerate.)
 
 ## One subject, three concurrency styles
 
-The `/proc` parsing itself is deliberately unglamorous — `open`, read lines,
-split fields — so the interesting difference is how each language overlaps
+The `/proc` parsing itself is unglamorous (`open`, read lines,
+split fields), so the interesting difference is how each language overlaps
 the five independent reads with the CPU-delta sampling window instead of
 doing five sequential blocking calls:
 
-- **C++** — `std::jthread` per source (`loadavg`, `meminfo`, `diskstats`,
+- **C++**: `std::jthread` per source (`loadavg`, `meminfo`, `diskstats`,
   `netdev`, `psi`), an `std::atomic<int>` success counter, and a small
   `ProcFile` RAII wrapper around `std::ifstream` so every `/proc` handle
   closes itself. Errors flow through `std::expected<T, std::string>`.
-- **Go** — one goroutine per source, fanned in over a single buffered
-  `chan namedErr` — the idiomatic Go answer to "wait for N concurrent
+- **Go**: one goroutine per source, fanned in over a single buffered
+  `chan namedErr`, the idiomatic Go answer to "wait for N concurrent
   results and keep the first error." Errors are wrapped with `%w` throughout.
-- **Rust** — `std::thread::scope` with one scoped closure per source, so the
+- **Rust**: `std::thread::scope` with one scoped closure per source, so the
   borrows into the final `Snapshot` don't need `Arc`/`Mutex`; each closure
   returns a `Result<T, String>` collected via `JoinHandle::join()`. Errors
   flow through `Result`/`?`.
@@ -117,7 +117,7 @@ doing five sequential blocking calls:
 The HTTP layer follows the same three-languages-one-idea pattern as the
 book's chatterd examples: Go leans on its stdlib `net/http`; C++ and Rust
 hand-roll the request line + `poll(2)` + `signalfd`/`SignalFd` shutdown
-doorbell that chapter 24 already established, because there's no reason to
+doorbell established earlier in the book's chatterd chapters, because there's no reason to
 pull in a framework for one endpoint.
 
 ## Layout
@@ -136,7 +136,7 @@ pull in a framework for one endpoint.
 Each language directory has a `demo.sh` with the identical interface used
 book-wide: `./demo.sh build`, `./demo.sh run [args]`, and a bare `./demo.sh`
 that builds then runs. With `TARGET` set, `run` deploys to that lab VM
-instead of running locally — unused here since this chapter is local-only
+instead of running locally; unused here since this chapter is local-only
 (`mode: local` in the manifest); it reads the current host's `/proc`, not a
 VM's. `run` execs straight into the built binary so signals (`SIGINT` on
 `serve`) reach it directly rather than a wrapping shell.
@@ -146,8 +146,8 @@ VM's. `run` execs straight into the built binary so signals (`SIGINT` on
 `verify.lua` (run by the test harness with `LSP_LANG` set to one language at
 a time) asserts observable behavior, not exit 0:
 
-1. Usage errors — no arguments, an unknown subcommand, `serve` without
-   `--port` — all exit 2 with a usage line.
+1. Usage errors (no arguments, an unknown subcommand, `serve` without
+   `--port`) all exit 2 with a usage line.
 2. `sample --json` carries every field in the schema above with a numeric
    (or boolean, for `psi_available`) value, `mem_total_kb` is positive,
    `cpu_util_pct` is in `[0, 100]`, the `disks` array has a named entry, and
@@ -157,7 +157,7 @@ a time) asserts observable behavior, not exit 0:
    longer than a `sample --interval-ms 500` window and compares against an
    immediately-prior idle sample, retried up to three times with a 12
    percentage-point margin (or an absolute ≥55% floor, for the case where the
-   host is already saturated) — robust against running on a real, shared
+   host is already saturated), robust against running on a real, shared
    development box rather than an isolated benchmark rig.
 4. `serve --port P` answers `GET /metrics` with the same JSON shape, 404s an
    unknown path, and its `mem_total_kb` agrees **exactly** with a direct

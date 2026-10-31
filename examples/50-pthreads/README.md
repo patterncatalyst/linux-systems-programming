@@ -1,6 +1,6 @@
-# 50 — pthreads
+# 50: pthreads
 
-Chapter 49 measured threads from above, with `std::thread`. This example goes
+The previous chapter measured threads from above, with `std::thread`. This example goes
 **under** `std::thread` to the thing it is on Linux: a pthread. Each subcommand
 exercises one per-thread control that POSIX offers and the C++ standard library
 does not expose, and reports something the kernel or glibc produced.
@@ -23,15 +23,16 @@ pthreads report: facet=naming digest=0x481984990deee5ff
 | `sched` | `pthread_getschedparam` / `setschedparam` | default is `SCHED_OTHER` at priority 0; an unprivileged `SCHED_FIFO` request is refused with `EPERM` |
 | `cancel` | `pthread_cancel` | the C++ destructor **and** the `pthread_cleanup_push` handler both run; `pthread_join` reports `PTHREAD_CANCELED` |
 | `cancel-swallow` | the same, mishandled | a `catch (...)` that does not rethrow aborts the process: `FATAL: exception not rethrown`, exit 134 |
-| `bridge` | `std::thread::native_handle()` | naming a `std::thread` from outside lands in that thread's procfs `comm` — `native_handle_type` **is** `pthread_t`, checked by `static_assert` |
+| `bridge` | `std::thread::native_handle()` | naming a `std::thread` from outside lands in that thread's procfs `comm`: `native_handle_type` **is** `pthread_t`, checked by `static_assert` |
 
 One subcommand per facet is deliberate: `cancel-swallow` ends in `abort()` by
 design, and a facet that aborts must never be able to take the others with it.
 
 Every facet prints `digest=0x481984990deee5ff` over the payload
-`The quick brown.` — the same value ch46's C++, ch47's Go, ch48's Rust, and
-ch49's `conc` produce. As always, the answer does not depend on how the work
-was scheduled, or here on which per-thread knob was turned.
+`The quick brown.`: the same value the C++, Go, and Rust toolbox chapters,
+and the concurrency-vs-parallelism chapter's `conc`, produce. As always,
+the answer does not depend on how the work was scheduled, or here on which
+per-thread knob was turned.
 
 ## Two identities, and why it matters
 
@@ -44,7 +45,7 @@ A Linux thread has two names and they are not interchangeable:
   a directory in `/proc`, the thing `perf`, `ftrace`, `top -H`, and gdb all
   report.
 
-The main thread is the case that catches people out — its tid *equals* the
+The main thread is the case that catches people out: its tid *equals* the
 process pid, because a process on Linux is its first thread.
 
 ## Layout
@@ -60,11 +61,12 @@ process pid, because a process on Linux is its first thread.
     └── src/pthreads.cpp
 ```
 
-C++-only, like ch49. Go and Rust wrap these same pthreads and deliberately hide
-exactly these controls, so a three-language version would have two directories
-with nothing to say. `verify.lua` skips for any `LSP_LANG` other than `cpp`.
+C++-only, like the concurrency-vs-parallelism chapter. Go and Rust wrap these
+same pthreads and hide exactly these controls, so a three-language version
+would have two directories with nothing to say. `verify.lua` skips for any
+`LSP_LANG` other than `cpp`.
 
-Standard library and pthreads only. Local, unprivileged, offline — **no Boost,
+Standard library and pthreads only. Local, unprivileged, offline: **no Boost,
 no Conan, no network, no VM, no root**.
 
 ## Build and run
@@ -98,7 +100,7 @@ terminal:
 
 Two rows for one process: `TID` is the same integer `gettid()` returns, and the
 first row's TID equals the PID because a process is its first thread. `PSR` is
-the CPU each thread is on — the `affinity` facet is what makes those two numbers
+the CPU each thread is on: the `affinity` facet is what makes those two numbers
 something you chose rather than something the scheduler picked. `COMMAND` is the
 procfs `comm` field, which defaults to the process name; the `naming` and
 `bridge` facets are the ones that change it.
@@ -111,14 +113,14 @@ procfs `comm` field, which defaults to the process name; the `naming` and
 
 Gates A–H are hard and all run offline and unprivileged:
 
-- **A** — every facet computes the expected digest.
-- **B** — identity: main tid == pid, worker tids distinct, `/proc/self/task/<tid>` present.
-- **C** — naming: both read-back paths agree, and 16 chars is refused with `ERANGE` leaving the old name in place.
-- **D** — stack: the custom thread got at least what was asked and less than the default; a sub-minimum request is refused with `EINVAL` rather than rounded up.
-- **E** — affinity: two threads on two different CPUs, caller's mask unchanged. Prints an informational `SKIP` (never a FAIL) on a host allowed fewer than 2 CPUs.
-- **F** — sched: `SCHED_OTHER` at priority 0, and `SCHED_FIFO` refused with `EPERM`. **The refusal is the gate** — asserting a *successful* `SCHED_FIFO` would need root and would not run on a reader's laptop.
-- **G** — cancel, both directions: the unwind runs destructors and cleanup handlers, and swallowing that unwind kills the process with `exception not rethrown`.
-- **H** — bridge: `native_handle_type` is `pthread_t`, and a `std::thread` named through it shows that name in procfs.
+- **A**: every facet computes the expected digest.
+- **B**: identity: main tid == pid, worker tids distinct, `/proc/self/task/<tid>` present.
+- **C**: naming: both read-back paths agree, and 16 chars is refused with `ERANGE` leaving the old name in place.
+- **D**: stack: the custom thread got at least what was asked and less than the default; a sub-minimum request is refused with `EINVAL` rather than rounded up.
+- **E**: affinity: two threads on two different CPUs, caller's mask unchanged. Prints an informational `SKIP` (never a FAIL) on a host allowed fewer than 2 CPUs.
+- **F**: sched: `SCHED_OTHER` at priority 0, and `SCHED_FIFO` refused with `EPERM`. **The refusal is the gate**: asserting a *successful* `SCHED_FIFO` would need root and would not run on a reader's laptop.
+- **G**: cancel, both directions: the unwind runs destructors and cleanup handlers, and swallowing that unwind kills the process with `exception not rethrown`.
+- **H**: bridge: `native_handle_type` is `pthread_t`, and a `std::thread` named through it shows that name in procfs.
 
 **I** (clang parity on the digest) runs if `clang++` is on `PATH` and prints an
 informational `SKIP` otherwise.

@@ -24,9 +24,9 @@ A profiler only answers "where does the time go" if you can read what it hands b
 
 The payoff is the cross-check this chapter runs at the end: three profiling tools, built by three unrelated projects, reading three different kinds of instrumentation, all converge on the same function name at the same overwhelming share of samples. That agreement, not any single tool's output, is what makes a profiling result trustworthy enough to act on.
 
-Chapter 28 opened this part by reading a crash gdb already knew about;
-Chapter 29 broke code by design and watched a sanitizer catch it. Both
-chapters answer "what is wrong". This one answers a different question that
+gdb already read a crash it knew about, opening this part; sanitizers broke
+code by design and watched the break get caught. Both answer "what is
+wrong". This one answers a different question that
 comes up on every program that runs correctly and still feels slow: "where
 does the time go, and which line is spending it?" That question has no
 generic answer: each language ships its own native way of pointing a
@@ -47,7 +47,7 @@ this chapter draws from.
 {% include excalidraw.html
    file="31-flamegraph-reading"
    alt="A schematic flamegraph with two labeled axes: y is stack depth, bottom the root frame runtime.main and top the leaf running at the instant a sample was taken; x is share of samples, explicitly not time order or call order. A stack of boxes narrows from a full-width root frame up through main/main.run, into a wide accent box for spin_hot/hotSpin covering about 99% of the row's width, into an equally wide inlined divisor-loop frame directly above it, topped by a leaf sliver. A callout box explains that color here just marks which language tab a frame came from, since real profilers usually color by module or at random. A footer note says the way to find the hot path is to scan for the widest unbroken column reaching toward the top."
-   caption="Figure 31.1: reading a flamegraph: width is the share of samples, height is stack depth, and the widest column reaching toward the top is the function actually spending the cycles" %}
+   caption="Figure 31.1: reading a flamegraph: width is the share of samples, height is stack depth, and the widest column reaching toward the top is the function spending the cycles" %}
 
 > **Tools used**: `perf` record/report/stat, `clang-tidy`, GCC `-fanalyzer`
 > (C++); `go tool pprof`, `go tool trace`, `dlv` (Go); `perf` record/report,
@@ -73,7 +73,7 @@ libraries the program calls into, so writing a CPU profile, a heap profile,
 or an execution trace is part of the program's own behavior, driven by flags
 this chapter's Go build accepts and C++/Rust do not (`--cpuprofile`,
 `--memprofile`, `--trace`). Rust sits in the middle: it is compiled to the
-same kind of native ELF binary as C++, so `perf` attaches to it the same way,
+same native ELF binary as C++, so `perf` attaches to it the same way,
 but the Rust ecosystem also ships `cargo flamegraph`, a Rust program that
 *wraps* `perf record` and then renders the result with `inferno`, a Rust
 reimplementation of Brendan Gregg's original Perl `stackcollapse`/`flamegraph`
@@ -84,21 +84,21 @@ flamegraph draws directly and what `--top` tabulates as text.
 
 A flamegraph earns its name from the shape, not from heat: each horizontal
 row is one level of stack depth (the root frame along the bottom, the
-function actually executing at the top), and the *width* of a box is the
+function executing at the top), and the *width* of a box is the
 fraction of samples in which that function was somewhere on the stack at
 that depth. Frames are usually **sorted alphabetically within their parent**,
 not by call order or wall-clock time, which is the detail that trips up
 first-time readers expecting the x-axis to mean "when". Reading one is a
 single scan: follow the tallest, widest column of boxes from the bottom to
 the top, and the name at the top of that column is where the cycles are
-actually going. Figure 31.1 draws that shape directly from this chapter's
+going. Figure 31.1 draws that shape directly from this chapter's
 own data: `spin_hot`/`hotSpin` is that column in every one of the three
 profiles below.
 
 {% include excalidraw.html
    file="31-toolbelt-map"
-   alt="One shared target box, app hot or alloc with an identical result across languages, feeding three columns. The C++ column lists perf record with call-graph fp as its accent entry naming spin_hot at 99.9%, then perf report/perf stat, clang-tidy, GCC -fanalyzer, and a dashed gdb box marked Chapter 28. The Go column lists runtime/pprof as its accent entry, cpuprofile into go tool pprof top naming main.hotSpin, then memprofile with alloc_space naming main.allocChurn, runtime/trace with go tool trace, delve, and a dashed go vet box. The Rust column lists perf record with call-graph fp as its accent entry naming spin_hot inlined near 100%, then cargo flamegraph producing a real SVG, cargo clippy and cargo fmt check, a dashed tokio-console box marked forward reference to Chapter 27 not applicable here since there is no async runtime, and a dashed gdb/rust-gdb box marked Chapter 28. A note explains the amber boxes are the CPU-profiling step this chapter cross-checks against each other, and the dashed boxes are noted but out of scope."
-   caption="Figure 31.2: one shared target, three native toolbelts: the amber boxes are what this chapter's cross-check compares; the dashed boxes point to where gdb (Ch. 28) and tokio-console (Ch. 27) belong instead" %}
+   alt="One shared target box, app hot or alloc with an identical result across languages, feeding three columns. The C++ column lists perf record with call-graph fp as its accent entry naming spin_hot at 99.9%, then perf report/perf stat, clang-tidy, GCC -fanalyzer, and a dashed gdb box marked as the debugging digression. The Go column lists runtime/pprof as its accent entry, cpuprofile into go tool pprof top naming main.hotSpin, then memprofile with alloc_space naming main.allocChurn, runtime/trace with go tool trace, delve, and a dashed go vet box. The Rust column lists perf record with call-graph fp as its accent entry naming spin_hot inlined near 100%, then cargo flamegraph producing a real SVG, cargo clippy and cargo fmt check, a dashed tokio-console box marked as a forward reference to async-runtime debugging, not applicable here since there is no async runtime, and a dashed gdb/rust-gdb box marked as the debugging digression. A note explains the amber boxes are the CPU-profiling step this chapter cross-checks against each other, and the dashed boxes are noted but out of scope."
+   caption="Figure 31.2: one shared target, three native toolbelts: the amber boxes are what this chapter's cross-check compares; the dashed boxes point to where gdb and tokio-console belong instead" %}
 
 ## How the code works
 
@@ -186,10 +186,10 @@ fn spin_hot(n: u64) -> u64 {
 All three are the same trial-division loop with the same invariant: an
 `i` in `[2, n)` is prime only if no `d` in `[2, sqrt(i)]` divides it evenly,
 found by walking `d` up from 2 and stopping the moment `d*d > i`. The loop is
-intentionally the slow textbook version (no sieve, no memoized small primes,
-no early-exit on evens) because a fast implementation would finish before a
-sampling profiler collected enough hits to draw a clean picture, and the goal
-here is a profile, not a fast prime counter. The `noinline` annotation on
+the slow textbook version (no sieve, no memoized small primes, no
+early-exit on evens): a fast implementation would finish before a sampling
+profiler collected enough hits to draw a clean picture, and the goal here is
+a profile, not a fast prime counter. The `noinline` annotation on
 each (`[[gnu::noinline]]`, `//go:noinline`, `#[inline(never)]`) is not
 decoration: at `-O2`/release optimization, all three compilers are entitled
 to fold a small, single-call-site function directly into its caller, which
@@ -201,7 +201,7 @@ every transcript below does.
 
 The allocation-heavy sibling (`alloc_churn`/`allocChurn`/`alloc_churn`, not
 shown in the tabs above but present in every `main.cpp`/`main.go`/`main.rs`)
-does the opposite kind of work by design: `n` iterations round-robin
+does the opposite work by design: `n` iterations round-robin
 overwrite a 1,000-key string map, and every iteration allocates a fresh key
 string and a fresh value string before inserting. Where `spin_hot` never
 touches the heap, `alloc_churn` never does meaningful arithmetic; its job is
@@ -219,8 +219,8 @@ before the timed call, `pprof.WriteHeapProfile` after it), each guarded by a
 `anyhow::Result` through `parse_args`/`run` and returns `ExitCode` from
 `main` rather than calling `std::process::exit`, so destructors still run on
 every exit path. None of that wiring changes the algorithm; it only exists
-so the same binary can be pointed at by three very different profilers
-without recompiling it differently for each one.
+so the same binary can be pointed at by three different profilers without
+recompiling it differently for each one.
 
 ## Errors, three ways
 
@@ -242,13 +242,13 @@ profiler.
 ## Concurrency lens: what each language's tooling gives you
 
 This is a pure-tooling chapter: `app` is single-threaded in every language,
-so there is no race to hunt here the way Chapters 25 and 26 hunted one. What
-still differs by language is how much of the *concurrency picture* each
-toolbelt can show once a program does have more than one thread of control.
-`perf record --call-graph` samples every thread in a process by default, so
-it is already concurrency-aware for C++ and Rust: point it at `workq` from
-Chapter 25 and the flamegraph would show each worker thread's stack
-separately. Go's profilers go further because they are runtime-aware: a
+so there is no race to hunt here the way futex-protected shared state and
+lock-free atomics hunted one. What still differs by language is how much of
+the *concurrency picture* each toolbelt can show once a program does have
+more than one thread of control. `perf record --call-graph` samples every
+thread in a process by default, so it is already concurrency-aware for C++
+and Rust: point it at `workq`, the shared-state-and-futex example, and the
+flamegraph would show each worker thread's stack separately. Go's profilers go further because they are runtime-aware: a
 `runtime/pprof` CPU profile attributes samples to the goroutine that was
 running, and `go tool trace` is built specifically to show
 goroutine-level concurrency: when one parks, when the scheduler hands its P
@@ -363,12 +363,12 @@ just-returned `allocChurn` call is already garbage; the default *in-use*
 view would show almost nothing live. `--alloc_space` switches to pprof's
 cumulative-since-start counter, which remembers every byte `mallocgc` ever
 handed out whether or not it was later freed, which is the view that
-actually answers "where did the allocations happen": `main.allocChurn`
+answers "where did the allocations happen": `main.allocChurn`
 itself directly owns 53.98% (the map's own bucket storage), and
 `fmt.Sprintf`, called twice per iteration to build the key and value
 strings, owns another 38.34% underneath it. `go tool trace` opens an
 interactive browser UI by default, but `-d=parsed` dumps the same event
-stream as text, enough to confirm the tracer really captured `hotSpin`
+stream as text, enough to confirm the tracer captured `hotSpin`
 executing:
 
 ```console
@@ -380,8 +380,8 @@ app: mode=hot n=800000 result=63951 ms=114
 	main.hotSpin @ 0x4d272c
 ```
 
-Delve is the interactive debugger this chapter ties back to Chapter 28's
-`gdb` work: same idea (breakpoints, stack frames, live variables), native to
+Delve is the interactive debugger this chapter ties back to the `gdb` work
+above: same idea (breakpoints, stack frames, live variables), native to
 Go's runtime instead of DWARF-only. It was not preinstalled on this host;
 `go install github.com/go-delve/delve/cmd/dlv@latest` pulled it from the Go
 module proxy in a few seconds, and it scripts the same way `gdb --batch`
@@ -427,8 +427,8 @@ needing no `extern "C"` trick to stay readable) and reported as inlined at
 release optimization; the frame boundary survives as debug-info metadata
 even though the call itself was folded away. `cargo-flamegraph` was already
 on this host (`cargo install flamegraph --locked` is what would put it there
-otherwise), so I ran it against the live binary rather than falling back to
-the tabular report:
+otherwise); running it against the live binary skips the tabular-report
+fallback:
 
 ```console
 [host]$ cargo flamegraph --output rust-hot.svg -- hot
@@ -458,9 +458,8 @@ clean on this source, no findings, no diff. `tokio-console` deserves a brief
 look before being set aside: it attaches to a running **async runtime** and shows
 live task/waker state, which only exists once a program has `tokio` tasks to
 show. `app` has none; no `.await` anywhere in this chapter's source, so
-`tokio-console` has nothing to display here; it belongs with
-Chapter 27's async runtimes, where `chatterd`'s tokio tasks are the thing
-worth watching live.
+`tokio-console` has nothing to display here; it belongs with async-runtime
+debugging, where `chatterd`'s tokio tasks are the thing worth watching live.
 
 > **CLion's built-in profiler** <span class="status status--unverified">unverified</span>:
 > CLion wraps this same `perf record`/`perf report` pipeline (and, on
@@ -507,7 +506,7 @@ hardware sampler reading raw ELF symbols, an in-process Go library sampling
 its own goroutine stacks, the same kernel sampler again reading Rust's DWARF)
 converge on the same name in every language's own spelling of it, at the
 same overwhelming share of samples. That agreement is the cross-check: if
-`spin_hot`/`hotSpin` were *not* actually where the time went, three
+`spin_hot`/`hotSpin` were *not* where the time went, three
 independently-implemented tools would have no reason to all point at the
 same place.
 

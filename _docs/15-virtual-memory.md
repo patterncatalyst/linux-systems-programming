@@ -41,7 +41,7 @@ This chapter builds the vocabulary, VMAs, faults, VSZ/RSS/PSS, overcommit,
 that every later memory and IPC chapter assumes, including `shmkv`, the
 key-value store the rest of this part builds directly on mapped pages.
 
-Part 3 closed with `pmon` dropping privileges in chapter 14; this part turns
+Part 3 closed with `pmon` dropping privileges; this part turns
 inward, to the memory every one of those processes lives in. The one new idea
 is that **an address is a promise, not a page**: when `malloc`, `make`, or
 `Vec` hands you 64 MiB, the kernel has recorded a range in a bookkeeping
@@ -105,7 +105,7 @@ ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0   [vsyscall]
 (Whitespace compressed; the columns are start–end, permissions, file offset,
 device, inode, and path.) The fourth permission character is the one people
 miss: `p` means *private*, writes trigger copy-on-write and never reach the
-file; `s` would mean *shared*, the mode chapter 16 is built on. Read
+file; `s` would mean *shared*, the mode shared mappings are built on. Read
 the file top to bottom and the classic layout falls out. The binary itself
 appears four times: `r-xp` text, `r--p` read-only data, a second `r--p` that
 is the relro region (writable during relocation, sealed read-only before
@@ -116,7 +116,7 @@ one region the legacy `brk(2)` syscall grows. Then a jump to the high
 top-down: the locale archive `cat` mapped read-only, `libc` in the same
 four-segment pattern as the binary, anonymous `rw-p` slabs with inode 0
 (allocator arenas and thread machinery), and the kernel-provided `[vvar]` +
-`[vdso]` pages that let chapter 4's `clock_gettime` skip the syscall
+`[vdso]` pages that let `clock_gettime` skip the syscall
 entirely. Near the top, `[stack]` grows downward toward the mmap region; the
 `[vsyscall]` page at the very top is a frozen compatibility relic. The gaps
 between regions are the point, not an accident: unmapped gigabytes that turn
@@ -219,7 +219,7 @@ otherwise assume most promises are never fully touched. The proof is in the
 second read: this 64 GiB host has *already* promised 48.5 GiB against a
 nominal `CommitLimit` of 41.2 GiB (swap + 50% of RAM, per
 `overcommit_ratio`), and nothing is wrong: in mode 0 the limit is
-advisory. Mode `2` enforces it (`malloc` actually starts returning `NULL`);
+advisory. Mode `2` enforces it (`malloc` starts returning `NULL`);
 mode `1` promises anything. The price of overcommit is paid at touch time: if
 a fault needs a frame and there is nothing left to reclaim, the **OOM
 killer** picks the process with the highest badness score: roughly its
@@ -228,8 +228,8 @@ volunteers). This shell runs at `100` (`cat /proc/self/oom_score_adj`), a
 nudge from systemd making user sessions die before system services. The
 lesson for a systems programmer: on mode-0 Linux, allocation failure mostly
 does not arrive as a clean error at the call site; it arrives as `SIGKILL`
-at the worst touch. Chapter 22's cgroup work sharpens this with per-service
-memory limits.
+at the worst touch. cgroup memory limits sharpen this further, with
+per-service caps instead of a single host-wide policy.
 
 The last piece of the VMA toolkit is `madvise(2)`: hints on a range you
 already own. `MADV_WILLNEED` starts readahead; `MADV_SEQUENTIAL` and
@@ -241,9 +241,9 @@ out of transparent huge pages, which matters here because this host's THP
 mode is `madvise` (`cat /sys/kernel/mm/transparent_hugepage/enabled` prints
 `always [madvise] never`), meaning 2 MiB pages only where explicitly
 requested. This is not exotic: the Go runtime in the cross-check below calls
-`madvise(…, MADV_NOHUGEPAGE)` on its own metadata as a matter of course, and
-chapter 17 uses `MADV_DONTNEED` semantics to explain what "freeing" memory
-to an allocator actually returns to the kernel.
+`madvise(…, MADV_NOHUGEPAGE)` on its own metadata, and `MADV_DONTNEED`
+semantics are why "freeing" memory to an allocator does not always return
+it to the kernel.
 
 ## How the code works
 
@@ -251,7 +251,7 @@ Three small structures carry `memmap`. A `Baseline` (`{rss_kb, minor,
 major}`) is captured *before* each allocation because `/proc/self/status`'s
 `VmRSS` and `getrusage`'s `ru_minflt`/`ru_majflt` are cumulative since
 process start; only deltas isolate the window we care about. A `Mapping`
-owns an mmap'd range exactly the way chapter 7's `Fd` owns a descriptor:
+owns an mmap'd range exactly the way the RAII `Fd` owns a descriptor:
 move-only in C++, `Drop` calls `munmap` in Rust, `defer unix.Munmap(m)` in
 Go, so no error path leaks a VMA. A `TempFile` unlinks its path on
 destruction, which is why `verify.lua` can assert the walk file is gone even
@@ -344,11 +344,11 @@ fn run_stack(bytes: usize, page: usize) -> Result<()> {
 }
 ```
 
-The shared discipline: the worker is `noinline` so the 4 MiB frame really
-exists as a frame, and the baseline is taken by the *caller*, because the
-compiler (stack probing in C++/Rust, stack growth in Go) touches frame pages
-at function entry; measure from inside and you miss the very faults you came
-for. The divergence: C++ and Rust run the worker on the OS thread, so their
+The shared discipline: the worker is `noinline` so the 4 MiB frame exists as
+a frame instead of being optimized into registers, and the baseline is taken
+by the *caller*, because the compiler (stack probing in C++/Rust, stack
+growth in Go) touches frame pages at function entry; measure from inside and
+you miss the faults you came to measure. The divergence: C++ and Rust run the worker on the OS thread, so their
 excerpt shows the `[stack]` VMA growing; Go runs it on a fresh goroutine
 whose stack is runtime-managed heap spans, so its excerpt shows an anonymous
 region: same contract, different mechanism, and the accurate place to see
@@ -382,7 +382,7 @@ memmap: error: /no/such/file: No such file or directory (os error 2)  (Rust, exi
 Three renderings of the same `ENOENT`, because each rides its language's
 native machinery: `std::error_code::message()` inside `std::expected`
 plumbing, a `%w`-wrapped `*os.PathError`, `anyhow`'s `{:#}` chain over
-`io::Error`. Unlike chapter 5's `fwatch`, this contract pins the prefix and
+`io::Error`. Unlike `fwatch`'s contract, this one pins the prefix and
 the exit code but leaves message text native, and `verify.lua` asserts
 exactly that split, while errors the *program* generates, like mapping an
 empty file (`mmap` of length 0 would fail anyway, so `open_for_map` checks
@@ -401,7 +401,7 @@ zero-fills eagerly during construction, so the faults land in the `memset`
 `16598`: the same 16,384 plus a few hundred faults from runtime machinery
 (GC metadata, spans, a second OS thread growing something) because
 `getrusage(RUSAGE_SELF)` sums *every thread in the process*, and a Go
-program is never really alone. The same reasoning explains why `perf stat`
+program is never alone. The same reasoning explains why `perf stat`
 whole-process counts (below) always exceed the in-window deltas, and why
 `verify.lua` asserts `minor > 0` and RSS floors instead of equalities.
 One more thread-shaped trap from the stack tabs: Go's worker goroutine could
@@ -516,7 +516,8 @@ story.
 > logging every OOM-killer decision with the victim's badness score, and
 > `bpftrace` histograms over the `page_fault_user` tracepoint replacing
 > per-process `getrusage`. Those need root on a kernel you can afford to
-> pressure; chapter 30, on the `systems-target` VM, does exactly that.
+> pressure; the eBPF observation toolkit, on the `systems-target` VM, does
+> exactly that.
 
 ## What you learned
 
@@ -535,7 +536,7 @@ story.
 - Overcommit mode 0 means `Committed_AS` may exceed `CommitLimit` (it does,
   on this host); the bill arrives at touch time via reclaim or the OOM
   killer's `oom_score_adj`-weighted choice, and `madvise` is your lever for
-  telling the kernel what a range is really for.
+  telling the kernel what a range is for.
 
 Next, **mmap and shared mappings**: `MAP_SHARED`, `msync`, and two processes
 seeing one page, the machinery `shmkv` v0 is built from.

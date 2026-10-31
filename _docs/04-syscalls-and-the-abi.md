@@ -47,10 +47,10 @@ means later chapters on concurrency, I/O multiplexing, and signals can point
 at a runtime behavior and explain it in terms you already have, instead of
 treating each language's quirks as unrelated trivia.
 
-Chapter 1 ended on a number it did not explain: the C++ hello made 64 syscalls,
-the Go hello made 217, and we waved at "the runtime" and moved on. This chapter
+The prerequisites left a number unexplained: the C++ hello made 64 syscalls,
+the Go hello made 217, and "the runtime" took the blame without proof. This chapter
 is where that debt gets paid. With the lab and observability stack built, Part
-1 starts at the only interface that actually matters in this book, the
+1 starts at the only interface that matters in this book, the
 user/kernel boundary, and answers three questions precisely: what *is* a
 system call at the instruction level, why do some libc calls never reach the
 kernel at all (the vDSO), and what path does each of our three languages take
@@ -314,8 +314,8 @@ unix.EOPNOTSUPP)` still matches through the added context. rustix never
 materializes a global at all: the negative `rax` *is* the `Err(Errno)`, and
 the fallback triage becomes a match arm:
 `Err(Errno::OPNOTSUPP | Errno::ISDIR | Errno::INVAL)`. Same kernel fact,
-three idioms; Chapter 5 turns this three-way comparison into the book's
-error-handling policy.
+three idioms; this three-way comparison becomes the book's error-handling
+policy.
 
 ### Concurrency lens
 
@@ -330,7 +330,7 @@ C++ and Rust stay a single thread from `execve` to exit, which is exactly
 why their traces need no `-f`. The portable lesson is the `EINTR` loops:
 once any process has signal handlers (as Go's runtime just demonstrated),
 *every* blocking syscall can return early, so retry-on-`EINTR` is not
-defensive decoration but the baseline discipline; Chapter 12 (signals)
+defensive decoration but the baseline discipline; safe signal handling
 makes it precise.
 
 ## Build, run, observe
@@ -382,7 +382,7 @@ distinct boundary signatures: none of them wrong, all of them visible.
 
 ## Cross-check: counting every trap
 
-Chapter 1 counted 64 syscalls for the C++ hello and 217 for Go's. `strace
+The prerequisites counted 64 syscalls for the C++ hello and 217 for Go's. `strace
 -c` on the three `sysprobe` binaries (`-f` for Go) deepens that finding with
 a full accounting; trimmed to the key rows from this session's
 runs:
@@ -395,8 +395,8 @@ rust : 73 total  —  12 mmap, 5 openat, 6 write, 2 getrandom, 1 nanosleep
 ```
 
 The program's own work is four steps in every case; the rest is runtime
-overhead, and the ratio matches Chapter 1's almost exactly (roughly 4× for
-Go, near-parity for C++ and Rust). C++'s 21 `mmap`s are the dynamic loader
+overhead, and the ratio almost exactly matches what the prerequisites
+counted (roughly 4× for Go, near-parity for C++ and Rust). C++'s 21 `mmap`s are the dynamic loader
 mapping four libraries; Rust's 73 is C++-shaped because its *startup* still
 goes through glibc even though its syscalls do not. Go's 283 is dominated by
 runtime self-management: signals, threads, and its sleeping monitor. As an
@@ -405,7 +405,7 @@ instructions) confirms *where* each binary keeps its boundary crossings:
 nowhere (glibc's), everywhere (a static runtime's), and inline at 32 rustix
 call sites. Two tools, one story.
 
-<p><span class="status status--unverified">unverified</span>: <strong>On the lab VM:</strong> the kernel-side view of this chapter (watching <code>sys_enter_*</code> tracepoints fire with <code>bpftrace</code> as sysprobe runs, counting traps from inside the kernel instead of via ptrace) needs root and a disposable kernel, so it is not run here; chapter 30 (Debugging part) exercises exactly this on <code>systems-target</code>.</p>
+<p><span class="status status--unverified">unverified</span>: <strong>On the lab VM:</strong> the kernel-side view of this chapter (watching <code>sys_enter_*</code> tracepoints fire with <code>bpftrace</code> as sysprobe runs, counting traps from inside the kernel instead of via ptrace) needs root and a disposable kernel, so it is not run here; the eBPF observation toolkit exercises exactly this on <code>systems-target</code>.</p>
 
 ## What you learned
 
@@ -421,7 +421,7 @@ call sites. Two tools, one story.
   leaves a distinct fingerprint in `strace`.
 - `strace -c` puts numbers on runtime overhead: 70 (C++) vs 283 (Go, all
   threads) vs 73 (Rust) traps for four steps of real work, the same shape
-  as Chapter 1's 64-vs-217, now fully attributed.
+  as the prerequisites' 64-vs-217, now fully attributed.
 
 Next, **errors, three ways**: the `-errno` fact each wrapper just handed us
 becomes a policy (`std::expected`, wrapped Go errors, and `thiserror`-style

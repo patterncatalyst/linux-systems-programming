@@ -99,7 +99,7 @@ asked for 1, got: 4096
 Sixteen 4096-byte pages, 65536 bytes; ask for a 1-byte pipe and the kernel
 rounds up to one page; unprivileged growth stops at
 `/proc/sys/fs/pipe-max-size` (1048576 here). `pmon` uses `pipe2` rather than
-`pipe` for the same reason chapter 7 put `O_CLOEXEC` in every open: the flag
+`pipe` for the same reason every RAII-wrapped file descriptor puts `O_CLOEXEC` in every open: the flag
 lands atomically, with no window for a concurrently spawned child to inherit
 the fd. `strace -f -e trace=pipe2` on the C++ supervisor shows exactly two
 calls per attempt: `pipe2([5, 6], O_CLOEXEC) = 0` and
@@ -177,7 +177,7 @@ and go back to waiting for the next reader.
 
 {% include excalidraw.html
    file="18-log-topology"
-   alt="Three horizontal bands. Top, pmon supervise pid 2633754: the sh child pid 2633756 writes fd 1 and fd 2 into two kernel pipe nodes with inodes 16462630 and 16462631, which feed a poll loop node listing signalfd 4, pidfd 6, and pipe read ends 5 and 7, appending framed out and err lines into a live.log node opened append-only as fd 3. Middle, pmon tail pid 2634759: a log fd 3 node with fdinfo pos 10 connects by an amber splice arrow labelled with the real splice call returning 22 to a FIFO writer fd 4 node whose flags 02100001 show O_NONBLOCK cleared. Bottom, kernel FIFO plus reader: the live.fifo inode of type S_IFIFO flows into a cat reader holding fd 3, with a note that a detached reader causes EPIPE and the relay re-splices undelivered bytes to the next reader."
+   alt="Three horizontal bands. Top, pmon supervise pid 2633754: the sh child pid 2633756 writes fd 1 and fd 2 into two kernel pipe nodes with inodes 16462630 and 16462631, which feed a poll loop node listing signalfd 4, pidfd 6, and pipe read ends 5 and 7, appending framed out and err lines into a live.log node opened append-only as fd 3. Middle, pmon tail pid 2634759: a log fd 3 node with fdinfo pos 10 connects by an amber splice arrow labelled with the real splice call returning 22 to a FIFO writer fd 4 node whose flags 02100001 show O_NONBLOCK cleared. Bottom, kernel FIFO plus reader: the live.fifo inode of type S_IFIFO flows into a cat reader holding fd 3; a detached reader causes EPIPE, and the relay re-splices undelivered bytes to the next reader."
    caption="Figure 18.2: pmon v4's log pipeline end to end; every pid, fd number, pipe inode, flag value, and splice return comes from the live runs traced in this chapter" %}
 
 ## How the code works
@@ -228,7 +228,7 @@ supervisor would be holding its own pipe open, waiting on itself. Closing
 the parent's copies immediately after spawn makes child-exit imply
 pipe-EOF, which is what lets `drain_to_eof` terminate.
 
-From there the pipes simply join the multiplexing each engine already had.
+From there the pipes join the multiplexing each engine already had.
 C++ polls four fds: signalfd, both pipe read ends, and (pidfd engine) the
 pidfd, marking a drained pipe's slot as `fd = -1`, which `poll(2)`
 ignores. Rust builds the same four-slot `rustix::event::poll` set beside
@@ -243,7 +243,7 @@ log is complete before `pmon: child=… exited status=…` appears, an
 ordering `verify.lua` asserts.
 
 `tail` is the second half: create the FIFO (`EEXIST` is tolerated only if
-the existing inode really is a FIFO; anything else is error, exit 1), open
+the existing inode is a FIFO; anything else is error, exit 1), open
 the log read-only at offset 0 so a late reader gets the backlog, then relay
 forever. The C++ and Rust relays move bytes with `splice(2)`; Go uses
 `io.Copy` per reader session. The heart of each:
@@ -345,13 +345,14 @@ consuming them, which is how you would split this log stream to two
 FIFOs.
 
 The fragile bits: the 50 ms `sleep`-poll for both "log has
-no new bytes" and "no reader yet" is deliberate simplicity; chapter 9's
-inotify machinery could make both event-driven, and a real system would use
-it; the FIFO relay serves one reader at a time (a second simultaneous
+no new bytes" and "no reader yet" is deliberate simplicity; an epoll-based
+event loop with inotify could make both event-driven, and a real system would
+use it; the FIFO relay serves one reader at a time (a second simultaneous
 opener would interleave records with the first, since FIFOs have one ring, not
 one per reader); and log rotation is unhandled: `tail` follows an fd, not
-a name, so a renamed-away log keeps feeding the old inode. Chapter 19
-replaces "one anonymous byte stream" with a real control plane.
+a name, so a renamed-away log keeps feeding the old inode. A Unix domain
+socket with fd passing replaces "one anonymous byte stream" with a real
+control plane.
 
 ## Errors, three ways
 
@@ -389,8 +390,9 @@ explicitly; Go's `signal.Ignore(syscall.SIGPIPE)` does the same job with a
 runtime subtlety: Go would otherwise re-raise a fatal SIGPIPE only for
 writes to fds 1 and 2, and the FIFO writer is fd 3, but the explicit
 ignore documents intent and covers the stdout prints too. And the
-supervisor still resets the child's signal mask at spawn (chapter 12's
-lesson): a captured child is still a child.
+supervisor still resets the child's signal mask at spawn, the same safe-signal-handling
+discipline every spawn site in this book follows: a captured child is still a
+child.
 
 ## Build, run, observe
 

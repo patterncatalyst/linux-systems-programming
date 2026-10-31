@@ -14,15 +14,15 @@ By the end of this chapter you can:
 - Construct an io_uring instance with `io_uring_setup`, map the SQ ring, CQ ring, and SQE array via the canonical `mmap`s, and submit batched operations with `io_uring_enter`.
 - Write and link submission queue entries (`IORING_OP_READ`/`IORING_OP_WRITE`) with `IOSQE_IO_LINK` to express intra-pair ordering without a userspace round trip.
 - Measure when completion-based I/O helps and when it costs more than a synchronous read/write loop, using `strace -c` syscall counts and wall-clock timings.
-- Account for io_uring's security exposure, including why container seccomp profiles deny it by default, and explain Go's deliberate refusal to expose a uring engine.
+- Account for io_uring's security exposure, including why container seccomp profiles deny it by default, and explain why Go refuses to expose a uring engine.
 
 ## Why this matters
 
 Readiness and completion are the two mental models underlying every I/O-heavy system on Linux, and knowing which one a workload needs is a design decision with measurable consequences: this chapter's own numbers show a completion-based engine running roughly ten times slower than a synchronous loop on warm, small files, while the same engine would win decisively against deep queues on real storage or busy sockets. Fewer syscalls is not automatically faster, and this chapter proves it rather than asserting it.
 
-The chapter also surfaces a security tradeoff worth carrying forward: io_uring's opcode-dispatched interface can bypass syscall filters written against `read`/`write`/`connect`, which is why container runtimes deny it by default. That tension between a powerful kernel interface and a shrinking attack surface returns when Part 7 moves these programs into containers.
+The chapter also surfaces a security tradeoff worth carrying forward: io_uring's opcode-dispatched interface can bypass syscall filters written against `read`/`write`/`connect`, which is why container runtimes deny it by default. That tension between a broad kernel interface and a shrinking attack surface returns when these programs move into containers.
 
-Chapter 9 ended with `fwatch` blocked in an event loop, and with a promise:
+Epoll left `fwatch` blocked in an event loop, and with a promise:
 epoll would not be the last word on Linux I/O. Epoll answers one question:
 *which of these fds may I touch without blocking?* Then it leaves every
 actual `read(2)` and `write(2)` for you to make, one syscall per operation.
@@ -33,9 +33,8 @@ Instead it *describes* batches of operations in memory the kernel shares with
 the process, and submits sixteen of them per syscall. That is the
 **completion model**, and readiness-versus-completion is the mental-model
 pair this whole Part has been building toward. The chapter also delivers two
-deliberate surprises: our uring engine is measurably *slower* on this
-workload, and one of our three languages refuses to play at all. Both are
-intended, and both are worth understanding.
+surprises: our uring engine is measurably *slower* on this
+workload, and one of our three languages refuses to play at all.
 
 The code is in `examples/10-io-uring/`. `./demo.sh` there builds and runs all
 three implementations; its `README.md` covers the `scan`/`watch`/`sync`
@@ -53,8 +52,8 @@ subcommands and the two-engine contract.
 ## Readiness asks "may I?", completion says "it is done"
 
 Every I/O interface you have met so far is synchronous at the moment of data
-movement: `read(2)` in chapter 7, `write(2)` through the page cache in
-chapter 8, and epoll in chapter 9, which, for all its scalability, only
+movement: `read(2)` on RAII-wrapped fds, `write(2)` through the page cache,
+and epoll, which, for all its scalability, only
 *schedules* those same calls. Readiness is a hint about the future ("fd 7
 will not block right now"), and it can even be wrong: a readable socket can
 still return `EAGAIN` by the time you get there.
@@ -104,13 +103,13 @@ runtimes responded directly: on this host, podman's default seccomp profile
 and its allowlist contains **zero** mentions of `io_uring_setup`,
 `io_uring_enter`, or `io_uring_register`: deny by default. Run the uring
 engine in an unmodified container and `io_uring_setup` fails with `EPERM`.
-Chapter 34, when our programs move into containers, deals with that head-on.
+Containerizing these programs deals with that head-on.
 
 ## Go's deliberate absence
 
 `fwatch sync --engine uring` in Go prints
-`engine=uring: unsupported in Go (see chapter 10)` and exits 64. That is not
-laziness: it is the chapter's design lesson. Go already solved "many I/O
+`engine=uring: unsupported in Go (see chapter 10)` and exits 64: the chapter's
+design lesson. Go already solved "many I/O
 operations, few OS threads" once, inside the runtime: every goroutine writes
 ordinary blocking code, and the **netpoller** multiplexes those goroutines
 over epoll, parking them until readiness arrives. The concurrency model *is*
@@ -414,7 +413,7 @@ contract cannot express the engine at all.
 ### Concurrency lens
 
 Strip away the I/O and Figure 10.1 is a pair of single-producer,
-single-consumer lock-free ring buffers: the kernel is simply *the other
+single-consumer lock-free ring buffers: the kernel is *the other
 thread*. That is why `try_get_sqe`/`submit_and_wait` are written in
 acquire/release vocabulary: the store-release of the SQ tail publishes the
 filled SQEs, the kernel's load-acquire observes them, and the mirror-image
@@ -426,7 +425,7 @@ not get to declare `std::atomic`. Meanwhile the kernel side is concurrent
 too: `IORING_FEAT_NATIVE_WORKERS` in our trace is the io-wq worker-thread
 pool, which executes any submitted operation that cannot complete
 immediately, our buffered file writes among them, a fact that returns in
-the timings. Chapter 26 rebuilds this exact structure in user space, barrier
+the timings. Lock-free atomics rebuild this exact structure in user space, barrier
 by barrier.
 
 ## Build, run, observe
@@ -448,8 +447,8 @@ cache, `ms=` as printed by the tool:
 | `uring` | 129, 137, 130 ms | 105, 107, 107 ms | exit 64 (by design) |
 
 On this workload, our uring engine is roughly **ten times
-slower**. Nothing is broken: the copies are byte-identical (checked below).
-The model just costs more than it saves here. Every file is page-cache
+slower**. The copies are byte-identical (checked below); the model just costs
+more than it saves here. Every file is page-cache
 hot, so each `read(2)` in the rw loop is a short memcpy; the syscalls we so
 cleverly eliminated were never the bottleneck. The uring path, meanwhile,
 pays for what buffered file I/O cannot do asynchronously inline: the
@@ -457,7 +456,7 @@ kernel punts those operations to io-wq worker threads, buying context
 switches and wakeups per batch, and our engine waits for each batch to
 fully retire before building the next, with unregistered buffers reallocated
 per file. This is the batch-size lesson the chapter owes you: completion
-wins when queues are deep, operations are actually asynchronous, and fixed
+wins when queues are deep, operations are asynchronous, and fixed
 costs get amortized across real waiting, not when the "I/O" is a memcpy
 that was already cheaper than the bookkeeping. On the small verify fixture
 (5 files, 1,348,634 bytes) the gap shrinks to noise: `rw` printed `ms=0`,
@@ -508,8 +507,8 @@ claim above is a one-liner you can run yourself: `grep -c io_uring
 > the natural next probe is watching io-wq from the inside,
 > `bpftrace -e 'tracepoint:io_uring:io_uring_submit_req { @[comm] = count(); }'`
 > while the two engines run. bcc/bpftrace are not part of this host's
-> toolchain by design; chapter 30 (Debugging part) builds that eBPF
-> observation kit on the lab VM and exercises exactly this.
+> toolchain by design; the eBPF observation toolkit covers that setup
+> on the lab VM and exercises exactly this.
 
 ## What you learned
 
@@ -526,7 +525,8 @@ claim above is a one-liner you can run yourself: `grep -c io_uring
   small and fully synchronous. Completion pays off at depth, on real
   waiting.
 - io_uring's power is why container seccomp profiles deny it by default
-  (podman's allowlist has no io_uring entries on this host; chapter 34),
+  (podman's allowlist has no io_uring entries on this host, confirmed when
+  these programs move into containers),
   and why Go declines to expose it at all: the netpoller already owns the
   event loop (golang/go#31908 stays on hold).
 

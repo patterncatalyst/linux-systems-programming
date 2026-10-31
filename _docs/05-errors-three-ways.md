@@ -39,15 +39,16 @@ type systems arguing about what to do with it, and one shared contract
 irrelevant from the outside.
 
 That contract is not local to this chapter. Every program in the rest of the
-book, the concurrent hasher in Chapter 6, the file watcher built across Part
-2, the benchmark in Chapter 8, inherits the EINTR-retry and short-write-resume
+book, the concurrent hasher built three ways, the file
+watcher built across Part 2, the page-cache durability benchmark,
+inherits the EINTR-retry and short-write-resume
 rules established here, and every one of them reaches for the same
 values-versus-exceptions line when a new failure mode shows up. Getting the
 taxonomy right once, with a program small enough to read start to finish,
 is what lets later chapters spend their words on new material instead of
 re-litigating what a correct error policy looks like.
 
-Chapter 4 walked a syscall down to the boundary and back, and ended on the
+Syscalls and the ABI walked a syscall down to the boundary and back, and ended on the
 detail this chapter is built from: when a syscall fails, the kernel does not
 throw, log, or explain: it puts a small negative integer in a register and
 returns. Everything your language calls an "error" is constructed, in user
@@ -357,8 +358,8 @@ return means EOF, `write_all` per chunk, then a checked close) but each
 language spends its effort differently. **C++** builds the discipline out of
 `std::expected`: every fallible helper returns
 `std::expected<T, std::error_code>`, `last_error()` snapshots `errno` into
-`std::generic_category()` (the category for POSIX errno values; Chapter 1's
-`uname` wrapper used `system_category`; for Linux errno they render the
+`std::generic_category()` (the category for POSIX errno values; the
+prerequisites' `uname` wrapper used `system_category`; for Linux errno they render the
 same, and the book standardizes on `generic_category` from here on), and the
 move-only RAII `Fd` guarantees no descriptor outlives its owner. The
 asymmetry between `dst->close()` (explicit, `[[nodiscard]]`, result mapped
@@ -401,14 +402,14 @@ typed enum earns its boilerplate.
 
 ### Concurrency lens
 
-`copyx` is deliberately single-threaded (one loop, one buffer, no shared
+`copyx` is single-threaded (one loop, one buffer, no shared
 state), but the error machinery already matters for concurrency. C's
 `errno` is thread-local precisely so two threads failing simultaneously do
 not corrupt each other's error state, and `last_error()` copies it into a
 value *immediately* because the very next libc call on the same thread may
 overwrite it. Go and Rust sidestep the global entirely: the errno arrives as
 a return value, so there is nothing thread-local to protect. And the EINTR
-policy is really a concurrency policy in disguise: signals are asynchronous
+policy is a concurrency policy in disguise: signals are asynchronous
 interruptions, and a program whose I/O loops retry EINTR is one whose
 correctness does not depend on when a signal lands. That property gets
 load-tested in the Processes, Signals, Privilege part, when `pmon` starts
@@ -485,7 +486,7 @@ syscall, one identical message, one identical `+++ exited with 3 +++`.
 > the aggregate view of this chapter (*which* errnos your whole system's
 > syscalls are failing with, live) belongs to eBPF tooling in the class of
 > bpftrace one-liners counting negative syscall returns by errno. That is not
-> runnable on this host without privileges; Chapter 30 (Debugging part)
+> runnable on this host without privileges; the eBPF observation toolkit
 > exercises it in the `systems-target` VM against these same binaries.
 
 ## What you learned
@@ -513,4 +514,4 @@ and scoped threads under `Send`/`Sync`.
 
 ---
 
-<p><span class="status status--verified">verified</span>: all evidence in this chapter was produced on the Fedora 44 host this session: each of the three binaries printed <code>copied 200000 bytes</code> (exit 0) with <code>cmp</code> exiting 0, <code>copyx: nope.bin: No such file or directory</code> (exit 2), and <code>copyx: write /dev/full: No space left on device</code> (exit 3); the strace excerpt is real output showing <code>write(4, …, 65536) = -1 ENOSPC</code> before the exit-3; the Go trace showed the failing write on descriptor 5 with <code>cpu.max</code> held on 3, and the Rust trace showed the fragmented stderr writes; <code>ls -li /dev/full</code> showed the <code>1, 7</code> character device; and <code>scripts/test-all-examples.py --only 05-errors-three-ways</code> reported PASS for cpp, go, and rust (3 passed, 0 failed, 0 skipped). The lab-VM eBPF callout above is the one unverified item, deferred to Chapter 30.</p>
+<p><span class="status status--verified">verified</span>: all evidence in this chapter was produced on the Fedora 44 host this session: each of the three binaries printed <code>copied 200000 bytes</code> (exit 0) with <code>cmp</code> exiting 0, <code>copyx: nope.bin: No such file or directory</code> (exit 2), and <code>copyx: write /dev/full: No space left on device</code> (exit 3); the strace excerpt is real output showing <code>write(4, …, 65536) = -1 ENOSPC</code> before the exit-3; the Go trace showed the failing write on descriptor 5 with <code>cpu.max</code> held on 3, and the Rust trace showed the fragmented stderr writes; <code>ls -li /dev/full</code> showed the <code>1, 7</code> character device; and <code>scripts/test-all-examples.py --only 05-errors-three-ways</code> reported PASS for cpp, go, and rust (3 passed, 0 failed, 0 skipped). The lab-VM eBPF callout above is the one unverified item, deferred to the eBPF observation toolkit.</p>

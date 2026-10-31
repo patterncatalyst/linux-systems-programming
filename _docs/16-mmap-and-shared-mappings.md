@@ -71,12 +71,12 @@ Every `mmap` call picks one cell of a 2×2. The first axis is **what backs the
 pages**: a *file-backed* mapping names an fd and an offset, so its pages are
 literally page-cache pages of that file; an *anonymous* mapping
 (`MAP_ANONYMOUS`) is backed by nothing but zero-fill: this is what your
-allocator asks for when it wants a fresh arena, which is chapter 17's whole
-subject. The second axis is **who sees your writes**. `MAP_SHARED` means
+allocator asks for when it wants a fresh arena, squarely allocator and
+GC-runtime territory. The second axis is **who sees your writes**. `MAP_SHARED` means
 writes go to the backing object itself: for a file, straight into the shared
 page cache, visible immediately to every other process mapping the same range.
 `MAP_PRIVATE` means copy-on-write: your mapping starts out referencing the
-very same page-cache pages (reads are free and shared), but the page-table
+same page-cache pages (reads are free and shared), but the page-table
 entries are write-protected, and the first store to a page faults, at which
 point the kernel copies that page and points only *your* mapping at the copy.
 Your writes never reach the file, and after the copy, other processes' writes
@@ -179,8 +179,8 @@ processes.
 
 Interop works because the format is defined in bytes, not in types: magic
 `"SHKV1\0"` at offset 0, a **u32 little-endian** slot count at offset 6, then
-256-byte slots: key NUL-padded in `[0..64)`, value in `[64..256)`. Note that
-offset 6 is *misaligned* for a 4-byte integer, and none of the
+256-byte slots: key NUL-padded in `[0..64)`, value in `[64..256)`. Offset 6
+is *misaligned* for a 4-byte integer, and none of the
 three implementations care, because none of them ever casts a pointer into the
 mapping: C++ assembles the u32 from four bytes with shifts, Go uses
 `binary.LittleEndian.PutUint32`, Rust `u32::to_le_bytes`: byte moves have no
@@ -383,9 +383,9 @@ barrier, and the kernel orders nothing between mappers. shmkv v0's defense is
 its usage model: commands are whole processes run sequentially, so every
 write is ordered by process exit, and the Rust unsafe-boundary comment is
 where that assumption is written down rather than left implicit. This is the
-cliff-hanger by design: chapter 20 puts atomics and futexes *inside* a shared
-mapping to make concurrent access actually safe. Two language-specific hazards
-round it out. Go's `[]byte` view means the race detector and GC offer no help
+gap left open by design: shared-memory coordination puts atomics and
+futexes *inside* a shared mapping to make concurrent access safe. Two
+language-specific hazards round it out. Go's `[]byte` view means the race detector and GC offer no help
 across processes, and the slice must never be touched after `Munmap`, which
 `close` enforces by nil-ing it. And any mapper can be killed by a peer that
 truncates the file (in-bounds loads become `SIGBUS`), which is exactly the
@@ -506,7 +506,7 @@ language, `PASS 48 / FAIL 0` for cpp, go, and rust in this session's run.
   memory look like any other pointer, and Go disguises the mapping as a
   `[]byte` you must never touch after `Munmap`.
 
-Next, **allocators and GC runtimes**: what actually happens between your
+Next, **allocators and GC runtimes**: what happens between your
 `new`/`make`/`Box` and the anonymous mappings this chapter taught you to see.
 
 ---

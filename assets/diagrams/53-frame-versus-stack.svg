@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 620" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
 <rect x="24" y="54" width="1112" height="200" rx="12" fill="#fafafa" stroke="#ddd"/>
-<text x="36" y="74" font-size="12" font-weight="700" fill="#1d1d1d">A thread: ch50 measured this</text>
+<text x="36" y="74" font-size="12" font-weight="700" fill="#1d1d1d">A thread: measured here</text>
 <rect x="24" y="272" width="1112" height="232" rx="12" fill="#fdf7ef" stroke="#ddd"/>
 <text x="36" y="292" font-size="12" font-weight="700" fill="#1d1d1d">A coroutine frame: measured here, via operator new in the promise</text>
 <rect x="400" y="14" width="360" height="30" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
@@ -46,5 +46,5 @@
 <path d="M581,448 L581,470" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <text x="40" y="548" font-size="11" fill="#1d1d1d" text-anchor="start">Both hold one paused computation. Only one of them reserves 8 MiB of address space and a kernel task to do it: which is the whole reason coroutines exist.</text>
 <text x="40" y="572" font-size="11" fill="#1d1d1d" text-anchor="start">Frame sizes are measured by overloading operator new inside promise_type: the only portable way to see a size the language hides.</text>
-<text x="40" y="596" font-size="11" fill="#1d1d1d" text-anchor="start">Thread stack from ch50 (pthread_getattr_np); frame sizes from this chapter. GCC 16.1.1, C++23, Fedora 44. Nothing here is a duration.</text>
+<text x="40" y="596" font-size="11" fill="#1d1d1d" text-anchor="start">Thread stack (pthread_getattr_np); frame sizes from this chapter. GCC 16.1.1, C++23, Fedora 44. Nothing here is a duration.</text>
 </svg>

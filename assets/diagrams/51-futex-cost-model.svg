@@ -3,7 +3,7 @@
 <rect x="24" y="54" width="1112" height="210" rx="12" fill="#fafafa" stroke="#ddd"/>
 <text x="36" y="74" font-size="12" font-weight="700" fill="#1d1d1d">User space: atomic compare-exchange on the futex word, no kernel involved</text>
 <rect x="24" y="282" width="1112" height="232" rx="12" fill="#fdf7ef" stroke="#ddd"/>
-<text x="36" y="302" font-size="12" font-weight="700" fill="#1d1d1d">Kernel: futex(2), the syscall ch25 built by hand</text>
+<text x="36" y="302" font-size="12" font-weight="700" fill="#1d1d1d">Kernel: futex(2), the syscall built by hand</text>
 <rect x="400" y="14" width="360" height="30" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
 <text x="580.0" y="34.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">200,000 lock/unlock pairs, two ways</text>
 <rect x="56" y="96" width="300" height="140" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
@@ -49,6 +49,6 @@
 <path d="M356,166 L400,166" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="40" y="546" font-size="11" fill="#1d1d1d" text-anchor="start">Same total work in all three cost cases: 200,000 increments: so only the contention differs, which is what makes the syscall counts comparable.</text>
 <text x="40" y="570" font-size="11" fill="#1d1d1d" text-anchor="start">An uncontended std::mutex costs no syscalls at all. What costs is contention: identical work, two orders of magnitude more kernel involvement.</text>
-<text x="40" y="594" font-size="11" fill="#1d1d1d" text-anchor="start">Counted from outside with strace -f -c -e trace=futex. Nothing here is a duration; only the SIGN of the comparison is gated (see ch39).</text>
+<text x="40" y="594" font-size="11" fill="#1d1d1d" text-anchor="start">Counted from outside with strace -f -c -e trace=futex. Nothing here is a duration; only the SIGN of the comparison is gated.</text>
 <text x="40" y="618" font-size="11" fill="#1d1d1d" text-anchor="start">Measured on the Fedora 44 reference host, glibc 2.43, GCC 16.1.1.</text>
 </svg>

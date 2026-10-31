@@ -17,7 +17,7 @@
 <rect x="510" y="70" width="340" height="98" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="680.0" y="109.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">self-detected: leaked=1 goroutine</text>
 <text x="680.0" y="126.5" font-size="11.5" fill="#555555" text-anchor="middle">valgrind: CONFUSED (630 errors,</text>
-<text x="680.0" y="141.5" font-size="11.5" fill="#555555" text-anchor="middle">0 real signal -- see below)</text>
+<text x="680.0" y="141.5" font-size="11.5" fill="#555555" text-anchor="middle">0 real signal, see below)</text>
 <rect x="850" y="70" width="340" height="98" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
 <text x="1020.0" y="117.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">valgrind: CAUGHT (65,536B lost)</text>
 <text x="1020.0" y="134.0" font-size="11.5" fill="#555555" text-anchor="middle">+ miri (nightly): &quot;memory leaked&quot;</text>
@@ -70,5 +70,5 @@
 <text x="1020.0" y="549.0" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">prevented: Send/Sync rules</text>
 <text x="1020.0" y="566.0" font-size="11.5" fill="#dddddd" text-anchor="middle">reject the unsync&#x27;d share</text>
 <text x="20" y="630" font-size="11.5" fill="#1d1d1d" text-anchor="start">amber = a tool run this session caught the defect  ·  dark = the language prevents it outright, no tool needed  ·  plain = a real blind spot this session measured</text>
-<text x="20" y="648" font-size="11" fill="#666666" text-anchor="start">Every cell is backed by a command in &quot;Build, run, observe&quot; / &quot;Cross-check&quot; -- none of this is asserted from memory.</text>
+<text x="20" y="648" font-size="11" fill="#666666" text-anchor="start">Every cell is backed by a command in &quot;Build, run, observe&quot; / &quot;Cross-check&quot;: none of this is asserted from memory.</text>
 </svg>

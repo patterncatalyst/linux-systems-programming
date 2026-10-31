@@ -1,17 +1,17 @@
-# 43 — rust-macros-for-systems
+# 43: rust-macros-for-systems
 
 The book's first **single-language** example (Rust only): the deep dives don't
 mirror across three languages. It shows three metaprogramming techniques a
-systems programmer actually reaches for, as a small cargo **workspace** — a
+systems programmer reaches for, as a small cargo **workspace**: a
 proc-macro crate plus the binary that uses it:
 
-- **`#[derive(SysError)]`** — a derive macro that generates `Display` + `std::error::Error`
+- **`#[derive(SysError)]`**: a derive macro that generates `Display` + `std::error::Error`
   from `#[error("...")]` attributes (a miniature `thiserror`), for errno-style
   error enums.
-- **`#[instrument]`** — an attribute macro that wraps a function to log its
-  entry (name + args), exit (return value), and wall-clock duration — tracing
+- **`#[instrument]`**: an attribute macro that wraps a function to log its
+  entry (name + args), exit (return value), and wall-clock duration, tracing
   without a runtime.
-- **A sound `unsafe` unaligned read**, validated with **miri** — plus a
+- **A sound `unsafe` unaligned read**, validated with **miri**, plus a
   defect-named `--oob-read` path that miri flags as undefined behaviour.
 
 ## Layout
@@ -38,7 +38,7 @@ proc-macro crate plus the binary that uses it:
 ## Verify
 
 `verify.lua` (Rust only; skips other langs) asserts the generated `Display`
-strings, the `#[instrument]` entry/exit/timing lines, and the parsed record —
+strings, the `#[instrument]` entry/exit/timing lines, and the parsed record:
 behaviour, not exit codes. The gate runs on the **pinned stable** toolchain;
 miri (nightly) is exercised by the chapter, not the gate.
 

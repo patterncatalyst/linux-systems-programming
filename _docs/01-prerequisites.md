@@ -13,8 +13,8 @@ book was written against, which is why this chapter is less "install these
 packages" and more "here is *why* each pin exists, and here is one script that
 tells you whether your host matches." By the end you will have run the book's
 first program, `examples/01-hello-syscalls`, in all three languages, and
-cross-checked with `strace` that each of them really made the syscalls the
-source code claims.
+cross-checked with `strace` that each of them made the syscalls the source
+code claims.
 
 The code is in `examples/01-hello-syscalls/`. `./demo.sh` there builds and
 runs all three implementations; its `README.md` covers the run-script contract
@@ -81,7 +81,7 @@ per run; this one accumulates every result into a table and exits non-zero
 only at the end, so one pass gives you the full shopping list. Second, it
 distinguishes **hard requirements** (`fail`, which gates the exit code) from
 **soft** ones (`warn`, informational). That split encodes what the book
-actually needs versus what is merely convenient.
+needs versus what is merely convenient.
 
 The hard requirements, and the reason each is hard:
 
@@ -299,7 +299,7 @@ are `CStr`-like views, and `to_string_lossy()` handles the (theoretical)
 non-UTF-8 case instead of panicking. Three languages, three defaults: C++
 makes you construct the error discipline yourself, Go hands you an error value
 and conventions, and Rust moves part of the manpage into the type system.
-Chapter 5 turns this comparison into policy.
+This comparison is the seed of the book's errors-three-ways policy.
 
 ## Build, run, observe
 
@@ -383,7 +383,7 @@ step ever requires the IDE.
 - Every example follows one `demo.sh` contract: `build`, `run`, and
   `TARGET=<vm>` for deploy-to-guest. It is *verified* only by its observable
   output, which `verify.lua` pattern-matches.
-- `strace` confirms what a binary actually asks the kernel for, and already
+- `strace` confirms what a binary asks the kernel for, and already
   reveals runtime differences: 64 syscalls for the C++ hello, 217 for Go's.
 
 Next, the **KVM lab**: provisioning the `systems-target` and `systems-peer`

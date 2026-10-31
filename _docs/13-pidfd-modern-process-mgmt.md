@@ -21,7 +21,7 @@ By the end of this chapter you can:
 
 A supervisor that names its children by pid carries a race it usually never notices: any reap it does not control, a runtime, a library, a signal handler, can free that pid for reuse before the supervisor acts on it again. On a busy build server or a container with a small `pid_max`, that window is not theoretical.
 
-Pidfds close the race by making a process a referenceable object instead of a reused number, and they compose directly with the event-loop model Chapter 9 built: a process exit becomes ordinary fd readiness. This chapter makes pidfds pmon's default engine, completing the supervision story Chapters 11 and 12 started before Chapter 14 turns to privilege.
+Pidfds close the race by making a process a referenceable object instead of a reused number, and they compose directly with the epoll-based event-loop model: a process exit becomes ordinary fd readiness. Making pidfds pmon's default engine completes the supervision story that restart-on-crash and signal handling started, before identity and privilege take over.
 
 `pmon` v1 ended the last chapter supervising a crashing child correctly: no
 async handlers, SIGCHLD arriving as data through a signalfd, a `WNOHANG` reap
@@ -32,7 +32,7 @@ come to mean a completely different process, and `kill(2)` will cheerfully
 signal the stranger. The one new idea in this chapter is that a process can
 be a *file descriptor*: `pidfd_open(2)` hands you an fd that refers to the
 process itself, not to its number, pollable in exactly the event-loop style
-Chapter 9 built, reapable with `waitid(2)`, signalable with
+built on epoll, reapable with `waitid(2)`, signalable with
 `pidfd_send_signal(2)`, and immune to reuse by construction. `pmon` v2 makes
 that its default engine and keeps the v1 sigchld engine beside it,
 byte-identical in output, so you can strace the difference.
@@ -61,8 +61,8 @@ table, nothing more; on this host the table wraps at
 zombie: the pid stays reserved *only* until someone collects the exit
 status. (3) Someone does, and here is the trap: in any program bigger than
 a toy, "someone" is not always you. A library thread that spawns helpers, a
-language runtime that reaps everything (Chapter 11 showed Go's runtime
-holding exactly this power), a signal handler someone else installed: any
+language runtime that reaps everything (Go's runtime holds exactly this
+power), a signal handler someone else installed: any
 `wait()` in the process can free the pid. (4) The kernel recycles 4242 for
 an unrelated process. Under default settings that needs the counter to wrap,
 but a busy build server wraps in hours, and a container with a small
@@ -85,12 +85,12 @@ The fix arrived in a burst across Linux 5.1–5.4, and this host's manpages
 (kernel `7.1`) document each piece. `pidfd_open(2)`'s manpage (HISTORY:
 "Linux 5.3") says it "creates a file descriptor that refers to the process whose
 PID is specified in pid"; the close-on-exec flag is set automatically, so
-the Chapter 7 discipline costs nothing here. The fd's superpower is stated
+the RAII file-descriptor discipline costs nothing here. The fd's superpower is stated
 under NOTES: it "can be monitored using poll(2), select(2), and epoll(7).
 When the process that it refers to terminates, these interfaces indicate the
 file descriptor as readable": a process exit becomes an ordinary readiness
-event, composable with every other fd your Chapter 9 event loop owns. There
-is nothing to actually read: `read(2)` on a pidfd fails with `EINVAL`. The
+event, composable with every other fd your epoll event loop owns. There
+is nothing to read: `read(2)` on a pidfd fails with `EINVAL`. The
 manpage also warns that an fd obtained by opening `/proc/<pid>` (the older
 trick) "is not pollable and can't be waited on with waitid(2)".
 
@@ -98,7 +98,7 @@ For your *own* children there is a spelling with no window at all:
 `clone(2)`/`clone3(2)` with `CLONE_PIDFD` (since Linux 5.2) delivers the
 pidfd atomically at spawn time, via `parent_tid` for `clone` or
 `cl_args.pidfd` for `clone3`, the same "set the property at creation, not
-after" move as `O_CLOEXEC` in Chapter 7. Acting through the fd:
+after" move as `O_CLOEXEC`. Acting through the fd:
 `pidfd_send_signal(2)` (Linux 5.1) "sends the signal sig to the target
 process referred to by pidfd", and `waitid(2)` grew an ID type
 `P_PIDFD` (Linux 5.4) to "wait for the child referred to by the PID file
@@ -135,7 +135,7 @@ probe against it on this stable toolchain fails with `E0658: use of unstable
 library feature 'linux_pidfd'`, pointing at tracking issue #82971. That is
 the verified line: Go's runtime rides pidfds invisibly; stable Rust makes
 you call `pidfd_open` yourself (our example uses `rustix`); where either
-lands next is a research note, not something this chapter will claim.
+lands next is a research note, not a claim made here.
 
 ## How the code works
 
@@ -148,7 +148,7 @@ the two things a wait produced: a reaped status, or a stop request
 (`signal` or `timeout`). C++ spells that as
 `std::variant<ChildStatus, Stop>`, Rust as an `enum Outcome`, and Go, with
 `select` as its native "whichever happens first", doesn't need the type at
-all. The C++ `Fd` owner is the same class Chapter 7 built; Rust gets
+all. The C++ `Fd` owner is the same RAII fd wrapper used elsewhere; Rust gets
 `OwnedFd` straight from `rustix::process::pidfd_open`, and Go holds the raw
 integer from `unix.PidfdOpen` with an explicit `unix.Close`.
 
@@ -295,7 +295,7 @@ Only then does readability on `fds[0]` mean "the child terminated", and
 naming the child *by the fd*, so even in a process where some library reaps
 promiscuously, this call can never collect a stranger. `status_from`
 classifies `si_code == CLD_EXITED` versus killed/dumped, the same siginfo
-plumbing as Chapter 11.
+plumbing as pmon v0's exit reporting.
 
 Go cannot put a channel in a `poll` set, so it inverts the bridge: one
 goroutine parks in `unix.Poll` on the pidfd alone, infinite timeout, and
@@ -303,10 +303,10 @@ goroutine parks in `unix.Poll` on the pidfd alone, infinite timeout, and
 then merges three event sources (exit, `signal.Notify` delivery, deadline)
 exactly as the C++/Rust `poll` merged two fds and a timeout. On a stop, the
 `<-exited` after `PidfdSendSignal` does double duty: it waits for
-the child to actually die (the pidfd goes readable), and it guarantees the
+the child to die (the pidfd goes readable), and it guarantees the
 goroutine has finished touching `pidfd` before `unix.Close(pidfd)` runs:
 close an fd a goroutine is still polling and the slot number could be
-recycled mid-poll, which is Chapter 7's double-close lesson wearing a
+recycled mid-poll, which is the double-close lesson wearing a
 concurrency hat.
 
 The stop path is the syscall the diagram promised:
@@ -330,15 +330,15 @@ get the fd at clone time the way Go's runtime does.
 
 ## Errors, three ways
 
-The retry policy from Chapter 5 lands on three calls here: `poll` and
+The EINTR retry policy lands on three calls here: `poll` and
 `waitid` retry `EINTR` in a loop in C++ (`errno != EINTR` breaks), Go
 (`errno == unix.EINTR { continue }` around `Syscall6`, and the poller
 goroutine's `err == unix.EINTR`), and Rust
 (`Err(rustix::io::Errno::INTR) => continue`). Expected failures are policy
 at the call site: `pidfd_send_signal` on the stop path ignores its result
 (zombie or `ESRCH`, both fine), and the sigchld engine treats a `WNOHANG`
-reap that returns nobody as "coalesced SIGCHLD, keep waiting": Chapter 12's
-lesson encoded in all three languages. Everything unexpected carries context
+reap that returns nobody as "coalesced SIGCHLD, keep waiting": the
+coalesced-signal lesson encoded in all three languages. Everything unexpected carries context
 up to one printer with the raw error preserved: C++ wraps `errno` in
 `std::error_code` inside `std::expected`, Go wraps with `%w` so
 `errors.Is`/`errors.As` still see the errno underneath, Rust chains
@@ -362,7 +362,7 @@ child-side mask reset (`POSIX_SPAWN_SETSIGMASK`, `pre_exec`) is
 non-negotiable: any thread may be the one that spawns. Note also what the
 strace shows about fd-table behavior under concurrency: every spawn prints
 `pidfd=4` because the previous pidfd was closed before the next
-`pidfd_open`, and Chapter 7's lowest-free-slot rule hands the number back,
+`pidfd_open`, and the kernel's lowest-free-slot fd rule hands the number back,
 while in Go the runtime's *own* pidfd for the same child sits one slot over.
 Two fds, one process, no interference: identity multiplied is still
 identity.
@@ -404,7 +404,8 @@ pgrep exit=1
 
 The `pgrep` exit 1 is the observable that matters: no supervised `sleep`
 outlived its supervisor. (The `[.]` keeps `pgrep -f` from matching its own
-command line: a pid-namespace-sized footgun in miniature.) The Rust binary
+command line, since pattern-matching the process list can catch the
+matching command itself.) The Rust binary
 produces the same crash-loop shape (children 2622026–2622028 on this host),
 and the runner (`python3 scripts/test-all-examples.py --only
 13-pidfd-modern-process-mgmt`) reports `PASS PASS PASS` with `verify.lua`'s
@@ -447,7 +448,7 @@ followed by our `pidfd_open(2623708, 0) = 4` and the identical
 
 **The fd itself, in `/proc`.** Pause a live supervision
 (`supervise --timeout-ms 8000 -- sleep 6.66`, supervisor pid 2624388) and
-read the fd table the way Chapter 7 taught:
+read the fd table directly:
 
 ```bash
 [host]$ ls -l /proc/2624388/fd | tail -2
@@ -470,11 +471,11 @@ code on our side. (`NSpid` previews Part 10: inside a pid namespace the same
 process has a different number, but the same pidfd.)
 
 > **On the lab VM** <span class="status status--unverified">unverified</span>:
-> the fleet-wide view of this chapter is bcc-tools: `exitsnoop` timestamping
+> the fleet-wide view here is bcc-tools: `exitsnoop` timestamping
 > every process exit and `killsnoop` logging who signalled whom, which would
 > show `pmon`'s SIGTERM (and would *not* show a pid-reuse mishit, because
 > there is none). bcc-tools need root and kernel headers, so they are not run
-> on this host; Chapter 30 in the Debugging part exercises them on the
+> on this host; the eBPF observation toolkit exercises them on the
 > `systems-target` VM.
 
 ## What you learned
@@ -483,7 +484,7 @@ process has a different number, but the same pidfd.)
   steps, and the dangerous reap in step 3 is often performed by a runtime or
   library you don't control.
 - `pidfd_open` (or `CLONE_PIDFD` at clone time) pins process identity to an
-  fd: exit becomes `poll` readability (Chapter 9's event-loop model now
+  fd: exit becomes `poll` readability (the epoll event-loop model now
   covers processes), `waitid(P_PIDFD)` reaps exactly that process, and
   `pidfd_send_signal` yields `ESRCH` rather than signalling a stranger;
   `/proc/<pid>/fdinfo/<fd>`'s `Pid:` line names the pinned process.

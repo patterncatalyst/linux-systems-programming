@@ -30,7 +30,7 @@
 <path d="M556,159 L596,159" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <path d="M556,417 L596,417" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <text x="40" y="540" font-size="11" fill="#1d1d1d" text-anchor="start">Both mechanisms produce the correct answer. The difference is what happens to a thread that loses the race: a mutex puts it to sleep, a strand gives it something else to do.</text>
-<text x="40" y="564" font-size="11" fill="#1d1d1d" text-anchor="start">Futex counts measured with ch51&#x27;s method (strace -f -c -e trace=futex). Gated as a ratio, never as magnitudes: they move with scheduling.</text>
+<text x="40" y="564" font-size="11" fill="#1d1d1d" text-anchor="start">Futex counts measured with the same method (strace -f -c -e trace=futex). Gated as a ratio, never as magnitudes: they move with scheduling.</text>
 <text x="40" y="588" font-size="11" fill="#1d1d1d" text-anchor="start">A strand costs no lock and no thread. What it costs instead is ordering: handlers on one strand can never run in parallel with each other, however many threads you have.</text>
 <text x="40" y="612" font-size="11" fill="#1d1d1d" text-anchor="start">Measured on the Fedora 44 reference host, Boost 1.90.0, GCC 16.1.1.</text>
 </svg>

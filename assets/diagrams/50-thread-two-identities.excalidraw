@@ -1683,13 +1683,13 @@
    "updated": 1,
    "link": null,
    "locked": false,
-   "text": "Every value shown is from a real run on the 16-CPU reference host (glibc 2.43). Nothing here is a duration; see ch39.",
+   "text": "Every value shown is from a real run on the 16-CPU reference host (glibc 2.43). Nothing here is a duration.",
    "fontSize": 11,
    "fontFamily": 1,
    "textAlign": "left",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "Every value shown is from a real run on the 16-CPU reference host (glibc 2.43). Nothing here is a duration; see ch39.",
+   "originalText": "Every value shown is from a real run on the 16-CPU reference host (glibc 2.43). Nothing here is a duration.",
    "lineHeight": 1.25,
    "baseline": 11
   }

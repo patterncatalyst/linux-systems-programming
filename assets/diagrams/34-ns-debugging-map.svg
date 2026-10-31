@@ -33,5 +33,5 @@
 <path d="M636,101 L600,101" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
 <path d="M244,280 L380,255" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M630,280 L630,300" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
-<text x="44" y="400" font-size="13" fill="#555555" text-anchor="start">Both paths independently confirm the same PID 1 identity -- podman exec from inside the container runtime, nsenter from the bare host.</text>
+<text x="44" y="400" font-size="13" fill="#555555" text-anchor="start">Both paths independently confirm the same PID 1 identity: podman exec from inside the container runtime, nsenter from the bare host.</text>
 </svg>

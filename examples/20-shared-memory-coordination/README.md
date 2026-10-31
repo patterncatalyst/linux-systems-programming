@@ -1,9 +1,9 @@
-# 20-shared-memory-coordination — shmkv v1
+# 20-shared-memory-coordination: shmkv v1
 
 shmkv grows from a passive shared-memory key-value file (v0) into a live
 coordination fabric: one process publishes updates, other processes learn
 about them **without polling**, through a seqlock for consistency and a futex
-for wakeups — the same pair of primitives glibc builds mutexes and condition
+for wakeups: the same pair of primitives glibc builds mutexes and condition
 variables from. Implemented three times (C++23, Go 1.26, Rust 2024) with
 identical observable behavior.
 
@@ -40,7 +40,7 @@ shmkv bench FILE [--rounds N] [--channel futex|mq|poll]
   `observed update <k>: <key>=<value>` for every new id, exiting 0 after N
   events (or 1 after a 30 s self-termination deadline).
 - **bench**: producer/consumer threads over the same mapping measure one-way
-  notification latency for three channels — `futex` (wake/wait), `mq` (a
+  notification latency for three channels: `futex` (wake/wait), `mq` (a
   POSIX message queue carrying the update id), `poll` (a 1 ms sleep loop
   re-reading the counter; it sleeps *before* looking, so every observation
   costs at least one full nap). Rounds are strictly serialized by an ack word
@@ -60,15 +60,15 @@ read:  s1 = seq (acquire)   ; if s1 odd retry
        s2 = seq (relaxed)   ; consistent iff s1 == s2, else retry
 ```
 
-The data copy races the writer on purpose; a torn copy is detected by the
-seq re-check and discarded. That trade-off — writers never block, readers
-retry — is exactly the kernel's seqlock. The retry loop is bounded (10^6
+The data copy races the writer by design; a torn copy is detected by the
+seq re-check and discarded. That trade-off (writers never block, readers
+retry) is exactly the kernel's seqlock. The retry loop is bounded (10^6
 attempts) so a corrupt file cannot livelock a reader forever.
 
 The futex is **shared** (no `FUTEX_PRIVATE_FLAG`): the kernel keys waiters
 by the file's inode, which is what lets two unrelated processes rendezvous
 through the same mapped page. `EAGAIN`, `ETIMEDOUT`, and `EINTR` from
-`FUTEX_WAIT` are all normal — the waiter re-reads shared state and decides
+`FUTEX_WAIT` are all normal: the waiter re-reads shared state and decides
 again.
 
 ## Language notes

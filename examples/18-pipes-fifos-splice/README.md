@@ -1,30 +1,30 @@
-# 18 — Pipes, FIFOs, splice (`pmon` v4)
+# 18: Pipes, FIFOs, splice (`pmon` v4)
 
 `pmon` is the process supervisor that grows across the book: v0 `run`,
-v1 the sigchld supervise engine, v2 the pidfd engine (chapter 13), v3 the
+v1 the sigchld supervise engine, v2 the pidfd engine, v3 the
 privilege-drop chapter. v4 keeps both supervise engines exactly as they were
 and turns the supervisor into a log pipeline built from kernel pipe
 machinery:
 
-- **`supervise` captures the child** — the child's stdout and stderr each
+- **`supervise` captures the child**: the child's stdout and stderr each
   flow through their own `pipe(2)` back into the supervisor, which relays
   them line-buffered into a log file as `[out] ...` / `[err] ...` lines.
-  The two pipe read ends simply join the fd set each engine already
+  The two pipe read ends join the fd set each engine already
   multiplexes; nothing about the v1/v2 restart/timeout/stop behavior
   changes.
-- **`tail` republishes the log** — it creates a FIFO (`mkfifo(3)`), follows
+- **`tail` republishes the log**: it creates a FIFO (`mkfifo(3)`), follows
   the log file, and relays appended bytes into whatever reader opens the
   FIFO. C++ and Rust move the bytes kernel-side with `splice(2)`
   (file → pipe, no userspace copy; automatic `read`/`write` fallback on
   filesystems without splice support). A reader that disappears is not
   fatal: SIGPIPE is ignored, the resulting `EPIPE` prints
-  `pmon: tail reader detached`, and the relay waits for the next reader —
-  losing nothing, because the log offset only advances for bytes that
-  actually reached the pipe.
+  `pmon: tail reader detached`, and the relay waits for the next reader,
+  losing nothing because the log offset only advances for bytes that
+  reached the pipe.
 
 | Language | Architecture |
 |---|---|
-| **C++23** | one `poll(2)` loop per child over four fds — the two capture pipes, the signalfd, and (pidfd engine) the pidfd from raw `SYS_pidfd_open`; `waitid(P_PIDFD)` reaps race-free. RAII `Fd`/`SpawnAttrs`/`FileActions` owners, `std::expected` error paths, `posix_spawnp` wiring the pipes via `adddup2` and resetting the child's signal mask. `tail` uses the `splice(2)` fast path with an offset-preserving `read`/`write` fallback. |
+| **C++23** | one `poll(2)` loop per child over four fds: the two capture pipes, the signalfd, and (pidfd engine) the pidfd from raw `SYS_pidfd_open`; `waitid(P_PIDFD)` reaps race-free. RAII `Fd`/`SpawnAttrs`/`FileActions` owners, `std::expected` error paths, `posix_spawnp` wiring the pipes via `adddup2` and resetting the child's signal mask. `tail` uses the `splice(2)` fast path with an offset-preserving `read`/`write` fallback. |
 | **Rust (edition 2024)** | the same poll set via `rustix::event::poll` + a nix `SignalFd`, `pidfd_open` returning an `OwnedFd`, `waitid(WaitId::PidFd)`; `rustix::pipe::splice` for the tail fast path; `anyhow` + `?` throughout, every fd `OwnedFd`-backed. |
 | **Go 1.26** | the idiomatic inversion: one goroutine per capture pipe feeds a channel of prefixed lines into the same `select` that already multiplexes the pidfd poller (or `signal.Notify(SIGCHLD)`), the stop signals, and the deadline. `tail` relays with `io.Copy` per reader session, rewinding the log to `start+written` on `EPIPE`; `mkfifo`/nonblocking FIFO open via `golang.org/x/sys/unix`. |
 
@@ -60,7 +60,7 @@ New in v4:
   `[out] line` / `[err] line`; a trailing partial line is flushed with a
   newline when the stream closes, and the log is fully drained before the
   exit observation is printed.
-- `tail --log FILE --fifo PATH` — creates PATH as a FIFO (an existing FIFO
+- `tail --log FILE --fifo PATH`: creates PATH as a FIFO (an existing FIFO
   is reused; anything else is an error), prints
   `pmon: tail ready (fifo PATH)` to stderr, then relays FILE from the
   beginning into each successive FIFO reader, polling for appended bytes.
@@ -73,11 +73,11 @@ New in v4:
 
 Each language directory has the standard `demo.sh`:
 
-- `./demo.sh build` — build only
-- `./demo.sh run [args]` — run the built binary (`app`); the local path
+- `./demo.sh build`: build only
+- `./demo.sh run [args]`: run the built binary (`app`); the local path
   `exec`s the binary so a backgrounded `run tail ...` can be signalled
   directly
-- `./demo.sh` — build, then a one-shot self-demo (`run -- sh -c ...`)
+- `./demo.sh`: build, then a one-shot self-demo (`run -- sh -c ...`)
 - With env `TARGET` set, `run` deploys to that lab VM via
   `scripts/lab/deploy-to-vm.sh`
 

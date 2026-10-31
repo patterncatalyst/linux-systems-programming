@@ -2,7 +2,7 @@
 title: "The Go runtime from a systems programmer's seat: the scheduler, the collector, and the netpoller"
 order: 44
 part: "Deep Dives"
-description: "go-runtime-for-systems is a single Go binary that observes its own runtime across four themes -- the GMP scheduler and signal-based async preemption, GC pacing under GOGC/GOMEMLIMIT with Go 1.26's Green Tea collector on by default, the epoll-backed netpoller that turns 2,000 blocked goroutines into roughly a dozen OS threads, and the effective knobs a process is actually running under -- each theme printing a self-computed ok/FAIL verdict. Verified on the Fedora 44 host on go1.26.5 with verify.lua PASS 16/FAIL 0, and the same preemption check flipped to FAIL on demand by GODEBUG=asyncpreemptoff=1."
+description: "go-runtime-for-systems is a single Go binary that observes its own runtime across four themes (the GMP scheduler and signal-based async preemption, GC pacing under GOGC/GOMEMLIMIT with Go 1.26's Green Tea collector on by default, the epoll-backed netpoller that turns 2,000 blocked goroutines into roughly a dozen OS threads, and the effective knobs a process is actually running under), each theme printing a self-computed ok/FAIL verdict. Verified on the Fedora 44 host on go1.26.5 with verify.lua PASS 16/FAIL 0, and the same preemption check flipped to FAIL on demand by GODEBUG=asyncpreemptoff=1."
 duration: "45 minutes"
 ---
 
@@ -24,24 +24,24 @@ Every earlier Go chapter in this book leaned on the runtime without looking at i
 
 The netpoller theme is the clearest payoff: 2,000 goroutines blocked on a read and a thread count that stays in the double digits is the concrete, measured reason Go programs can hold far more concurrent work in flight than their OS thread count would suggest, and the chapter proves it against the kernel's own `/proc/self/status` accounting, not the runtime's self-report.
 
-Chapter 43 spent its whole budget on Rust's compiler doing extra work at
-build time -- a proc-macro crate that runs once, produces tokens, and gets
-out of the way. This chapter is the mirror image: a runtime that never gets
-out of the way, because it is doing something every second the program
-runs. Every earlier chapter that used Go leaned on its runtime without
-looking at it -- goroutines that seemed to run in parallel, garbage that
-seemed to collect itself, sockets that seemed to block without blocking
-anything. `go-runtime-for-systems` is the chapter where that runtime stops
-being invisible: a single stdlib-only binary that asks its own scheduler,
-collector, and netpoller direct questions and prints the answers as
-computed verdicts -- `ok` or `FAIL`, never just an exit code. It's also the
+The previous chapter on Rust macros spent its whole budget on Rust's
+compiler doing extra work at build time: a proc-macro crate that runs once,
+produces tokens, and gets out of the way. This chapter is the mirror image: a
+runtime that never gets out of the way, because it is doing something every
+second the program runs. Every earlier chapter that used Go leaned on its
+runtime without looking at it: goroutines that seemed to run in parallel,
+garbage that seemed to collect itself, sockets that seemed to block without
+blocking anything. `go-runtime-for-systems` is the chapter where that runtime
+stops being invisible: a single stdlib-only binary that asks its own
+scheduler, collector, and netpoller direct questions and prints the answers
+as computed verdicts: `ok` or `FAIL`, never just an exit code. It's also the
 last chapter of Part 12: the Rust-only dive into macros and `miri`, and
 this Go-only look under the runtime's hood, are the two language-specific
 excursions the tri-language chapters made room for.
 
 {% include excalidraw.html
    file="44-gmp-scheduler"
-   alt="A global run queue band at top holds overflow G's. Below, two P columns (P0.M0 running a spinner G, P1.M1 running a ticker G) each show a local run queue (256 slots + runnext), plus a box for P2 through P15 on this 16-CPU host. A dashed amber steal half arrow runs P1 into P0. To the right, a dashed sysmon box (no P, its own M) lists retake, forcegc, netpoll backstop, and the Go 1.25+ GOMAXPROCS recheck, with a solid amber SIGURG to asyncPreempt arrow into P0's running M. Caption: M:N -- many G onto few M via P; GOMAXPROCS=1 still preempts since sysmon's signal needs no spare P."
+   alt="A global run queue band at top holds overflow G's. Below, two P columns (P0.M0 running a spinner G, P1.M1 running a ticker G) each show a local run queue (256 slots + runnext), plus a box for P2 through P15 on this 16-CPU host. A dashed amber steal half arrow runs P1 into P0. To the right, a dashed sysmon box (no P, its own M) lists retake, forcegc, netpoll backstop, and the Go 1.25+ GOMAXPROCS recheck, with a solid amber SIGURG to asyncPreempt arrow into P0's running M. Caption: M:N: many G onto few M via P; GOMAXPROCS=1 still preempts since sysmon's signal needs no spare P."
    caption="Figure 44.1: the GMP model: G's queued locally (256 slots + runnext) and globally, GOMAXPROCS P's bound to M's, work-stealing between them, and sysmon's SIGURG reaching in from outside the P pool" %}
 
 > **Tools used**: `go build` / `go run` (host, the `go 1.26.x` check in
@@ -251,7 +251,7 @@ temporarily *becoming* the netpoller thread.
 
 {% include excalidraw.html
    file="44-goroutines-not-threads"
-   alt="Top band: 2000 goroutines blocked on os.Pipe reads feed one shared netpoller (epoll_pwait, per-fd pollDesc) labeled parked, no M; the OS-thread box reads threads=12, bound=80. Bottom band, the contrast: N goroutines calling syscall.Read on a raw, never-epoll-registered fd each block one M in read(2); the thread box shows the count climbing toward N via sysmon retake, handoffp, startm/newm. Caption: goroutines != threads -- 2000 parked, 12 threads, bound 80."
+   alt="Top band: 2000 goroutines blocked on os.Pipe reads feed one shared netpoller (epoll_pwait, per-fd pollDesc) labeled parked, no M; the OS-thread box reads threads=12, bound=80. Bottom band, the contrast: N goroutines calling syscall.Read on a raw, never-epoll-registered fd each block one M in read(2); the thread box shows the count climbing toward N via sysmon retake, handoffp, startm/newm. Caption: goroutines != threads: 2000 parked, 12 threads, bound 80."
    caption="Figure 44.2: the netpoller contrast: 2,000 goroutines parked in one shared epoll with no M held, against a raw blocking read that pins one M per blocked goroutine" %}
 
 The `netpoll` theme measures exactly this: 2,000 `os.Pipe()` pairs, one
@@ -327,7 +327,7 @@ fails if something regresses to one-thread-per-blocked-goroutine. Go 1.26
 also removes something from this picture: a dedicated `_Psyscall` P
 status. A P whose M was in a syscall used to carry that status directly;
 as of 1.26, `pp.status` only ever takes
-`_Pidle`/`_Prunning`/`_Pgcstop`/`_Pdead`, and whether a P's M is really in
+`_Pidle`/`_Prunning`/`_Pgcstop`/`_Pdead`, and whether a P's M is in
 a syscall is read off the **goroutine's** status instead
 (`setBlockOnExitSyscall`); the release notes attribute a ~30% cut in
 baseline cgo-call overhead to this, a narrower change than the still-open
@@ -341,7 +341,7 @@ end the line with a verdict word the program itself decides:
 `fmt.Printf("... %s\n", verdict(cond))`, where `verdict` renders `"ok"`
 or `"FAIL"` from a boolean. `verify.lua` matches the label text plus the
 literal `ok`; if the condition flips, `FAIL` prints instead and the
-pattern simply stops matching. The check is the program's own
+pattern stops matching. The check is the program's own
 arithmetic, not the test's, and three techniques above make that
 arithmetic trustworthy rather than merely plausible:
 `debug.SetGCPercent(-1)` turns "allocate then measure" into an exact
@@ -374,18 +374,16 @@ signal-based preemption is what let the ticker progress, and disabling
 it reproduces the pre-1.14 world where a non-yielding loop starves
 everything else on its P.
 
-That contrast run almost didn't terminate while this example was being
-built. With async preemption disabled, the only way the ticker gets to
-run is if the spinner voluntarily yields its P, which it never does by
-design. Launch the spinner first and the ticker second under
-`asyncpreemptoff=1`, and the ticker claims `runnext`, starts, and blocks
-forever on a flag only the never-scheduled spinner can set: a true
-livelock, not a slow test. The fix is the launch order in the excerpt
-above (ticker first, spinner second), so the ticker observes `tick`
-incrementing on a normal run, or never runs at all under
-`asyncpreemptoff=1`, correctly reporting `ticker_incr=0`. The bug and
-the fix teach the same lesson as SIGURG itself: a scheduler decision
-that looks arbitrary usually isn't.
+With async preemption disabled, the only way the ticker runs is if the
+spinner voluntarily yields its P, which it never does by design. Launching
+the spinner first and the ticker second under `asyncpreemptoff=1` would let
+the ticker claim `runnext`, start, and block forever on a flag only the
+never-scheduled spinner can set: a true livelock, not a slow check. The
+launch order in the excerpt above (ticker first, spinner second) avoids
+that: the ticker observes `tick` incrementing on a normal run, or never
+runs at all under `asyncpreemptoff=1`, correctly reporting `ticker_incr=0`.
+The ordering choice teaches the same lesson as SIGURG itself: a scheduler
+decision that looks arbitrary usually isn't.
 
 ## Concurrency lens
 
@@ -582,9 +580,9 @@ none of them "the binary exited 0."
   has to match the fixed label text plus the literal word `ok`.
 
 Part 12 closes here. Two deep dives, two languages, one shared discipline:
-Chapter 43 proved Rust's `unsafe` promises with `miri`; this chapter proved
-Go's runtime promises with the runtime's own instrumentation, turned back
-on itself.
+the Rust macros chapter proved Rust's `unsafe` promises with `miri`; this
+chapter proved Go's runtime promises with the runtime's own instrumentation,
+turned back on itself.
 
 ---
 
@@ -611,7 +609,7 @@ followed by a sane <code>4 MB goal</code> once a real percent was
 restored; a fresh <code>GODEBUG=schedtrace=1000,scheddetail=1</code>
 capture showed the startup <code>threads=5</code> summary line and
 per-P/M/G detail including the Go 1.25+
-<code>GOMAXPROCS updater (idle)</code> goroutine. The deliberate contrast
+<code>GOMAXPROCS updater (idle)</code> goroutine. This contrast
 run, <code>GODEBUG=asyncpreemptoff=1 ./go/bin/app sched</code>, reproduced
 <code>ticker_incr=0 ticker_incr>0 FAIL</code> and <code>sched: FAIL</code>
 exactly, with the other three <code>sched</code> checks unaffected. Green
@@ -620,5 +618,5 @@ Tea GC's default-on status in Go 1.26 and the removal of the dedicated
 notes and runtime source, not measured directly; Green Tea leaves no
 signal in <code>gctrace</code> output by design. Not exercised:
 <code>examples/manifest.yaml</code> marks this <code>mode: local</code>:
-no VM or LGTM path applies; the <code>asyncpreemptoff=1</code> run is a
-deliberate FAIL demo, never asserted green in <code>verify.lua</code>.</p>
+no VM or LGTM path applies; the <code>asyncpreemptoff=1</code> run is
+designed to fail, never asserted green in <code>verify.lua</code>.</p>
