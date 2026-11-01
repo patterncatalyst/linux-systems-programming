@@ -1,22 +1,22 @@
-# 31-per-language-toolbelts — toolbelt
+# 31-per-language-toolbelts: toolbelt
 
-Chapter 31 closes the debugging arc by putting each language's *native*
+This chapter closes the debugging arc by putting each language's *native*
 profiling toolbelt to work on the same program. There is nothing wrong with
-this code — the point is not to find a defect, but to point a real profiler
-at a real binary and watch it name the function that is actually costing the
+this code; the point is not to find a defect, but to point a real profiler
+at a real binary and watch it name the function that is costing the
 cycles or the bytes.
 
 ```
 app <hot|alloc> [--n N]
 ```
 
-- `hot` — counts primes in `[2, n)` by unoptimized trial division (every
+- `hot`: counts primes in `[2, n)` by unoptimized trial division (every
   candidate divisor up to `sqrt(i)`). One function, `spin_hot` /
-  `hotSpin`, does all the work — it is the whole point of a CPU profile.
-- `alloc` — builds a 1000-key string index from `n` iterations of
+  `hotSpin`, does all the work; it is the whole point of a CPU profile.
+- `alloc`: builds a 1000-key string index from `n` iterations of
   round-robin overwrite, each iteration allocating a fresh key and value
   string. One function, `alloc_churn` / `allocChurn`, is the only
-  allocation site — it is the whole point of an allocation profile.
+  allocation site; it is the whole point of an allocation profile.
 - `--n N` overrides the default size (`hot`: 3,000,000; `alloc`: 200,000);
   must be a positive integer.
 
@@ -32,13 +32,13 @@ app <hot|alloc> [--n N]
 - Bad usage (missing/unknown mode, non-positive `--n`, unknown flag) prints
   a diagnostic plus `usage: app <hot|alloc> [--n N]` on stderr and exits 2.
 - Go's binary additionally accepts `--cpuprofile FILE`, `--memprofile FILE`,
-  and `--trace FILE` — see "Why Go's CLI has extra flags" below. Its usage
+  and `--trace FILE`; see "Why Go's CLI has extra flags" below. Its usage
   banner lists them; C++ and Rust do not accept them (unknown-argument
   errors bad-usage the same as any other unrecognized flag).
 
 ### Why Go's CLI has extra flags
 
-`perf` attaches to *any* ELF binary from the outside — nothing in the C++ or
+`perf` attaches to *any* ELF binary from the outside: nothing in the C++ or
 Rust source needs to know it is being profiled. Go's CPU and heap profilers
 are different: `runtime/pprof` and `runtime/trace` are libraries the program
 calls into, so writing a profile is part of the binary's own behavior. That
@@ -61,12 +61,12 @@ app: unknown mode: bogus
 usage: app <hot|alloc> [--n N]
 ```
 
-(Timings vary by host and load; `result` does not — same algorithm, same
+(Timings vary by host and load; `result` does not: same algorithm, same
 input, same answer, in all three languages.)
 
-## The toolbelts, run for real
+## The toolbelts in practice
 
-Every command below was actually run against the binaries in this directory
+Every command below ran against the binaries in this directory
 (`cpp/build/release/app`, `go/bin/app`, `rust/target/release/app`) on this
 host (Fedora 44, GCC 16.1.1, clang 22.1.8, go1.26.5, rustc 1.97.1, perf
 7.1.3, gdb 17.2). Numbers are host- and load-dependent; the shapes and the
@@ -74,7 +74,7 @@ named functions are the point.
 
 ### C++: perf record/report, clang-tidy, -fanalyzer
 
-`spin_hot` has C linkage on purpose (`extern "C"`), so perf and gdb print it
+`spin_hot` has C linkage by design (`extern "C"`), so perf and gdb print it
 as the plain symbol `spin_hot` instead of an Itanium-mangled name.
 
 ```console
@@ -108,8 +108,8 @@ $ perf report -i cpp.perf.data --stdio
 `flamegraph.pl` scripts are not installed on this host (no `FlameGraph/` tree
 on `PATH` or under any locatable directory), so per the fallback this chapter
 documents, the C++ step stops at `perf report --stdio` above rather than
-producing an SVG. (Compare the Rust section, where `cargo flamegraph` — a
-Rust-native reimplementation of the same collapse+render pipeline — *is*
+producing an SVG. (Compare the Rust section, where `cargo flamegraph`, a
+Rust-native reimplementation of the same collapse+render pipeline, *is*
 installable and produces a real SVG.)
 
 `clang-tidy` (bugprone-*, modernize-*, performance-*, readability-*):
@@ -124,14 +124,14 @@ main.cpp:143:5: warning: an exception may be thrown in function 'main' which
 
 One warning, and it is a known shape with `std::format`/`std::println`:
 `bugprone-exception-escape` traces a theoretical `std::format_error` path
-that only fires on a malformed format string — ours are literals, so the
+that only fires on a malformed format string; ours are literals, so the
 path is unreachable in practice, but the checker cannot prove that
 statically. Nothing else fires.
 
 GCC's `-fanalyzer` (its own preset: `cmake --build --preset analyze`) is
-clean — zero diagnostics on this source.
+clean: zero diagnostics on this source.
 
-### Go: pprof (CPU + heap), go tool trace, delve
+### Go: pprof (CPU + heap), go tool trace, `dlv`
 
 ```console
 $ ./go/bin/app hot --cpuprofile cpu.prof
@@ -157,12 +157,12 @@ $ go tool pprof --top --cum --alloc_space --nodecount=6 ./go/bin/app mem.prof
 `pprof.WriteHeapProfile` runs, the churned map from the just-finished
 `allocChurn` call is already garbage (it went out of scope when the
 function returned), so the default *in-use* view would show almost nothing.
-`alloc_space` is pprof's cumulative-since-start counter — it remembers
+`alloc_space` is pprof's cumulative-since-start counter: it remembers
 everything `mallocgc` ever handed out, freed or not, which is the view that
-actually answers "where did the allocations happen".
+answers "where did the allocations happen".
 
 `go tool trace` opens an interactive, browser-based UI by default, which
-does not script well — but `-d=parsed` dumps the same event stream as text,
+does not script well; `-d=parsed` dumps the same event stream as text,
 which is enough to confirm the tracer captured `hotSpin`'s execution:
 
 ```console
@@ -173,7 +173,8 @@ $ go tool trace -d=parsed trace.out | grep -B2 hotSpin | head -3
 	main.hotSpin @ 0x4d272c
 ```
 
-Delve, scripted non-interactively (no TUI) with a piped command script:
+The Go debugger, `dlv`, scripted non-interactively (no TUI) with a piped
+command script:
 
 ```console
 $ echo -e "break main.hotSpin\ncontinue\nprint n\nbt\ncontinue\nquit" \
@@ -187,11 +188,11 @@ $ echo -e "break main.hotSpin\ncontinue\nprint n\nbt\ncontinue\nquit" \
    at ./go/main.go:175
 ```
 
-(`dlv` is not preinstalled on this host; `go install
-github.com/go-delve/delve/cmd/dlv@latest` pulls it from the Go module proxy
-into `$(go env GOPATH)/bin`. Where that install is unavailable — no module
-proxy reachable — the pprof and trace steps above still stand on their own;
-delve is demonstrated here, not gated on by `verify.lua`.)
+(`dlv` is not preinstalled on this host; `go install github.com/go-delve/delve/cmd/dlv@latest`
+pulls it from the Go module proxy
+into `$(go env GOPATH)/bin`. Where that install is unavailable (no module
+proxy reachable), the pprof and trace steps above still stand on their own;
+`dlv` is demonstrated here, not gated on by `verify.lua`.)
 
 ### Rust: perf record/report, cargo flamegraph, clippy
 
@@ -206,7 +207,7 @@ $ perf report -i rust.perf.data --stdio
                spin_hot (inlined)
 ```
 
-`cargo-flamegraph` is not preinstalled, but *is* installable —
+`cargo-flamegraph` is not preinstalled, but *is* installable:
 `cargo install flamegraph --locked` pulls it (and the `inferno` crate it
 wraps, a Rust reimplementation of the classic Perl collapse+render scripts)
 from crates.io in well under a minute:
@@ -222,14 +223,14 @@ $ grep -c spin_hot rust-hot.svg
 The resulting SVG contains a `spin_hot` frame, confirming the same story
 `perf report` tells above, rendered instead of tabulated. Where network
 access to crates.io is unavailable, the `perf record`/`perf report --stdio`
-pair above is the fallback path — same data, no plot.
+pair above is the fallback path: same data, no plot.
 
-`tokio-console`: not applicable here — this program has no async runtime
+`tokio-console` does not apply here: this program has no async runtime
 (no `tokio`, no `.await`), so there are no tasks for `tokio-console` to
-show. It belongs to the async chapter (27), not this one.
+show. It belongs to the async runtimes and coroutines chapter, not this one.
 
 `cargo clippy --release --all-targets` and `cargo fmt --check` are both
-clean — no findings.
+clean: no findings.
 
 ## Layout
 
@@ -243,15 +244,15 @@ clean — no findings.
 ```
 
 The C++ `analyze` preset (`cmake --build --preset analyze`) builds with
-`-fanalyzer` instead of running it as a separate step — it is just another
+`-fanalyzer` instead of running it as a separate step: it is just another
 `CMakeLists.txt`-driven build, same as `asan`.
 
 ## Demo contract
 
 Each language directory has a `demo.sh` with the book-wide interface:
 
-- `./demo.sh build` — build only
-- `./demo.sh run [args]` — run the built binary (builds first if needed)
+- `./demo.sh build`: build only
+- `./demo.sh run [args]`: run the built binary (builds first if needed)
 - With env `TARGET` set, `run` deploys the binary to that lab VM via
   `scripts/lab/deploy-to-vm.sh` instead of running locally.
 
@@ -275,7 +276,7 @@ against the real built binary:
   value the same algorithm produces in every language (`216816` / `5000`
   at the defaults; `4` / `7` at the small sizes).
 - `perf stat -e cycles,instructions` on `app hot` exits 0 and its output
-  parses two numeric counters — this step is identical for all three
+  parses two numeric counters: this step is identical for all three
   languages, since perf attaches to any ELF binary.
 - **C++ and Rust**: `perf record` then `perf report --stdio` exits 0 and
   the report names `spin_hot`.
@@ -285,7 +286,7 @@ against the real built binary:
 
 `go tool trace`, `delve`, `cargo flamegraph`, `clang-tidy`, and
 `-fanalyzer` are demonstrated above with real captured output but are not
-asserted by `verify.lua` — they either open an interactive UI
+asserted by `verify.lua`: they either open an interactive UI
 (`go tool trace`'s default mode), depend on a piped TTY session
 (`delve`), or depend on a tool this session had to install over the
 network (`dlv`, `cargo-flamegraph`) that may not be present in every
@@ -299,15 +300,15 @@ flaky one; the chapter text, not `verify.lua`, carries that evidence.
 | Build | `cmake --preset release` + ninja | `go build` | `cargo build --release` |
 | CPU profile | `perf record` / `perf report --stdio` | `runtime/pprof` + `go tool pprof --top` | `perf record` / `perf report --stdio`, or `cargo flamegraph` |
 | Allocation profile | *(not asserted; `alloc` mode exits 0)* | `runtime/pprof` heap + `go tool pprof --top --cum --alloc_space` | *(not asserted; `alloc` mode exits 0)* |
-| Execution trace | — | `go tool trace -d=parsed` | — |
-| Interactive debugger | `gdb` (chapter 28) | `dlv` | `gdb`/`rust-gdb` (chapter 28) |
+| Execution trace | n/a | `go tool trace -d=parsed` | n/a |
+| Interactive debugger | `gdb` (the gdb chapter) | `dlv` | `gdb`/`rust-gdb` (the gdb chapter) |
 | Static analysis | `clang-tidy`, `-fanalyzer` | `go vet` | `cargo clippy` |
 | Result asserted by `verify.lua` | `spin_hot` named in `perf report --stdio` | `main.hotSpin`/`main.allocChurn` named in `go tool pprof --top` | `spin_hot` named in `perf report --stdio` |
 
 ## Mapping to a chapter
 
-This example backs chapter 31 (per-language toolbelts), the closing chapter
-of the debugging arc that opened with chapter 28 (gdb and remote debugging)
-and chapter 29 (valgrind, sanitizers, miri). Where those chapters aim a
+This example backs the per-language toolbelts chapter, the closing chapter
+of the debugging arc that opened with the gdb and remote debugging chapter
+and the valgrind/sanitizers/miri chapter. Where those chapters aim a
 generic tool at a specific defect, this one aims each language's own
 profiler at a workload built to have exactly one obvious answer.

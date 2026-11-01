@@ -14,7 +14,7 @@ const (
 
 // kPayload is ch46's exact 16-byte payload ("The quick brown."), reused
 // byte-for-byte so the Go and C++ toolbox chapters land on the identical
-// FNV-1a digest (0x481984990deee5ff) -- a cross-appendix easter egg, not a
+// FNV-1a digest (0x481984990deee5ff), a cross-appendix easter egg, not a
 // coincidence. FNV-1a is language-independent: any conforming
 // implementation over the same bytes produces the same 64-bit value.
 var kPayload = [16]byte{
@@ -23,7 +23,7 @@ var kPayload = [16]byte{
 }
 
 // fnv1a hashes data with the 64-bit FNV-1a algorithm. Integer/string-only
-// output, no floats, addresses, timing, or map iteration -- the same input
+// output, no floats, addresses, timing, or map iteration; the same input
 // bytes produce the same digest bit-for-bit on every conforming Go
 // toolchain, on every architecture, every run.
 func fnv1a(data []byte) Digest {

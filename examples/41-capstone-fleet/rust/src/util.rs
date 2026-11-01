@@ -1,8 +1,8 @@
-// util.rs — small helpers shared across the fleet's subcommands, the Rust
+// util.rs: small helpers shared across the fleet's subcommands, the Rust
 // counterpart of util.go's installSignalFlag: chatterd/sysagent/fwatch each
 // run their own poll loop already (accept-with-timeout, interval sleep,
 // poll(2) with a timeout), so a level-triggered flag is all any of them
-// needs from a signal — no EINTR-sensitive syscall unwinding required, unlike
+// needs from a signal: no EINTR-sensitive syscall unwinding required, unlike
 // ex40's fastpath server. pmon (a supervisor, not a poller) does its own
 // dedicated child-reaping loop in pmon.rs instead of using this.
 use std::sync::OnceLock;

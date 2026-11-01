@@ -1,4 +1,4 @@
-// benchlab (Go) — proper benchmarking of the chatterd frame codec (ch21).
+// benchlab (Go): proper benchmarking of the chatterd frame codec (ch21).
 //
 // Usage:
 //
@@ -9,15 +9,15 @@
 // (time.Now's monotonic reading), discards a warmup phase, and reports
 // min/median/p99/max plus a coordinated-omission-corrected p99 (see
 // coCorrect below). `--lie` times a single unwarmed call with wall-clock and
-// reports one number — exactly the benchmark this example exists to
+// reports one number, exactly the benchmark this example exists to
 // discredit.
 //
 // Wire format (canonical chatterd chat frame, introduced ch21):
 //
 //	[ magic 0x43 0x48 ][ version 0x01 ][ type u8 ][ length u16 be ][ payload ]
 //
-// This file re-implements only encodeFrame/decodeFrame — the codec under
-// test — not the daemon; see ch21/22/27 for the networked version.
+// This file re-implements only encodeFrame/decodeFrame (the codec under
+// test), not the daemon; see ch21/22/27 for the networked version.
 package main
 
 import (
@@ -31,7 +31,7 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// Frame codec under test — canonical chatterd chat frame (see file header).
+// Frame codec under test: canonical chatterd chat frame (see file header).
 // ---------------------------------------------------------------------------
 const (
 	headerLen = 6
@@ -53,7 +53,7 @@ func encodeFrame(typ byte, body []byte) []byte {
 	return out
 }
 
-// decodeFrame decodes exactly one frame that fills buf completely — no
+// decodeFrame decodes exactly one frame that fills buf completely; no
 // partial-read reassembly here, that lives in the networked chatterd
 // (ch21/22/27); this harness only measures the codec's per-call cost.
 func decodeFrame(buf []byte) (byte, []byte, error) {
@@ -134,7 +134,7 @@ func (o op) String() string {
 
 // runOnce performs one iteration of the requested op against the fixed
 // workload, returning a small scalar derived from the result so the caller
-// can fold it into a checksum — this is what keeps the compiler (and a human
+// can fold it into a checksum; this is what keeps the compiler (and a human
 // skimming the loop) from mistaking the call for dead code. A codec bug
 // (never expected on this fixed workload) is wrapped and propagated.
 func runOnce(o op, body, prebuiltFrame []byte) (uint64, error) {
@@ -172,8 +172,8 @@ func percentile(sorted []int64, p float64) int64 {
 }
 
 // coCorrect applies the coordinated-omission correction (HdrHistogram's
-// recordValueWithExpectedInterval): this harness is a closed loop —
-// iteration N+1 never starts until N returns — so a stall (a GC pause, a
+// recordValueWithExpectedInterval): this harness is a closed loop;
+// iteration N+1 never starts until N returns, so a stall (a GC pause, a
 // page fault, a scheduling hiccup) is recorded as a single slow sample. A
 // fixed-rate caller would instead have had many requests queue up behind
 // that stall, each experiencing a similar multiple-of-the-target-interval

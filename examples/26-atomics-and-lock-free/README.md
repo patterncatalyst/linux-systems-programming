@@ -1,7 +1,7 @@
 # 26-atomics-and-lock-free
 
-Chapter 26's example: `spscring`, a single-producer/single-consumer lock-free
-ring buffer implemented three times — C++23, Go, and Rust — each with that
+This chapter's example: `spscring`, a single-producer/single-consumer lock-free
+ring buffer implemented three times, in C++23, Go, and Rust, each with that
 language's atomics, but one shared observable contract so a single `verify.lua`
 covers all three.
 
@@ -15,7 +15,7 @@ A **producer** thread pushes `N` `u64` values (`0, 1, ..., N-1`) through a
 bounded ring of `K` slots; the **consumer** (the main thread) pops each value
 and sums it. There is no mutex and no lock: the ring is coordinated by two
 `u64` atomic counters, `head` (advanced by the consumer) and `tail` (advanced
-by the producer), using acquire/release ordering — Lamport's classic SPSC
+by the producer), using acquire/release ordering: Lamport's classic SPSC
 queue. When the producer has finished all `N` pushes and the consumer all `N`
 pops, the program prints exactly one line:
 
@@ -23,15 +23,15 @@ pops, the program prints exactly one line:
 spscring: items=1000000 sum=499999500000 throughput_mops=37.29 pad=off
 ```
 
-- `items=<N>` — echoes the requested count.
-- `sum=<s>` — the consumer's running total. Because the values are `0..N-1`,
+- `items=<N>`: echoes the requested count.
+- `sum=<s>`: the consumer's running total. Because the values are `0..N-1`,
   a correct run **always** yields `s = N·(N-1)/2`. Any dropped, duplicated, or
   torn hand-off changes this number, so the sum is a concurrency oracle.
-- `throughput_mops=<m>` — millions of pushes per second, `N / wall_seconds / 1e6`,
+- `throughput_mops=<m>`: millions of pushes per second, `N / wall_seconds / 1e6`,
   printed with two decimals. Its magnitude is machine- and run-dependent; the
   book uses it only to *narrate* the false-sharing effect, and `verify.lua`
   only asserts that it parses as a positive number.
-- `pad=<on|off>` — echoes the `--pad` mode.
+- `pad=<on|off>`: echoes the `--pad` mode.
 
 The three binaries produce the same line shape and the same `items`/`sum`/`pad`
 fields for the same arguments.
@@ -39,16 +39,16 @@ fields for the same arguments.
 **`--pad on|off`** toggles cache-line padding between `head` and `tail`
 (default `off`):
 
-- `off` — the two counters sit adjacent in one 64-byte cache line. The
+- `off`: the two counters sit adjacent in one 64-byte cache line. The
   producer's `store(tail)` and the consumer's `store(head)` then invalidate
-  each other's copy of the shared line on every hand-off — **false sharing** —
+  each other's copy of the shared line on every hand-off (**false sharing**),
   even though neither thread touches the other's counter.
-- `on` — each counter is `alignas(64)` / `#[repr(align(64))]` / padded onto its
+- `on`: each counter is `alignas(64)` / `#[repr(align(64))]` / padded onto its
   own cache line, so the two cores stop fighting over one line.
 
 Both modes compute the same, correct sum; the throughput difference between
 them is the chapter's whole point, not a hard assertion (on a lightly loaded
-box a single 1M-item run is noisy — the book measures the gap with repeats).
+box a single 1M-item run is noisy; the book measures the gap with repeats).
 
 ## The ring protocol (identical across languages)
 
@@ -81,13 +81,13 @@ push(v):                             pop() -> v:
 | | index atomics | memory ordering | padding knob |
 |---|---|---|---|
 | **C++23** | `std::atomic<uint64_t>` head/tail in a `Control` struct; producer is a `std::jthread`, consumer is `main` | explicit `memory_order_acquire` on the loads, `memory_order_release` on the stores; the plain `std::vector<uint64_t>` slots ride the release/acquire edge | `Control<true>` gives head and tail each `alignas(64)`; `Control<false>` packs them adjacent |
-| **Go** | `atomic.Uint64` head/tail; producer goroutine, consumer on `main`, joined over a `chan struct{}` | **no per-op order argument** — Go's `sync/atomic` is sequentially consistent, and the memory model's "an atomic write is synchronized-before the read that observes it" *is* the acquire/release edge, just not relaxable | `ctrlPadded` inserts `[56]byte` after each counter; `ctrlPacked` leaves them adjacent |
-| **Rust** | `AtomicU64` head/tail shared across a `std::thread::scope`; slots are `Vec<AtomicU64>` too | explicit `Ordering::{Acquire, Release}` on head/tail, `Ordering::Relaxed` on the slots — so the data race is ruled out by the type system, no `unsafe` | `CtrlPadded` wraps each counter in `#[repr(align(64))]`; `CtrlPacked` leaves them adjacent |
+| **Go** | `atomic.Uint64` head/tail; producer goroutine, consumer on `main`, joined over a `chan struct{}` | **no per-op order argument**: Go's `sync/atomic` is sequentially consistent, and the memory model's "an atomic write is synchronized-before the read that observes it" *is* the acquire/release edge, just not relaxable | `ctrlPadded` inserts `[56]byte` after each counter; `ctrlPacked` leaves them adjacent |
+| **Rust** | `AtomicU64` head/tail shared across a `std::thread::scope`; slots are `Vec<AtomicU64>` too | explicit `Ordering::{Acquire, Release}` on head/tail, `Ordering::Relaxed` on the slots, so the data race is ruled out by the type system, no `unsafe` | `CtrlPadded` wraps each counter in `#[repr(align(64))]`; `CtrlPacked` leaves them adjacent |
 
 **What Go gives you (and doesn't):** C++ and Rust let you name the exact
 ordering per operation (`acquire`, `release`, `relaxed`) and could, in
 principle, relax the slot accesses further. Go's `sync/atomic` exposes only
-sequentially-consistent `Load`/`Store`/`Add` — you cannot ask for a weaker
+sequentially-consistent `Load`/`Store`/`Add`: you cannot ask for a weaker
 order, but you also cannot get it wrong: every atomic access already carries
 the happens-before edge this queue needs. The Go build runs under `-race`
 (see `go/demo.sh`); the detector understands the atomic edge and stays silent
@@ -109,14 +109,14 @@ race-free rather than merely lucky.
 
 Every language directory has a `demo.sh` with the book-wide interface:
 
-- `./demo.sh` — build then run
-- `./demo.sh build` — build only
-- `./demo.sh run [args]` — run the built binary
+- `./demo.sh`: build then run
+- `./demo.sh build`: build only
+- `./demo.sh run [args]`: run the built binary
   (e.g. `./demo.sh run --capacity 1024 --items 1000000 --pad on`)
 - With env `TARGET` set, `run` deploys the binary to that lab VM via
   `scripts/lab/deploy-to-vm.sh` instead of running locally.
 
-This is a host-only example — pure threads and atomics, no sockets, no VM.
+This is a host-only example: pure threads and atomics, no sockets, no VM.
 
 ## Verification
 
@@ -124,11 +124,11 @@ This is a host-only example — pure threads and atomics, no sockets, no VM.
 time and asserts, per language:
 
 1. `--capacity 1024 --items 1000000 --pad off` exits 0 and prints
-   `items=1000000 sum=499999500000 throughput_mops=<float> pad=off` — the sum
+   `items=1000000 sum=499999500000 throughput_mops=<float> pad=off`; the sum
    is the exact triangular number `N·(N-1)/2`, so every one of the million
    hand-offs delivered its value once;
 2. the same with `--pad on` yields the identical sum with `pad=on`;
-3. `--capacity 1 --items 1000` (a one-slot ring — maximum head/tail
+3. `--capacity 1 --items 1000` (a one-slot ring, maximum head/tail
    contention) still sums to exactly `499500`;
 4. the `throughput_mops` field parses as a positive number;
 5. no arguments prints `usage: spscring --capacity K --items N [--pad on|off]`

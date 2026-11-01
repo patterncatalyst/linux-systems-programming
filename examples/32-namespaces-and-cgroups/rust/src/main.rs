@@ -1,4 +1,4 @@
-//! pmon v6 — namespaces & cgroups (chapter 32).
+//! pmon v6: namespaces & cgroups (chapter 32).
 //!
 //! Subcommand:
 //!   pmon containerize [--hostname NAME] [--mem-max BYTES|max]
@@ -8,20 +8,20 @@
 //! Same two primitives as the C++ build, through `nix` instead of raw libc
 //! calls:
 //!
-//!   1. NAMESPACES — unshare(2) with CLONE_NEWNS|CLONE_NEWUTS|CLONE_NEWNET|
+//!   1. NAMESPACES: unshare(2) with CLONE_NEWNS|CLONE_NEWUTS|CLONE_NEWNET|
 //!      CLONE_NEWPID puts the caller into a fresh mount, UTS and network
 //!      namespace immediately, and arranges for the next fork(2) child to
 //!      become PID 1 of a fresh PID namespace (unshare(2) never moves the
-//!      caller itself into a new PID namespace — only its future children).
-//!   2. CGROUP v2 LIMITS — a dedicated cgroup gets memory.max and cpu.max
+//!      caller itself into a new PID namespace, only its future children).
+//!   2. CGROUP v2 LIMITS: a dedicated cgroup gets memory.max and cpu.max
 //!      written before the child is ever created, so the limits are already
 //!      live the instant CMD execs.
 //!
 //! `fork(2)` (not clone3) here: nix's `fork` gives the same "no code runs
 //! between clone and exec except what we ourselves write" shape as the
 //! C++ build's `clone3(flags=0)`. Its safety contract is the same as libc
-//! fork's — the child may only call async-signal-safe operations until it
-//! execs — which is exactly what the child below does: read its own pid,
+//! fork's: the child may only call async-signal-safe operations until it
+//! execs, which is exactly what the child below does: read its own pid,
 //! read the hostname, print, exec.
 
 use std::ffi::CString;
@@ -54,14 +54,14 @@ fn signal_name(sig: i32) -> String {
 // ---- cgroup helpers --------------------------------------------------
 
 /// Whether `tokens` (a whitespace-separated list, as cgroupfs writes it)
-/// contains `word` as a whole token — "cpu" must not match inside "cpuset".
+/// contains `word` as a whole token: "cpu" must not match inside "cpuset".
 fn has_token(tokens: &str, word: &str) -> bool {
     tokens.split_whitespace().any(|t| t == word)
 }
 
 /// The root cgroup is exempt from the "no internal process" constraint, so
 /// controllers can be enabled there even though it holds every process on
-/// the box — this is how a fresh sibling cgroup gets memory/cpu control
+/// the box: this is how a fresh sibling cgroup gets memory/cpu control
 /// without first relocating ourselves into a leaf.
 fn ensure_root_controllers() -> Result<(), String> {
     let have = fs::read_to_string("/sys/fs/cgroup/cgroup.subtree_control")
@@ -230,7 +230,7 @@ fn cmd_containerize(args: &[String]) -> i32 {
 
     // SAFETY: the child performs only async-signal-safe operations
     // (getpid, gethostname, writes to already-open stdio fds, execvp)
-    // before it either execs or _exits — it never returns up through this
+    // before it either execs or _exits: it never returns up through this
     // stack frame into arbitrary Rust code, satisfying fork(2)'s contract.
     match unsafe { fork() } {
         Ok(ForkResult::Child) => {

@@ -9,7 +9,7 @@
 -- comparison itself and prints a literal "... ok" / "... FAIL" verdict token;
 -- this script matches the fixed label text plus the literal "ok", never a raw
 -- fluctuating number. GODEBUG=gctrace/schedtrace are shown by the chapter,
--- not asserted here -- they are per-line noisy and not meant to be matched.
+-- not asserted here: they are per-line noisy and not meant to be matched.
 
 local script_dir = arg[0]:match("(.*/)") or "./"
 local repo_root = os.getenv("REPO_ROOT") or (script_dir .. "../..")

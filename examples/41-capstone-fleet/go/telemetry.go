@@ -1,8 +1,8 @@
-// telemetry.go — OTel wiring shared by chatterd and sysagent. Both signals
+// telemetry.go: OTel wiring shared by chatterd and sysagent. Both signals
 // (traces for chatterd deliveries, metrics for sysagent's /proc samples) are
 // exported over OTLP/HTTP. Endpoint comes from the standard
 // OTEL_EXPORTER_OTLP_ENDPOINT env var (the exporters read it themselves, per
-// the OTel env-var spec) — this is exactly the variable
+// the OTel env-var spec); this is exactly the variable
 // scripts/lab/deploy-to-vm.sh forwards from a caller's OTEL_ENDPOINT, so a
 // service started under pmon on a lab guest picks it up with no extra flag.
 package main
@@ -29,7 +29,7 @@ import (
 // exportErrors counts OTel export failures observed via the global error
 // handler. verify polls this (via the "otel: export_errors=N" line each
 // service prints at exit / on request) as the deterministic stand-in for
-// "the exporter got a 200" — the batch/periodic exporters only ever call the
+// "the exporter got a 200"; the batch/periodic exporters only ever call the
 // error handler on a non-2xx response or a transport failure.
 var exportErrors atomic.Int64
 
@@ -51,7 +51,7 @@ func noopTelemetry(service string) *telemetry {
 
 // initTelemetry sets up trace+metric providers if OTEL_EXPORTER_OTLP_ENDPOINT
 // is set; otherwise it returns a disabled, no-op telemetry (the service still
-// runs — OTel is additive, never a hard dependency of the fleet coming up).
+// runs; OTel is additive, never a hard dependency of the fleet coming up).
 func initTelemetry(ctx context.Context, service, node string) *telemetry {
 	endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	if endpoint == "" {

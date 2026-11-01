@@ -12,7 +12,7 @@ struct Digest {
 };
 
 // FNV-1a over a fixed, embedded byte array. Integer/string-only, no floats,
-// no addresses, no timing, no unordered-container iteration -- the same
+// no addresses, no timing, no unordered-container iteration: the same
 // input bytes must produce the same digest bit-for-bit on every conforming
 // C++23 compiler, which is what the GCC-vs-clang parity gate (ch46 Sec.
 // "GCC-vs-clang parity") relies on.

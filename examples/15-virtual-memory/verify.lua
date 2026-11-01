@@ -1,5 +1,5 @@
 -- Verify 15-virtual-memory: run memmap in every mode and assert the
--- observable behavior — header shapes, the annotated /proc/self/maps
+-- observable behavior: header shapes, the annotated /proc/self/maps
 -- excerpt (region range, permissions, backing path), real VmRSS growth
 -- (heap/mmap-anon must gain at least half the touched allocation), nonzero
 -- minor-fault deltas, the per-step fault-walk table shape, exit codes for

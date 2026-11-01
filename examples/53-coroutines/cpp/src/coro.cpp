@@ -1,4 +1,4 @@
-// coro -- the reference program for ch53.
+// coro: the reference program for ch53.
 //
 // Chapter 27 already built a working C++20 coroutine engine: promise_type,
 // the awaitable protocol, await_suspend returning a handle for symmetric
@@ -15,7 +15,7 @@
 //   frames         frame size for three shapes, via operator new in the promise
 //   halo           does the compiler elide the allocation? (it depends, and
 //                  the answer differs between GCC and clang on this host)
-//   generator      C++23 std::generator -- ch27 hand-rolled one, C++23 ships it
+//   generator      C++23 std::generator: ch27 hand-rolled one, C++23 ships it
 //   versus-thread  frame bytes against ch50's measured 8 MiB thread stack
 //   lifetime       the trap: a frame is not owned by anything that scopes
 //   versions       what the toolchain reports
@@ -45,7 +45,7 @@ std::uint64_t fnv1a(const std::uint8_t* data, std::size_t len) {
     std::uint64_t h = kFnvOffsetBasis;
     for (std::size_t i = 0; i < len; ++i) {
         h ^= data[i];
-        h *= kFnvPrime;  // uint64_t wraps by definition -- no UB to sanitize
+        h *= kFnvPrime;  // uint64_t wraps by definition, no UB to sanitize
     }
     return h;
 }
@@ -62,7 +62,7 @@ constexpr std::size_t kCh50ThreadStackBytes = 8388608;
 
 // ── instrumentation ──────────────────────────────────────────────────────
 //
-// A coroutine frame is allocated by the compiler, not by you -- unless the
+// A coroutine frame is allocated by the compiler, not by you: unless the
 // promise type declares operator new, in which case every frame allocation
 // comes through it. That is the only portable way to see the size of a thing
 // the language deliberately hides.
@@ -98,7 +98,7 @@ struct Counted {
     std::coroutine_handle<promise_type> handle;
 
     // A coroutine handle is NOT an owning type. If nothing calls destroy(),
-    // the frame leaks -- see the `lifetime` case.
+    // the frame leaks: see the `lifetime` case.
     ~Counted() {
         if (handle) {
             handle.destroy();
@@ -113,7 +113,7 @@ struct Counted {
 //
 // The frame holds the promise, the resume/destroy function pointers, a state
 // index, and every local that is LIVE ACROSS A SUSPENSION. A local used only
-// between two co_awaits, or only before the first one, need not be stored --
+// between two co_awaits, or only before the first one, need not be stored,
 // which is why frame size tracks what you carry, not how much you declare.
 
 Counted frame_trivial() { co_await std::suspend_always{}; }
@@ -161,7 +161,7 @@ void case_frames() {
 
 // ── halo: the allocation that may not happen ─────────────────────────────
 //
-// HALO -- Heap Allocation eLision Optimization. When the compiler can prove a
+// HALO: Heap Allocation eLision Optimization. When the compiler can prove a
 // frame does not outlive its caller, [dcl.fct.def.coroutine] PERMITS it to
 // elide the allocation entirely. Permits, not requires.
 //
@@ -242,7 +242,7 @@ void case_generator() {
     }
 
     // An infinite generator consumed finitely. Breaking out of the loop
-    // destroys the generator, which destroys the frame -- the suspended
+    // destroys the generator, which destroys the frame: the suspended
     // coroutine is simply abandoned, and that is well-defined.
     std::printf("generator: took=%d twentieth_fib=%llu expected=4181 correct=%s\n", taken - 1,
                 static_cast<unsigned long long>(last), last == 4181 ? "yes" : "no");
@@ -276,14 +276,14 @@ void case_versus_thread() {
 // A coroutine_handle is a raw pointer with a nicer name. It does not own the
 // frame, it is not RAII, copying it copies a pointer, and destroying it does
 // nothing at all. Whoever creates a coroutine must arrange for exactly one
-// destroy() -- or the frame leaks, which is what an unowned handle does.
+// destroy(), or the frame leaks, which is what an unowned handle does.
 //
 // This case demonstrates the leak DELIBERATELY and reports it, rather than
 // pretending the problem does not exist. The Counted type above is the fix:
 // a destructor that calls destroy().
 
 void case_lifetime() {
-    // The observable is not how many frames were ALLOCATED -- both halves
+    // The observable is not how many frames were ALLOCATED: both halves
     // allocate one. It is how many were FREED. operator delete on the promise
     // runs only when someone calls destroy(), so counting it distinguishes a
     // frame that was cleaned up from one that was abandoned.
@@ -291,7 +291,7 @@ void case_lifetime() {
     {
         auto leaked = frame_trivial();
         // Take the handle out of the RAII wrapper so its destructor cannot
-        // clean up -- exactly what code that stores handles in a container
+        // clean up: exactly what code that stores handles in a container
         // and loses track of one ends up doing.
         auto h = leaked.handle;
         leaked.handle = {};

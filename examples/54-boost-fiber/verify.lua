@@ -1,6 +1,6 @@
 -- Verify 54-boost-fiber (C++ only): what a real stack buys, and what it costs.
 --
--- ch53 measured a C++20 coroutine frame at 32 bytes -- stackless, holding only
+-- ch53 measured a C++20 coroutine frame at 32 bytes: stackless, holding only
 -- the locals that cross a suspension. A Boost fiber is STACKFULL: it owns a
 -- machine stack switched by boost::context. That single difference produces
 -- both its price and its capability, and both are measured here.
@@ -14,7 +14,7 @@
 -- Conan: system Boost only.
 --
 -- Hard-gated (A-F):
---   A. Every non-faulting case computes the same digest, 0x481984990deee5ff --
+--   A. Every non-faulting case computes the same digest, 0x481984990deee5ff,
 --      ch46 through ch53.
 --   B. Stacks: a fixedsize_stack returns EXACTLY what was asked for, and
 --      protected_fixedsize_stack returns exactly one page more. The guard-page
@@ -23,7 +23,7 @@
 --   C. The three-way memory table: a fiber stack sits strictly between ch53's
 --      32-byte frame and ch50's 8388608-byte thread stack, and both ratios are
 --      computed by the program from those measured numbers.
---   D. Deep suspend -- the capability the stack buys. A fiber yields from
+--   D. Deep suspend: the capability the stack buys. A fiber yields from
 --      inside an ORDINARY function six frames below the fiber body and resumes
 --      at the same depth. A stackless coroutine cannot do this at any price:
 --      co_await is only valid in a coroutine body, so every frame in the
@@ -31,12 +31,12 @@
 --   E. M:N, and the scheduler is a choice. The SAME 16 fibers doing the SAME
 --      work report exactly 1 distinct tid under the default round_robin
 --      scheduler and more than 1 under shared_work. One call to
---      use_scheduling_algorithm is the only difference -- ch49's grid, applied
+--      use_scheduling_algorithm is the only difference: ch49's grid, applied
 --      to fibers.
 --   F. The guard page, both directions. A fiber that stays inside its 64 KiB
 --      stack exits 0; the same fiber recursing 60x past it dies of a SIGNAL.
 --      The gate asserts the exit signal and NEVER anything the faulting run
---      printed -- output after a stack overflow is undefined, and gating on it
+--      printed: output after a stack overflow is undefined, and gating on it
 --      would be gating on UB (the rule ch49 established for oob_unchecked).
 --
 -- Gated-if-present (G): clang++ parity on the digest.
@@ -175,8 +175,8 @@ local code = tonumber(overflow.out:match("exit=(%d+)") or "0")
 -- Asserted as "died of a signal" (128 + signo), never as a specific output.
 -- What a process prints after running off its stack is undefined; ch49
 -- established that gating on the output of UB is unsound, so this gates the
--- exit status alone. 124 would mean timeout(1) killed it -- i.e. it hung
--- rather than faulting -- and must NOT pass.
+-- exit status alone. 124 would mean timeout(1) killed it (i.e. it hung
+-- rather than faulting) and must NOT pass.
 checks.expect_match(tostring(code ~= nil and code >= 128 and code ~= 124), "true",
   "cpp: recursing 60x past that stack dies of a signal (exit=" .. tostring(code) ..
   "; 139 = SIGSEGV on the guard page) rather than corrupting the next mapping")

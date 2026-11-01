@@ -5,8 +5,8 @@ import "strconv"
 // smells.go collects deliberate, behavior-preserving smells for the
 // if-present static-analysis gates (verify.lua gates G "golangci-lint" and
 // H "staticcheck") and the chapter's "Errors, three ways" section. None of
-// these functions is ever called at runtime -- they compile cleanly and
-// have zero effect on `toolbox report`'s digest -- so they exist purely as
+// these functions is ever called at runtime; they compile cleanly and
+// have zero effect on `toolbox report`'s digest, so they exist purely as
 // designed-for targets for tools this host does not have installed.
 
 // unusedHelper is never called. staticcheck's U1000 ("unusedHelper is

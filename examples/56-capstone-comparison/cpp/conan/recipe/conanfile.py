@@ -3,7 +3,7 @@
 Why this file exists at all: stdexec is NOT in ConanCenter (`conan search
 stdexec -r conancenter` reports no recipe, and `*exec*` matches nothing), it is
 not packaged by Fedora, and upstream's own conanfile is named `p2300` and takes
-its version from `git.get_commit()` -- so there is no stable version to depend
+its version from `git.get_commit()`, so there is no stable version to depend
 on. Upstream publishes no GitHub releases either, only `nvhpc-*` snapshot tags.
 
 So ch56 pins a tag tarball by sha256. That hash is what makes the build

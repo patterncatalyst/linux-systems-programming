@@ -1,11 +1,11 @@
-// main.rs — 41-capstone-fleet — pmon supervises chatterd + sysagent + fwatch
+// main.rs (41-capstone-fleet): pmon supervises chatterd + sysagent + fwatch
 // across two lab hosts, capability-dropped and Landlock-sandboxed, all
 // telemetry exported to the host LGTM stack. One binary, four subcommands
 // (the same self-re-exec shape ch34's container entrypoint uses): pmon is
 // the fleet's init; chatterd/sysagent/fwatch are the services it supervises.
 //
 // This file is a direct port of go/main.go's flag parsing
-// (argFlag/hasFlag/firstPositional/atoiOr) and dispatch table — the usage
+// (argFlag/hasFlag/firstPositional/atoiOr) and dispatch table: the usage
 // banner text below is byte-identical to the Go reference's (cross-checked
 // against cpp/src/main.cpp's std::print of the same banner), since
 // verify.lua and every language's demo.sh depend on it matching exactly.
@@ -38,7 +38,7 @@ fn usage() {
 
 /// arg_flag scans args for "--name value" and returns (value, true), or
 /// (def, true) if absent, or (_, false) if the flag is present but has no
-/// following value — mirrors go/main.go's argFlag exactly.
+/// following value; mirrors go/main.go's argFlag exactly.
 fn arg_flag(args: &[String], name: &str, def: &str) -> (String, bool) {
     for (i, a) in args.iter().enumerate() {
         if a == name {
@@ -57,7 +57,7 @@ fn has_flag(args: &[String], name: &str) -> bool {
 
 /// first_positional: walks args, treating every "--xxx" token as consuming
 /// exactly one following token (its value), and returns the first token that
-/// survives that skipping — mirrors go/main.go's firstPositional exactly,
+/// survives that skipping; mirrors go/main.go's firstPositional exactly,
 /// including its "skip the very next token no matter what it is" quirk.
 fn first_positional(args: &[String]) -> String {
     let mut skip = false;

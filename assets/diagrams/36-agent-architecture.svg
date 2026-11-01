@@ -24,7 +24,7 @@
 <rect x="240" y="240" width="170" height="70" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
 <text x="325.0" y="265.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">mpstat -P ALL 1</text>
 <text x="325.0" y="282.5" font-size="11.5" fill="#555555" text-anchor="middle">not installed here</text>
-<text x="325.0" y="297.5" font-size="11.5" fill="#555555" text-anchor="middle">ch37 lab VM</text>
+<text x="325.0" y="297.5" font-size="11.5" fill="#555555" text-anchor="middle">lab VM</text>
 <rect x="430" y="240" width="170" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="515.0" y="273.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">free -m</text>
 <text x="515.0" y="290.0" font-size="11.5" fill="#555555" text-anchor="middle">MemAvailable vs available</text>

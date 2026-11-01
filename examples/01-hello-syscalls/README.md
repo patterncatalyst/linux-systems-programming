@@ -1,7 +1,7 @@
 # 01-hello-syscalls
 
-Chapter 1's example — and the seed for every runnable example in the book. It
-implements the same tiny program three times — C++23, Go, and Rust — each
+This chapter's example is the seed for every runnable example in the book. It
+implements the same tiny program three times, in C++23, Go, and Rust, each
 printing exactly one line:
 
 ```
@@ -32,9 +32,9 @@ built binaries.
 Every language directory has a `demo.sh` with the same interface, identical
 across the whole book:
 
-- `./demo.sh` — build then run
-- `./demo.sh build` — build only
-- `./demo.sh run [args]` — run the built binary
+- `./demo.sh`: build then run
+- `./demo.sh build`: build only
+- `./demo.sh run [args]`: run the built binary
 - With env `TARGET` set, `run` deploys the binary to that lab VM via
   `scripts/lab/deploy-to-vm.sh "$TARGET" <binary> -- [args]` instead of
   running locally.

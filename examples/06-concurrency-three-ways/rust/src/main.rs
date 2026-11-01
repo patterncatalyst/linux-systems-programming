@@ -1,4 +1,4 @@
-// parhash: parallel FNV-1a 64 checksummer — Rust flavor.
+// parhash: parallel FNV-1a 64 checksummer, Rust flavor.
 //
 // Concurrency shape: 4 scoped threads share one mpsc Receiver behind a Mutex
 // and pull relative paths from it; results flow back to the main thread on a

@@ -1,7 +1,7 @@
-// fwatch.rs — the book's recurring file watcher (ch07 polling -> ch09
+// fwatch.rs: the book's recurring file watcher (ch07 polling -> ch09
 // inotify/epoll -> ch33 Landlock+seccomp), reduced here to what the fleet
 // needs: watch a directory, print one line per raw create/write/delete
-// inotify event (no debounce/merge — go/fwatch.go prints every event as it
+// inotify event (no debounce/merge: go/fwatch.go prints every event as it
 // arrives, and this port matches that exactly, unlike ex09/ex33's fuller
 // debounced watcher), and optionally run under a Landlock ruleset that
 // restricts reads to that directory. Landlock is wired exactly as ex33's
@@ -9,7 +9,7 @@
 // probe since landlock_create_ruleset has no libc/crate wrapper for the
 // version-query form); the inotify fd comes from ex09's `nix::sys::inotify`
 // usage. Full seccomp allow-listing was proven once in ex33 and is not
-// re-derived here — capability-bounding-set drop (caps.rs) plus Landlock are
+// re-derived here: capability-bounding-set drop (caps.rs) plus Landlock are
 // this capstone's sandboxing layers, applied by pmon before it execs fwatch.
 use std::fs;
 use std::os::fd::AsFd;
@@ -27,7 +27,7 @@ use nix::sys::inotify::{AddWatchFlags, InitFlags, Inotify};
 use crate::util;
 
 // ---------------------------------------------------------------------------
-// Landlock — raw syscall for the ABI probe (no libc/crate wrapper exists for
+// Landlock: raw syscall for the ABI probe (no libc/crate wrapper exists for
 // the version-query form of landlock_create_ruleset); the ruleset itself
 // goes through the `landlock` crate, exactly ex33's technique.
 // ---------------------------------------------------------------------------
@@ -79,7 +79,7 @@ fn apply_landlock(dir: &str) -> Result<(), String> {
 }
 
 // classify mirrors go/fwatch.go's eventName: create, then delete, then
-// modify (CLOSE_WRITE or MODIFY), else "other" — checked in that priority
+// modify (CLOSE_WRITE or MODIFY), else "other": checked in that priority
 // order because a single inotify event's mask can carry more than one bit.
 fn classify(mask: AddWatchFlags) -> &'static str {
     if mask.contains(AddWatchFlags::IN_CREATE) {

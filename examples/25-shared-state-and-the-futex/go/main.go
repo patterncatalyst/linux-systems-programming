@@ -1,7 +1,7 @@
-// workq — a bounded MPMC job queue and worker pool (Go 1.26).
+// workq: a bounded MPMC job queue and worker pool (Go 1.26).
 //
 // P producers push N items total into a bounded blocking queue (a buffered
-// channel — the CSP-flavored blocking queue), C consumers pop and fold each
+// channel, the CSP-flavored blocking queue), C consumers pop and fold each
 // item's payload into a checksum. A closer goroutine waits on the producers'
 // WaitGroup and closes the channel, which ends every consumer's range loop.
 //

@@ -1,4 +1,4 @@
-// shmkv v0 — a tiny mmap-backed key/value store (Go).
+// shmkv v0: a tiny mmap-backed key/value store (Go).
 //
 // On-disk format, byte-exact and shared with the C++ and Rust implementations:
 //
@@ -166,7 +166,7 @@ func (s *store) slot(i uint32) []byte {
 func (s *store) slotKey(i uint32) string   { return field(s.slot(i)[:keyField]) }
 func (s *store) slotValue(i uint32) string { return field(s.slot(i)[keyField:]) }
 
-// set: linear probe — overwrite the slot holding key, else claim the first
+// set: linear probe; overwrite the slot holding key, else claim the first
 // empty slot; exit-5 failure when every slot is taken.
 func (s *store) set(key, value string) error {
 	target := s.slots
@@ -201,7 +201,7 @@ func (s *store) set(key, value string) error {
 	return nil
 }
 
-// parseSlots: digits only, in range [1, u32 max] — identical rules in all
+// parseSlots: digits only, in range [1, u32 max]; identical rules in all
 // three languages so the CLIs reject exactly the same inputs.
 func parseSlots(text string) (uint32, error) {
 	if text == "" || len(text) > 10 {

@@ -1,4 +1,4 @@
-// chatterd v3 — heartbeats + deadlines (chapter 24: time, timers, deadlines).
+// chatterd v3: heartbeats + deadlines (chapter 24: time, timers, deadlines).
 //
 //   chatterd clockprobe
 //   chatterd listen  --name N --addr HOST:PORT     [opts]
@@ -9,9 +9,9 @@
 // liveness, and a signalfd doorbell drives clean shutdown. All three are fed
 // to one poll(2) loop alongside the peer socket. Instant is a monotonic
 // clock, so a peer is declared dead by silence, never by a wall-clock reading
-// that a clock step could rewind. No tokio here — that is chapter 27.
+// that a clock step could rewind. No tokio here; that is chapter 27.
 //
-// Wire format — this is THE canonical chatterd chat frame, unchanged since it
+// Wire format: this is THE canonical chatterd chat frame, unchanged since it
 // was introduced in chapter 21 and extended only by adding TYPE values in
 // later chapters; the header never changes. All integers big-endian:
 //
@@ -23,7 +23,7 @@
 //   byte 6.. PAYLOAD N bytes: JOIN/MSG/WELCOME/PING are UTF-8 text (PING
 //                             empty); DELIVER is name + 0x00 (NUL) + text.
 //
-// This v3 (chapter 24) peer only ever emits JOIN, MSG, and PING — DELIVER and
+// This v3 (chapter 24) peer only ever emits JOIN, MSG, and PING; DELIVER and
 // WELCOME belong to the server-broadcast versions (ch22/ch27) and, since the
 // header is shared, are simply treated as liveness traffic here if ever seen.
 // PING is the v3 addition over v0/v1. Any received frame is "traffic" and
@@ -242,7 +242,7 @@ fn run_session(o: &Opts, mut stream: TcpStream, sfd: &SignalFd, mut peer: String
                 Err(e) => panic!("poll: {e}"),
             }
             let ev = |idx: usize, flags: PollFlags| {
-                pfds[idx].revents().map(|r| r.intersects(flags)).unwrap_or(false)
+                pfds[idx].revents().is_some_and(|r| r.intersects(flags))
             };
             let sk = if sock_dead {
                 false
@@ -364,7 +364,7 @@ fn run_listen(o: &Opts, sfd: &SignalFd) -> i32 {
                 Err(Errno::EINTR) => continue,
                 Err(e) => panic!("poll: {e}"),
             }
-            let ev = |idx: usize| pfds[idx].revents().map(|r| r.intersects(PollFlags::POLLIN)).unwrap_or(false);
+            let ev = |idx: usize| pfds[idx].revents().is_some_and(|r| r.intersects(PollFlags::POLLIN));
             (ev(0), ev(1))
         };
         if ready.0 {

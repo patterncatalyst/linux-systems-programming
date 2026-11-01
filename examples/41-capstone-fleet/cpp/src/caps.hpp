@@ -1,4 +1,4 @@
-// caps.hpp — capability-bounding-set drop (see caps.cpp for rationale).
+// caps.hpp: capability-bounding-set drop (see caps.cpp for rationale).
 #pragma once
 
 namespace caps {

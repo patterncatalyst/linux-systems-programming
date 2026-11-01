@@ -1,11 +1,11 @@
--- Verify pmon v3 (identity & privilege) — a VM example. Behavioral assertions:
+-- Verify pmon v3 (identity & privilege), a VM example. Behavioral assertions:
 --
 --   1. `drop --user nobody --keep-cap net_bind_service -- CMD bindprobe :80`
 --      must run CMD as an UNPRIVILEGED uid (65534, not 0) yet still bind :80.
 --      That pairing is impossible without the ambient CAP_NET_BIND_SERVICE
---      surviving the setuid + execve — so it is the proof the cap was carried.
+--      surviving the setuid + execve, which is the proof the cap was carried.
 --
---   2. NEGATIVE CONTROL — the same drop WITHOUT --keep-cap must fail the bind
+--   2. NEGATIVE CONTROL: the same drop WITHOUT --keep-cap must fail the bind
 --      with "Permission denied" and exit 3. Same uid, cap withheld, port
 --      denied: this is what makes assertion 1 meaningful rather than trivially
 --      true (a root process, or a lowered ip_unprivileged_port_start, would
@@ -77,7 +77,7 @@ else
     lang .. ": uid must be non-root but was " .. tostring(uid))
 end
 
--- Negative control: same drop, NO cap — bind :80 must be denied, exit 3.
+-- Negative control: same drop, NO cap; bind :80 must be denied, exit 3.
 local neg = checks.run(string.format(
   "SUDO=1 ./demo.sh %s run drop --user nobody -- %s bindprobe --port 80",
   lang, staged))

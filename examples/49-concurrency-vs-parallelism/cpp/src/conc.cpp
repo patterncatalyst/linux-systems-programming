@@ -1,4 +1,4 @@
-// conc -- the reference program for ch49 (concurrency vs parallelism).
+// conc: the reference program for ch49 (concurrency vs parallelism).
 //
 // One workload, four execution models, and observables that report STRUCTURE
 // rather than elapsed time:
@@ -30,20 +30,20 @@ namespace {
 
 // ch46/ch47/ch48's exact 16-byte payload ("The quick brown."), reused
 // byte-for-byte so this chapter lands on the same FNV-1a digest as the three
-// toolbox appendices -- now carried into Part 14.
+// toolbox appendices: now carried into Part 14.
 constexpr std::uint8_t kPayload[16] = {0x54, 0x68, 0x65, 0x20, 0x71, 0x75, 0x69, 0x63,
                                        0x6b, 0x20, 0x62, 0x72, 0x6f, 0x77, 0x6e, 0x2e};
 
 constexpr std::uint64_t kFnvOffsetBasis = 0xcbf29ce484222325ULL;
 constexpr std::uint64_t kFnvPrime = 0x00000100000001b3ULL;
 
-// Integer-only, no floats, addresses, timing, or hash-map iteration -- the
+// Integer-only, no floats, addresses, timing, or hash-map iteration: the
 // same input bytes produce the same digest on every conforming toolchain.
 std::uint64_t fnv1a(const std::uint8_t* data, std::size_t len) {
     std::uint64_t h = kFnvOffsetBasis;
     for (std::size_t i = 0; i < len; ++i) {
         h ^= data[i];
-        h *= kFnvPrime;  // uint64_t wraps by definition -- no UB to sanitize
+        h *= kFnvPrime;  // uint64_t wraps by definition, no UB to sanitize
     }
     return h;
 }
@@ -60,7 +60,7 @@ constexpr int kBurnPerSample = 900;
 struct Observations {
     // Monotonic ticket handed out at every sample point by every worker. A
     // worker whose consecutive tickets are NOT consecutive integers was
-    // interleaved with some other worker in between -- that gap is the
+    // interleaved with some other worker in between: that gap is the
     // definition of "in flight at the same time" this program uses.
     std::atomic<std::uint64_t> ticket{0};
     std::atomic<std::uint64_t> interleaves{0};
@@ -79,7 +79,7 @@ struct Observations {
 
     // Where each worker's burn-loop result goes to die. A burn loop whose
     // result nobody reads is dead code, and a compiler that deletes it leaves
-    // workers finishing in microseconds, never overlapping -- so `concurrent`
+    // workers finishing in microseconds, never overlapping, so `concurrent`
     // reports max_inflight=1 interleaves=0, the signature of a sequential run,
     // no matter which model was asked for. Measured on this host at -O2, for
     // the `concurrent` model over three runs each:
@@ -105,7 +105,7 @@ void bump_max_inflight(Observations& obs, int now) {
     }
 }
 
-// One unit of work. Every worker runs exactly this, in every model -- the
+// One unit of work. Every worker runs exactly this, in every model: the
 // models differ only in how the workers are scheduled onto the machine.
 void worker(Observations& obs, int /*id*/) {
     bump_max_inflight(obs, obs.inflight.fetch_add(1, std::memory_order_relaxed) + 1);
@@ -120,7 +120,7 @@ void worker(Observations& obs, int /*id*/) {
         // previous iteration's value, so this is a genuine serial dependency
         // chain: the optimizer cannot hoist it, collapse it, or vectorize it.
         // An earlier version hashed a loop-invariant constant instead, and
-        // both compilers reduced the whole thing to almost nothing -- see the
+        // both compilers reduced the whole thing to almost nothing: see the
         // table on Observations::sink above.
         for (int b = 0; b < kBurnPerSample; ++b) {
             local = fnv1a(reinterpret_cast<const std::uint8_t*>(&local), sizeof local) + b;
@@ -134,7 +134,7 @@ void worker(Observations& obs, int /*id*/) {
         have_prev = true;
 
         // sched_getcpu() is a vDSO read of the CPU this thread is on right
-        // now. It can change between this line and the next -- that is the
+        // now. It can change between this line and the next: that is the
         // point. We union every value ever seen rather than trusting one.
         const int cpu = sched_getcpu();
         if (cpu >= 0 && cpu < 64) {
@@ -143,7 +143,7 @@ void worker(Observations& obs, int /*id*/) {
     }
 
     // Consume the burn-loop result so it cannot be optimized out. The value
-    // itself is meaningless and is never asserted on -- only its existence
+    // itself is meaningless and is never asserted on: only its existence
     // matters, and xor keeps the sink from depending on completion order.
     obs.sink.fetch_xor(local, std::memory_order_relaxed);
 
@@ -167,7 +167,7 @@ int cpus_allowed() {
 }
 
 // Restrict this process to a single CPU. This is what turns "N runnable
-// threads" into "N runnable threads that must take turns" -- concurrency
+// threads" into "N runnable threads that must take turns": concurrency
 // with the parallelism removed, by request rather than by accident.
 bool pin_to_one_cpu() {
     cpu_set_t set;
@@ -197,7 +197,7 @@ void run_threaded(Observations& obs, int workers) {
 
 // The sequential model deliberately does NOT spawn threads: each worker runs
 // to completion on this thread before the next one starts. That is what makes
-// its interleaves count exactly zero -- one worker's tickets are never
+// its interleaves count exactly zero: one worker's tickets are never
 // separated by another's.
 void run_sequential(Observations& obs, int workers) {
     for (int i = 0; i < workers; ++i) {

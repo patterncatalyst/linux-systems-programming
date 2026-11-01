@@ -4,7 +4,7 @@
 -- mode:vm-peer, but the verify itself is the LOCAL two-process assertion: two
 -- chatterd instances with distinct names run on loopback multicast, discover
 -- each other, and exchange one canonical chatterd TCP chat frame (JOIN then
--- DELIVER — the same frame ch21/22/24/27 share). (The real two-host demo
+-- DELIVER, the same frame ch21/22/24/27 share). (The real two-host demo
 -- across systems-target/systems-peer is driven separately by the chapter's
 -- demo; see README.) demo.sh run is forced local here by clearing TARGET, so
 -- the assertion never touches a VM.

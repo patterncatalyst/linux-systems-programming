@@ -1,14 +1,14 @@
-# 09 — Event loops: epoll + inotify (`fwatch` v1)
+# 09: Event loops: epoll + inotify (`fwatch` v1)
 
-`fwatch` is the file watcher that grows across Part II. Chapter 07/08 gave it
-polling-era subcommands (`snapshot`, `diff`); this chapter adds `watch`, a
-real-time watcher — and the three implementations deliberately showcase the
-two ways Linux programs consume readiness:
+`fwatch` is the file watcher that grows across Part II. The previous
+chapters gave it polling-era subcommands (`snapshot`, `diff`); this chapter
+adds `watch`, a real-time watcher, and the three implementations showcase
+the two ways Linux programs consume readiness:
 
 | Language | Architecture |
 |---|---|
-| **C++23** | one explicit `epoll` loop over three fds — the inotify fd, a `timerfd` (drives both the 100 ms per-path debounce and the overall timeout), and a `signalfd` (SIGINT/SIGTERM as readable data). Single thread; every fd owned by an RAII wrapper; fallible setup returns `std::expected`. |
-| **Rust (edition 2024)** | the same single-threaded epoll architecture via the `nix` crate (`Epoll`, `Inotify`, `TimerFd`, `SignalFd` — all `OwnedFd`-backed, closed on drop), with `anyhow` for error context. |
+| **C++23** | one explicit `epoll` loop over three fds: the inotify fd, a `timerfd` (drives both the 100 ms per-path debounce and the overall timeout), and a `signalfd` (SIGINT/SIGTERM as readable data). Single thread; every fd owned by an RAII wrapper; fallible setup returns `std::expected`. |
+| **Rust (edition 2024)** | the same single-threaded epoll architecture via the `nix` crate (`Epoll`, `Inotify`, `TimerFd`, `SignalFd`, all `OwnedFd`-backed, closed on drop), with `anyhow` for error context. |
 | **Go 1.26** | the idiomatic inversion: the runtime owns the poller. A goroutine reads the `O_NONBLOCK` inotify fd through `os.File` (parking on the netpoller, which is itself an epoll loop), and feeds a channel; `signal.Notify` and `time.After` are channels too; one `select` loop multiplexes all of it. |
 
 All three expose identical observable behavior, so one `verify.lua` covers
@@ -23,12 +23,12 @@ usage: fwatch <command>
   watch DIR [--timeout-ms T]    watch DIR (default 2000 ms) until timeout or SIGINT/SIGTERM
 ```
 
-- `snapshot DIR` — top-level regular files only, sorted by name, printed to
+- `snapshot DIR`: top-level regular files only, sorted by name, printed to
   stdout as `name\tsize\tmtime_ns`.
-- `diff OLD NEW` — reads two snapshot files and prints one line per changed
+- `diff OLD NEW`: reads two snapshot files and prints one line per changed
   name, in name order: `created <name>`, `deleted <name>`, `modified <name>`
   (size or mtime changed). Exit 0.
-- `watch DIR` — prints `fwatch: watching DIR` to stderr, then one line per
+- `watch DIR`: prints `fwatch: watching DIR` to stderr, then one line per
   filesystem event to stdout:
 
   ```
@@ -47,11 +47,11 @@ usage: fwatch <command>
 
 Each language directory has the standard `demo.sh`:
 
-- `./demo.sh build` — build only
-- `./demo.sh run [args]` — run the built binary (`app`); the local path
+- `./demo.sh build`: build only
+- `./demo.sh run [args]`: run the built binary (`app`); the local path
   `exec`s the binary so a backgrounded `run watch ...` can be signalled
   directly
-- `./demo.sh` — build, then run a 1-second self-demo (`watch .`)
+- `./demo.sh`: build, then run a 1-second self-demo (`watch .`)
 - With env `TARGET` set, `run` deploys to that lab VM via
   `scripts/lab/deploy-to-vm.sh`
 

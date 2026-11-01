@@ -1,8 +1,8 @@
-// app -- bugfarm scenario 1: a crashing pmon-like supervisor
+// app, bugfarm scenario 1: a crashing pmon-like supervisor
 // (chapter 28: gdb and remote debugging).
 //
-//	app run    -- normal operation: reap a child, report its exit, exit 0
-//	app crash  -- the SAME call path, fed a child record whose exit-status
+//	app run:   normal operation: reap a child, report its exit, exit 0
+//	app crash: the SAME call path, fed a child record whose exit-status
 //	              pointer was never populated (as if handleChild ran before
 //	              the reaper filled it in) -> a nil pointer dereference
 //	              three frames down:
@@ -17,7 +17,7 @@
 // panics. Left unrecovered, that panic unwinds to main, prints
 // "panic: runtime error: invalid memory address or nil pointer dereference"
 // plus a full goroutine trace naming every frame below, and the process
-// exits with status 2 -- not 139, and there is no core file for gdb to load.
+// exits with status 2, not 139, and there is no core file for gdb to load.
 // A goroutine trace (or dlv) is the tool for this crash, not gdb + core.
 package main
 
@@ -37,7 +37,7 @@ type childRecord struct {
 //go:noinline
 func deref(child childRecord) {
 	// BUG: no nil check before the read. In "crash" mode exitSlot is nil
-	// because handleChild ran before the reaper recorded the exit status --
+	// because handleChild ran before the reaper recorded the exit status;
 	// exactly the kind of race a real supervisor can hit.
 	fmt.Printf("pmon: child %d exited status=%d\n", child.pid, *child.exitSlot)
 }

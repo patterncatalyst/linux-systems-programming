@@ -1,7 +1,7 @@
-// chatterd v1 — a peer-to-peer chat daemon growing chapter by chapter.
+// chatterd v1: a peer-to-peer chat daemon growing chapter by chapter.
 //
 // ch21 introduced the length-prefixed frame protocol and a threaded server
-// (one thread per connection). ch22 — "scaling the server" — keeps that
+// (one thread per connection). ch22 ("scaling the server") keeps that
 // threaded engine working and adds a single-threaded epoll engine: one thread,
 // many connections, nonblocking accept plus a per-connection read/write state
 // machine with an outbound queue and real backpressure (partial writes are
@@ -60,7 +60,7 @@ namespace {
 }
 
 // ---------------------------------------------------------------------------
-// RAII file descriptor — the only owner of every fd/socket in this program.
+// RAII file descriptor: the only owner of every fd/socket in this program.
 // ---------------------------------------------------------------------------
 
 class Fd {
@@ -210,7 +210,7 @@ make_listener(std::uint16_t port, bool nonblock) {
 }
 
 // ---------------------------------------------------------------------------
-// Threaded engine — one thread per connection, a shared broadcast registry.
+// Threaded engine: one thread per connection, a shared broadcast registry.
 // ---------------------------------------------------------------------------
 
 struct Conn {
@@ -348,7 +348,7 @@ int serve_threaded(std::uint16_t port) {
 }
 
 // ---------------------------------------------------------------------------
-// Epoll engine — one thread, nonblocking, per-connection state machines.
+// Epoll engine: one thread, nonblocking, per-connection state machines.
 // ---------------------------------------------------------------------------
 
 struct EConn {
@@ -698,7 +698,7 @@ int cmd_flood(std::uint16_t port, int n, const std::string& text) {
             if (k == 0) {
                 (void)write_all(fd->get(), encode(Type::msg, text));
             }
-            // Exactly one broadcast is expected — conn0's message reaches all.
+            // Exactly one broadcast is expected: conn0's message reaches all.
             for (;;) {
                 auto fr = recv_frame(fd->get(), inbuf);
                 if (!fr) {

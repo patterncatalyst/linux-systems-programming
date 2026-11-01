@@ -1,8 +1,8 @@
-// app — bugfarm scenario 1: a crashing pmon-like supervisor
+// app: bugfarm scenario 1: a crashing pmon-like supervisor
 // (chapter 28: gdb and remote debugging).
 //
-//   app run     -- normal operation: reap a child, report its exit, exit 0
-//   app crash   -- the SAME call path, fed a child record whose exit-status
+//   app run: normal operation, reap a child, report its exit, exit 0
+//   app crash: the SAME call path, fed a child record whose exit-status
 //                  slot was never populated (as if handle_child() ran before
 //                  the reaper filled it in) -> a null pointer dereference
 //                  three frames down:
@@ -17,7 +17,7 @@
 //
 // One more thing to notice once you're inside gdb: ShutdownGuard below never
 // gets to print its message on the crash path. SIGSEGV is not a C++
-// exception -- the kernel delivers a signal, the default disposition
+// exception: the kernel delivers a signal, the default disposition
 // terminates the process immediately, and nothing unwinds the stack. RAII
 // buys you cleanup on every *C++-level* exit path (return, throw, exit via
 // exceptions); it buys you nothing against a hardware fault.
@@ -48,7 +48,7 @@ struct ChildRecord {
 [[gnu::noinline]] void deref(const ChildRecord& child) {
     // BUG: no null check before the read. In "crash" mode exit_slot is
     // nullptr because handle_child ran before the reaper recorded the exit
-    // status -- exactly the kind of race a real supervisor can hit.
+    // status: exactly the kind of race a real supervisor can hit.
     std::println("pmon: child {} exited status={}", child.pid,
                  *child.exit_slot);
 }

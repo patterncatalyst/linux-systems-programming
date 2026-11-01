@@ -1,8 +1,8 @@
-// copyx SRC DST — file copier that establishes the book's error taxonomy.
+// copyx SRC DST: file copier that establishes the book's error taxonomy.
 //
-//	exit 0 — success; "copied <N> bytes" on stdout
-//	exit 2 — source-side failure (open/read SRC); "copyx: <reason>" on stderr
-//	exit 3 — destination-side failure (open/write/close DST); same shape
+//	exit 0: success; "copied <N> bytes" on stdout
+//	exit 2: source-side failure (open/read SRC); "copyx: <reason>" on stderr
+//	exit 3: destination-side failure (open/write/close DST); same shape
 //
 // EINTR on read(2)/write(2) is retried (the syscall was interrupted before
 // completing; reissuing it is the only correct policy), and short writes are
@@ -46,8 +46,8 @@ func newOpError(op, path string, err error, exit int) *opError {
 	return &opError{op: op, path: path, err: errno, exit: exit}
 }
 
-// strerror renders an errno the way glibc's strerror(3) does — first letter
-// capitalized — so all three implementations print identical reason text.
+// strerror renders an errno the way glibc's strerror(3) does, first letter
+// capitalized, so all three implementations print identical reason text.
 func strerror(errno unix.Errno) string {
 	r := []rune(errno.Error())
 	if len(r) > 0 {

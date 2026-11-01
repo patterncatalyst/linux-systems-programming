@@ -1,4 +1,4 @@
-// chatterd.go — the book's recurring peer-to-peer chat daemon (ch21-27),
+// chatterd.go: the book's recurring peer-to-peer chat daemon (ch21-27),
 // reduced to what the capstone needs: serve local clients, and (new in this
 // chapter) bridge two chatterd instances across hosts so a message sent on
 // one node is delivered to clients on the other. The wire frame (proto.go)
@@ -14,7 +14,7 @@
 //
 // A local MSG is broadcast as DELIVER to every registered connection
 // (including a bridge connection dialed in from the other side) exactly like
-// any other client — no protocol change. When a bridge *worker* itself
+// any other client, no protocol change. When a bridge *worker* itself
 // receives a DELIVER over the connection it dialed, it re-broadcasts locally
 // with includeBridges=false, so the message never goes back out over any
 // bridge: no ping-pong between two nodes.
@@ -207,7 +207,7 @@ func bridgeWorker(peerAddr, localNode, peerNode string, h *hub, sig interface{ L
 }
 
 // ---------------------------------------------------------------------------
-// send / listen — minimal test clients used by verify to prove cross-host
+// send / listen: minimal test clients used by verify to prove cross-host
 // delivery deterministically (this capstone trims ch27's fuller "loadtest").
 // ---------------------------------------------------------------------------
 

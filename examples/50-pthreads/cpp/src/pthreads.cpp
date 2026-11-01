@@ -1,4 +1,4 @@
-// pthreads -- the reference program for ch50.
+// pthreads: the reference program for ch50.
 //
 // ch49 measured concurrency and parallelism through std::thread. This program
 // goes under std::thread to the thing it actually is on Linux: a pthread. Each
@@ -18,7 +18,7 @@
 // with it.
 //
 // Every facet prints the same digest. As in ch46-ch49, the answer does not
-// depend on how the work was scheduled -- or, here, on which per-thread knob
+// depend on how the work was scheduled, or, here, on which per-thread knob
 // was turned.
 
 #include <atomic>
@@ -50,7 +50,7 @@ std::uint64_t fnv1a(const std::uint8_t* data, std::size_t len) {
     std::uint64_t h = kFnvOffsetBasis;
     for (std::size_t i = 0; i < len; ++i) {
         h ^= data[i];
-        h *= kFnvPrime;  // uint64_t wraps by definition -- no UB to sanitize
+        h *= kFnvPrime;  // uint64_t wraps by definition, no UB to sanitize
     }
     return h;
 }
@@ -61,7 +61,7 @@ void report(const char* facet) {
 }
 
 // The kernel's name for a task, straight from procfs. This is the same string
-// `top -H`, `ps -L`, and gdb's `info threads` display -- reading it here proves
+// `top -H`, `ps -L`, and gdb's `info threads` display: reading it here proves
 // the name reached the kernel rather than living in a glibc-side variable.
 std::string comm_of(pid_t tid) {
     std::ifstream f("/proc/self/task/" + std::to_string(tid) + "/comm");
@@ -86,7 +86,7 @@ int cpus_allowed() {
 // ── identity ─────────────────────────────────────────────────────────────
 //
 // A Linux thread has two identities and they are not interchangeable.
-// pthread_t is an opaque glibc handle -- you may compare it with
+// pthread_t is an opaque glibc handle: you may compare it with
 // pthread_equal and nothing else; it is not a number and printing it is not
 // portable. gettid() is the kernel's task id: a real integer, the thing that
 // names a directory in /proc, the thing perf and ftrace and gdb report.
@@ -108,7 +108,7 @@ void facet_identity() {
         t.join();
     }
 
-    // Distinct from each other and from the process -- and each one named a
+    // Distinct from each other and from the process, and each one named a
     // real directory under /proc/self/task while it was alive.
     bool distinct = true;
     for (int i = 0; i < kWorkers; ++i) {
@@ -136,7 +136,7 @@ void facet_identity() {
 // The size limit is the interesting part. The kernel's comm field is 16 bytes
 // INCLUDING the terminating NUL, so 15 characters is the most that fits.
 // glibc refuses a longer name with ERANGE rather than truncating it, which
-// means an over-long name leaves the previous one in place -- a silent no-op
+// means an over-long name leaves the previous one in place: a silent no-op
 // if you do not check the return value.
 
 void facet_naming() {
@@ -287,7 +287,7 @@ void facet_affinity() {
 // ── sched ────────────────────────────────────────────────────────────────
 //
 // Scheduling policy is per-thread and std::thread cannot touch it. The
-// default is SCHED_OTHER at priority 0 -- the fair scheduler, where "priority"
+// default is SCHED_OTHER at priority 0: the fair scheduler, where "priority"
 // is nice and the sched_param priority is required to be zero.
 //
 // Asking for SCHED_FIFO is the interesting call precisely because it FAILS
@@ -399,8 +399,8 @@ void facet_cancel(bool swallow) {
 // ── the bridge ───────────────────────────────────────────────────────────
 //
 // Everything above used raw pthread_create, but none of it has to. A
-// std::thread IS a pthread here -- native_handle_type is pthread_t, checked
-// at compile time below -- so the standard type and the POSIX controls
+// std::thread IS a pthread here: native_handle_type is pthread_t, checked
+// at compile time below, so the standard type and the POSIX controls
 // compose. This is the sanctioned escape hatch, and using it is not a hack:
 // native_handle() exists in the standard precisely so that platform facilities
 // the standard does not wrap remain reachable.

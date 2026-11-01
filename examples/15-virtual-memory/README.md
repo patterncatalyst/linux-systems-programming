@@ -1,4 +1,4 @@
-# 15-virtual-memory — memmap
+# 15-virtual-memory: memmap
 
 A self-inspecting virtual-memory tool, implemented three times (C++23, Go,
 Rust) with identical CLI, output shapes, and exit codes. `memmap` performs one
@@ -43,7 +43,7 @@ memmap: faults minor=<n> major=<n>
   print `memmap: error: …` on stderr and exit 1; the exact message text is
   each language's native errno rendering.
 
-Example (heap, defaults — 64 MiB touched means ~64 MiB of RSS growth and one
+Example (heap, defaults: 64 MiB touched means ~64 MiB of RSS growth and one
 minor fault per touched 4 KiB page):
 
 ```
@@ -60,14 +60,14 @@ memmap: faults minor=16385 major=0
   pays for physical pages when they are touched: the RSS delta and the minor
   fault delta line up with the touched page count, not the allocation call.
 - **Fault-around.** In `fault-walk` and `mmap-file`, 512 touched file pages
-  produce ~32 minor faults per step, not 512 — the kernel maps a batch of
+  produce ~32 minor faults per step, not 512: the kernel maps a batch of
   surrounding page-cache pages per fault. Anonymous writes fault one page at
   a time, so `heap`/`mmap-anon` report ~1 fault per page.
 - **Minor vs major.** The walk file is written immediately before it is
   mapped, so every page is in the page cache and `major=0`; a major fault
   would mean a real disk read.
 - **Where allocations live.** A 64 MiB `malloc`/`Vec`/`make` does not extend
-  `[heap]` — the allocator satisfies it with a private anonymous mapping, and
+  `[heap]`: the allocator satisfies it with a private anonymous mapping, and
   the excerpt shows exactly that region.
 
 ## Per-language notes

@@ -1,4 +1,4 @@
-// chatterd v0 — a thread-per-connection TCP chat room.
+// chatterd v0: a thread-per-connection TCP chat room.
 //
 // One binary, two subcommands:
 //
@@ -270,7 +270,7 @@ func (h *hub) serveClient(ctx context.Context, conn net.Conn, id int) {
 // ---------------------------------------------------------------------------
 
 func cmdServe(host string, port int) error {
-	addr := fmt.Sprintf("%s:%d", host, port)
+	addr := net.JoinHostPort(host, strconv.Itoa(port))
 	ln, err := net.Listen("tcp", addr) // Go sets SO_REUSEADDR on TCP listeners
 	if err != nil {
 		return fmt.Errorf("listen %s: %w", addr, err)
@@ -309,7 +309,7 @@ func cmdServe(host string, port int) error {
 // ---------------------------------------------------------------------------
 
 func cmdChatctl(host string, port int, name string) error {
-	addr := fmt.Sprintf("%s:%d", host, port)
+	addr := net.JoinHostPort(host, strconv.Itoa(port))
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return fmt.Errorf("connect %s: %w", addr, err)

@@ -1,4 +1,4 @@
-// pmon v5 — a process supervisor with a UNIX-socket control plane.
+// pmon v5: a process supervisor with a UNIX-socket control plane.
 //
 // `pmon supervise` spawns a child command (its own process group,
 // stdout+stderr appended to a log file), restarts it 300 ms after every
@@ -56,7 +56,7 @@ type state struct {
 }
 
 // spawnChild starts argv in its own process group with stdout+stderr going to
-// the (O_APPEND) log file — the fd is inherited directly, no pipe goroutine.
+// the (O_APPEND) log file; the fd is inherited directly, no pipe goroutine.
 func spawnChild(argv []string, logFile *os.File) (*exec.Cmd, error) {
 	cmd := exec.Command(argv[0], argv[1:]...)
 	cmd.Stdout = logFile

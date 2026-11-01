@@ -1,17 +1,17 @@
-# 46 — cpp-toolbox
+# 46: cpp-toolbox
 
 A **single-language** example (C++ only): the C++ toolchain itself is the
 subject, so a Go or Rust variant would have nothing to show. One `toolbox`
 binary plus a full set of toolchain artifacts, engineered so every tool
 produces a checkable effect, not just a clean exit.
 
-- **`toolbox report`** — an FNV-1a digest over a fixed embedded byte array,
+- **`toolbox report`**: an FNV-1a digest over a fixed embedded byte array,
   printed via a custom `Digest { uint64_t fnv; }` type. Integer/string
   output only (no floats, addresses, timing, or unordered-container
   iteration), so a GCC build and a clang build print byte-identical output.
-- **`toolbox defect overflow`** — deliberately triggers signed-integer
-  overflow, caught by the `ubsan` CMake preset.
-- `src/smell.cpp` — one deliberate, behavior-preserving clang-tidy smell
+- **`toolbox defect overflow`**: triggers signed-integer overflow, caught by
+  the `ubsan` CMake preset.
+- `src/smell.cpp`: a seeded, behavior-preserving clang-tidy smell
   (`performance-unnecessary-value-param`), compiled into the same binary so
   clang-tidy sees it through the compile-commands database.
 
@@ -44,15 +44,15 @@ produces a checkable effect, not just a clean exit.
 
 ## The demo contract
 
-- `./demo.sh cpp` — build then run (`release` preset)
-- `./demo.sh cpp build` — build only
-- `./demo.sh cpp run [args]` — run the built binary
+- `./demo.sh cpp`: build then run (`release` preset)
+- `./demo.sh cpp build`: build only
+- `./demo.sh cpp run [args]`: run the built binary
 - With env `TARGET` set, `run` deploys the binary to that lab VM via
   `scripts/lab/deploy-to-vm.sh "$TARGET" <binary> -- [args]` instead of
   running locally.
 
 The default build (`release` preset, what `./demo.sh cpp build` and CI
-build-smoke use) never needs Conan, clang-tidy, clang-format, or gdb -- those
+build-smoke use) never needs Conan, clang-tidy, clang-format, or gdb: those
 are exercised directly by `verify.lua` and the chapter's hand-run recipes.
 
 ## Verify
@@ -71,7 +71,7 @@ Hard-gated, always asserted:
   `Digest(0x...)`.
 
 Gated only if the tool is present on `PATH` (never fails the example if
-absent -- degrades to an informational `SKIP:` line):
+absent: degrades to an informational `SKIP:` line):
 
 - **D.** clang-tidy flags `performance-unnecessary-value-param` at
   `src/smell.cpp:3`.
@@ -81,7 +81,7 @@ absent -- degrades to an informational `SKIP:` line):
   preset build + run prints the expected line.
 
 ccache and mold are checked opportunistically and printed for information
-only -- both are expected absent on the reference host and are never part
+only; both are expected absent on the reference host and are never part
 of the pass/fail count.
 
 Mode: `local`. No root, no VM, no LGTM stack.

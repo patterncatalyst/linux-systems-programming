@@ -3,9 +3,9 @@
 //!
 //! - `#[derive(SysError)]` (from the `sysmacros` proc-macro crate) generates
 //!   `Display` + `std::error::Error` for an errno-style error enum from
-//!   `#[error("...")]` attributes — a miniature `thiserror`.
+//!   `#[error("...")]` attributes: a miniature `thiserror`.
 //! - `#[instrument]` wraps `hash_chunk` to log its entry, exit, and
-//!   wall-clock duration — tracing without a runtime.
+//!   wall-clock duration: tracing without a runtime.
 //! - `read_record` is a sound `unsafe` unaligned read of a `repr(C)` struct
 //!   out of a byte buffer, validated with miri; `--oob-read` deliberately
 //!   reads 4 bytes past the buffer so miri reports the undefined behaviour.
@@ -24,7 +24,7 @@ enum PmonError {
 
 #[instrument]
 fn hash_chunk(len: usize) -> u64 {
-    // Deterministic FNV-1a over 0..len — the exact value doesn't matter, only
+    // Deterministic FNV-1a over 0..len: the exact value doesn't matter, only
     // that it's reproducible across runs.
     let mut h = 0xcbf29ce484222325u64;
     for i in 0..len {

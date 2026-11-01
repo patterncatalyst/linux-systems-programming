@@ -1,4 +1,4 @@
-// lsp-otel-rust — a traced request/response loop (chapter 38: OpenTelemetry
+// lsp-otel-rust: a traced request/response loop (chapter 38: OpenTelemetry
 // to LGTM).
 //
 //	app serve --port PORT [--otel-endpoint URL]
@@ -9,7 +9,7 @@
 // ("work", "respond"), a monotonic counter (requests_total) is incremented,
 // and a histogram (request_duration, milliseconds) records the parent
 // span's wall time. drive is an untraced TCP client that sends N requests
-// down one connection and waits for N replies — the load generator for
+// down one connection and waits for N replies: the load generator for
 // serve's telemetry, not a telemetry source itself.
 //
 // Every signal appears exactly once in the OTLP stream: serve's own
@@ -65,7 +65,7 @@ struct Telemetry {
 
 impl Telemetry {
     // shutdown flushes and closes both providers. Errors are reported but
-    // never fatal — the process is exiting regardless, this is best effort
+    // never fatal: the process is exiting regardless, this is best effort
     // draining of whatever the batch/periodic exporters still hold.
     fn shutdown(&self) {
         if let Err(e) = self.tracer_provider.shutdown() {
@@ -78,11 +78,11 @@ impl Telemetry {
 }
 
 // init_telemetry wires up the OTLP HTTP/protobuf exporters (reqwest blocking
-// client — no tokio runtime needed), a short-interval batch span processor
+// client, no tokio runtime needed), a short-interval batch span processor
 // and periodic metric reader, and the two instruments serve records against.
-// The per-signal OTLP HTTP exporters POST to exactly the URL given -- unlike
+// The per-signal OTLP HTTP exporters POST to exactly the URL given: unlike
 // the base-endpoint env-var path, an explicit with_endpoint() does NOT append
-// the signal path in opentelemetry-otlp 0.32 -- so the caller's base
+// the signal path in opentelemetry-otlp 0.32, so the caller's base
 // (http://localhost:4318) is joined to /v1/traces and /v1/metrics here.
 // Posting to the bare base instead 404s at the collector and the export
 // silently fails (surfacing only as a shutdown error).
@@ -238,8 +238,8 @@ fn serve_conn(t: &Telemetry, mut stream: TcpStream) {
     }
 }
 
-// Event unifies the two sources serve waits on — an incoming connection and
-// a shutdown signal — into the single channel a Go select over sigCh/connCh
+// Event unifies the two sources serve waits on (an incoming connection and
+// a shutdown signal) into the single channel a Go select over sigCh/connCh
 // would use.
 enum Event {
     Signal(&'static str),
@@ -310,7 +310,7 @@ fn run_serve(args: &[String]) -> i32 {
     // Accept loop: a dedicated thread forwards each accepted connection onto
     // the same event channel. The process exits (via std::process::exit)
     // from the shutdown path below rather than closing the listener, so this
-    // thread never needs to be joined — same lifecycle as Go's accept
+    // thread never needs to be joined: same lifecycle as Go's accept
     // goroutine, which os.Exit simply cuts short.
     {
         let tx = tx.clone();
@@ -348,7 +348,7 @@ fn run_serve(args: &[String]) -> i32 {
 // ------------------------------------------------------------------- drive
 
 // run_drive is a plain, untraced TCP client: it generates the load that
-// makes serve's telemetry interesting, but emits none of its own — the
+// makes serve's telemetry interesting, but emits none of its own: the
 // service under observation is serve, not drive.
 fn run_drive(args: &[String]) -> i32 {
     let mut n: i64 = 0;

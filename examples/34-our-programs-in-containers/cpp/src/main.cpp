@@ -1,4 +1,4 @@
-// app — a tiny PID-1 container entrypoint (chapter 34: our programs in
+// app: a tiny PID-1 container entrypoint (chapter 34: our programs in
 // containers).
 //
 //   app serve   run as the container's PID 1: reap zombies, forward SIGTERM
@@ -10,11 +10,11 @@
 //               instead of running that signal's default action. Only
 //               SIGKILL (and SIGSTOP) still work. `naive` never calls
 //               sigaction for anything, so `podman stop` cannot end it
-//               gracefully -- the engine has to wait out the stop timeout
+//               gracefully: the engine has to wait out the stop timeout
 //               and fall back to SIGKILL.
 //
 // Container-aware resource detection: hardware_concurrency() is
-// sysconf(_SC_NPROCESSORS_ONLN) under the hood -- the HOST's cpu count. It
+// sysconf(_SC_NPROCESSORS_ONLN) under the hood: the HOST's cpu count. It
 // never reads a cgroup, so under `podman run --cpus=2` this still prints the
 // host's full core count. That mismatch against Go's GOMAXPROCS and Rust's
 // available_parallelism() (both cgroup-aware) is the whole point of this
@@ -139,7 +139,7 @@ void write_line(std::string_view s) {
 }
 
 // A short-lived "job": forks, prints one line, exits immediately. Left
-// unreaped it would sit as a zombie -- reap_all() in the serve loop is what
+// unreaped it would sit as a zombie: reap_all() in the serve loop is what
 // keeps these from piling up.
 void spawn_job(int seq) {
     const pid_t pid = ::fork();
@@ -157,7 +157,7 @@ void spawn_job(int seq) {
 }
 
 // The persistent "worker": the long-running child that stands in for a
-// real service. It installs no handlers of its own -- an ordinary
+// real service. It installs no handlers of its own: an ordinary
 // (non-PID-1) process, so SIGTERM's default action (terminate) applies the
 // moment `serve` forwards the signal to it.
 [[nodiscard]] std::expected<pid_t, std::error_code> spawn_worker() {
@@ -169,7 +169,7 @@ void spawn_job(int seq) {
         // Undo the parent's SIG_BLOCK: without this the child inherits
         // TERM/INT/CHLD as *blocked*, so a forwarded SIGTERM would just sit
         // pending forever instead of running its default (terminate)
-        // action -- the worker would be unkillable. Same fix pmon (ch. 12)
+        // action: the worker would be unkillable. Same fix pmon (ch. 12)
         // applies before execvp; here there is no exec, so it happens
         // directly.
         sigset_t empty;
@@ -270,7 +270,7 @@ int serve() {
 
         // SIGTERM or SIGINT: this is the pid-1 duty naive skips. Stop
         // spawning new jobs, forward the signal to the worker, reap it, and
-        // only then exit -- so nothing is left behind when the container
+        // only then exit, so nothing is left behind when the container
         // stops.
         job_spawner.request_stop();
         if (::kill(worker_pid, SIGTERM) == 0 || errno == ESRCH) {
@@ -286,7 +286,7 @@ int serve() {
 
 // THE OTHER HALF OF THE TRAP: naive installs no signal handling whatsoever.
 // As this container's PID 1, the kernel will not run SIGTERM's default
-// action (terminate) for it -- there is no handler, so the signal is simply
+// action (terminate) for it: there is no handler, so the signal is simply
 // dropped. `podman stop` has no way to ask it to leave; only SIGKILL ends it.
 int naive() {
     print_container_line();

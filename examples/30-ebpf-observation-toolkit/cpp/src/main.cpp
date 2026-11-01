@@ -1,4 +1,4 @@
-// app work --seconds N — a small, observable workload for the eBPF
+// app work --seconds N: a small, observable workload for the eBPF
 // observation toolkit (chapter 30). It does four things in a loop, each one
 // deliberate bait for a specific bcc-tools/bpftrace probe:
 //
@@ -78,7 +78,7 @@ class Fd {
 // open(2) on the same path.
 [[nodiscard]] std::expected<void, std::error_code> open_bait(long iter) {
     // 0666: the bait file may get created by a root-run observe.sh one time
-    // and an unprivileged demo.sh run the next — world-writable avoids a
+    // and an unprivileged demo.sh run the next: world-writable avoids a
     // permission mismatch between those two ownership scenarios.
     Fd fd{::open(kBaitPath, O_CREAT | O_WRONLY | O_TRUNC, 0666)};
     if (!fd.valid()) {
@@ -115,7 +115,7 @@ struct Counters {
     std::atomic<long> opens{0};
     std::atomic<long> execs{0};
     std::atomic<long> busy_calls{0};
-    // The accumulated busy_hash() result. Printed in the summary line below —
+    // The accumulated busy_hash() result. Printed in the summary line below: 
     // that's what keeps the optimizer from proving the whole busy_hash call
     // chain's result is unused and deleting it outright (noinline only stops
     // inlining, not interprocedural dead-code elimination of a provably-pure,
@@ -158,7 +158,7 @@ int cmd_work(int seconds) {
     Counters counters;
     // jthread: takes a stop_token as its first parameter (so it's ready for
     // cooperative cancellation, e.g. from a signal handler) and joins on
-    // request/destruction like a plain thread — join explicitly here so the
+    // request/destruction like a plain thread: join explicitly here so the
     // summary line below always sees the final counters.
     std::jthread worker(run_workload, seconds, std::ref(counters));
     worker.join();

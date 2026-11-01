@@ -1,16 +1,16 @@
-// pmon v4 — the process supervisor becomes a log pipeline.
+// pmon v4: the process supervisor becomes a log pipeline.
 //
 // v0 (`run`) spawns a command, waits, and mirrors its exit status.
 // v1 (`supervise --engine sigchld`) restarts a crashing child via SIGCHLD
 //     delivered as readable data through a signalfd.
 // v2 (`supervise --engine pidfd`, the DEFAULT) supervises through
-//     pidfd_open(2)/poll(2)/waitid(P_PIDFD) — no pid-reuse race.
+//     pidfd_open(2)/poll(2)/waitid(P_PIDFD), no pid-reuse race.
 // v4 (this chapter) keeps both engines and adds pipes:
 //     * supervise captures the child's stdout AND stderr through two
-//       pipe(2)s into a log file as "[out] ..."/"[err] ..." lines — the two
+//       pipe(2)s into a log file as "[out] ..."/"[err] ..." lines: the two
 //       pipe read ends simply join the fd set each engine already polls;
 //     * `tail --log F --fifo PATH` creates a FIFO and relays log bytes into
-//       whatever reader attaches — splice(2) fast path (file -> pipe,
+//       whatever reader attaches: splice(2) fast path (file -> pipe,
 //       kernel-side), read/write fallback; SIGPIPE ignored, EPIPE reported
 //       as "pmon: tail reader detached" and survived, nothing lost.
 
@@ -58,7 +58,7 @@ constexpr int kPollMs = 50;
 }
 
 // ---------------------------------------------------------------------------
-// RAII owners — every fd and every spawn attribute has exactly one.
+// RAII owners: every fd and every spawn attribute has exactly one.
 // ---------------------------------------------------------------------------
 
 class Fd {
@@ -198,7 +198,7 @@ make_signalfd(std::initializer_list<int> sigs) {
 }
 
 // ---------------------------------------------------------------------------
-// v0: run — spawn, wait, mirror (stdio inherited, no capture).
+// v0: run: spawn, wait, mirror (stdio inherited, no capture).
 // ---------------------------------------------------------------------------
 
 int cmd_run(const std::vector<std::string>& cmd) {
@@ -341,7 +341,7 @@ using Outcome = std::variant<ChildStatus, Stop>;
     return left < 0 ? 0 : static_cast<int>(left);
 }
 
-// waitid(P_PIDFD) reaps the process the fd refers to — never a recycled pid.
+// waitid(P_PIDFD) reaps the process the fd refers to: never a recycled pid.
 [[nodiscard]] std::expected<ChildStatus, std::error_code> reap_pidfd(const Fd& pidfd) {
     siginfo_t si{};
     while (::waitid(P_PIDFD, static_cast<id_t>(pidfd.get()), &si, WEXITED) != 0) {
@@ -520,7 +520,7 @@ int cmd_supervise(Engine engine, int max_restarts, int timeout_ms,
 }
 
 // ---------------------------------------------------------------------------
-// v4: tail — follow the log, relay into a FIFO, survive reader churn.
+// v4: tail: follow the log, relay into a FIFO, survive reader churn.
 // ---------------------------------------------------------------------------
 
 volatile sig_atomic_t g_stop = 0;
@@ -559,7 +559,7 @@ enum class Relay : std::uint8_t { moved, idle, detached, no_splice };
 
 // splice(2) fast path: move log bytes kernel-side into the pipe. The file
 // offset only advances on success, so a detached reader (EPIPE) loses
-// nothing — the same bytes are respliced for the next reader.
+// nothing: the same bytes are respliced for the next reader.
 [[nodiscard]] std::expected<Relay, std::error_code>
 relay_splice(const Fd& log, const Fd& w) {
     const ssize_t n = ::splice(log.get(), nullptr, w.get(), nullptr, kChunk, 0);

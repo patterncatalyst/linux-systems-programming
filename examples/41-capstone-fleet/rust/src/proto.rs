@@ -1,4 +1,4 @@
-// proto.rs — the canonical chatterd chat frame (introduced ch21, unchanged
+// proto.rs: the canonical chatterd chat frame (introduced ch21, unchanged
 // since): magic "CH", version 1, one byte type, big-endian u16 length, then
 // payload. This capstone speaks only JOIN/MSG/DELIVER, the same three types
 // every prior chatterd chapter uses.

@@ -1,4 +1,4 @@
-// app — a tiny PID-1 container entrypoint (chapter 34: our programs in
+// app: a tiny PID-1 container entrypoint (chapter 34: our programs in
 // containers).
 //
 //	app serve   run as the container's PID 1: reap children, forward SIGTERM
@@ -9,7 +9,7 @@
 //	            which it has installed no explicit handler is dropped
 //	            instead of running that signal's default action. Only
 //	            SIGKILL (and SIGSTOP) still work. `naive` never calls
-//	            signal.Notify, so `podman stop` cannot end it gracefully --
+//	            signal.Notify, so `podman stop` cannot end it gracefully;
 //	            the engine has to wait out the stop timeout and fall back to
 //	            SIGKILL.
 //	app worker  the long-running child `serve` supervises (self-reexec).
@@ -22,7 +22,7 @@
 // Container-aware resource detection: runtime.GOMAXPROCS(0), as of the
 // go.mod "go 1.26" language version, defaults to the average cgroup CPU
 // throughput limit (cpu.max quota/period) when it is lower than the host's
-// cpu count -- this is the one language of the three that gets this right
+// cpu count; this is the one language of the three that gets this right
 // automatically. Compare this program's number against the C++ version's
 // (which reports the host's cpu count no matter what `--cpus` says).
 package main
@@ -51,7 +51,7 @@ func die(err error) {
 }
 
 // readTrim reads a whole file, trailing whitespace trimmed. Empty string
-// (not an error) if the file cannot be opened -- cgroup files may be absent
+// (not an error) if the file cannot be opened; cgroup files may be absent
 // on unusual hosts, and callers fall back to "unknown".
 func readTrim(path string) string {
 	b, err := os.ReadFile(path)
@@ -133,7 +133,7 @@ func jobRun(seq string) int {
 }
 
 // selfPath resolves the running binary's own path so serve can re-exec it as
-// "worker"/"job" -- there is no fork(2)-without-exec in Go, so this is the
+// "worker"/"job"; there is no fork(2)-without-exec in Go, so this is the
 // idiomatic way to spawn "more of this program" as a real child process.
 func selfPath() string {
 	p, err := os.Executable()
@@ -190,7 +190,7 @@ func serve() int {
 		case s := <-sigCh:
 			// This is the pid-1 duty naive skips: stop spawning new jobs,
 			// forward the signal to the worker, wait for it, and only then
-			// exit -- so nothing is left behind when the container stops.
+			// exit, so nothing is left behind when the container stops.
 			ticker.Stop()
 			name := "SIGINT"
 			if s == syscall.SIGTERM {
@@ -209,7 +209,7 @@ func serve() int {
 
 // THE OTHER HALF OF THE TRAP: naive installs no signal handling whatsoever.
 // As this container's PID 1, the kernel will not run SIGTERM's default
-// action (terminate) for it -- there is no handler, so the signal is simply
+// action (terminate) for it; there is no handler, so the signal is simply
 // dropped. `podman stop` has no way to ask it to leave; only SIGKILL ends it.
 func naiveRun() int {
 	printContainerLine()

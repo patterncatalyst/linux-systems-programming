@@ -1,4 +1,4 @@
-//! `sysmacros` — the proc-macro crate backing chapter 43's two techniques:
+//! `sysmacros`, the proc-macro crate backing chapter 43's two techniques:
 //!
 //! - `#[derive(SysError)]`: a miniature `thiserror`. Each enum variant carries
 //!   `#[error("...")]`; this derive generates `Display` (interpolating the
@@ -11,7 +11,7 @@
 //!
 //! Malformed input (a `#[derive(SysError)]` on a non-enum, or a variant
 //! missing `#[error(...)]`) is reported as a real `compile_error!` via
-//! `syn::Error::to_compile_error()` — never a panic.
+//! `syn::Error::to_compile_error()`, never a panic.
 
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;

@@ -77,6 +77,6 @@
 <path d="M540,400 L600,380" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="576.0" y="384.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">join()</text>
 <text x="576.0" y="384.0" font-size="11" fill="#555" text-anchor="middle">join()</text>
-<text x="40" y="205" font-size="12" fill="#b8650a" text-anchor="start" font-weight="700">Counters (stat, diskstats, net/dev) need TWO samples — a single read is cumulative since boot, not a rate.</text>
-<text x="40" y="500" font-size="12" fill="#555555" text-anchor="start">Gauges (loadavg, meminfo, PSI avg10) are valid from one read — only the CPU line needs the delta.</text>
+<text x="40" y="205" font-size="12" fill="#b8650a" text-anchor="start" font-weight="700">Counters (stat, diskstats, net/dev) need TWO samples: a single read is cumulative since boot, not a rate.</text>
+<text x="40" y="500" font-size="12" fill="#555555" text-anchor="start">Gauges (loadavg, meminfo, PSI avg10) are valid from one read: only the CPU line needs the delta.</text>
 </svg>

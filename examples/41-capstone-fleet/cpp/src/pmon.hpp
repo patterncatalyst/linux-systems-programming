@@ -1,4 +1,4 @@
-// pmon.hpp — the fleet's init: drops the capability bounding set, then
+// pmon.hpp: the fleet's init: drops the capability bounding set, then
 // self-re-execs chatterd/sysagent/fwatch as supervised children. See
 // pmon.cpp for the fork/exec + sigwait shutdown design.
 #pragma once

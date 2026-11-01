@@ -1,17 +1,17 @@
-// pmon v4 — the process supervisor becomes a log pipeline.
+// pmon v4: the process supervisor becomes a log pipeline.
 //
 // v0 (`run`) spawns a command, waits, and mirrors its exit status.
 // v1 (`supervise --engine sigchld`) restarts a crashing child via SIGCHLD
 //     delivered as readable data through a signalfd (nix).
 // v2 (`supervise --engine pidfd`, the DEFAULT) supervises through
-//     rustix::process::pidfd_open + poll + waitid(WaitId::PidFd) — no
+//     rustix::process::pidfd_open + poll + waitid(WaitId::PidFd): no
 //     pid-reuse race.
 // v4 (this chapter) keeps both engines and adds pipes:
 //     * supervise captures the child's stdout AND stderr through two pipes
-//       into a log file as "[out] ..."/"[err] ..." lines — the two pipe read
+//       into a log file as "[out] ..."/"[err] ..." lines. The two pipe read
 //       ends simply join the fd set each engine already polls;
 //     * `tail --log F --fifo PATH` creates a FIFO and relays log bytes into
-//       whatever reader attaches — rustix::pipe::splice fast path
+//       whatever reader attaches: rustix::pipe::splice fast path
 //       (file -> pipe, kernel-side), read/write fallback; SIGPIPE ignored,
 //       EPIPE reported as "pmon: tail reader detached" and survived,
 //       nothing lost.
@@ -65,7 +65,7 @@ fn report_exit(pid: i32, st: ChildStatus) -> i32 {
     }
 }
 
-/// Spawn with an empty signal mask in the child — the supervisor blocks
+/// Spawn with an empty signal mask in the child: the supervisor blocks
 /// signals for its signalfd and std does NOT reset the mask across
 /// fork+exec (a supervised `sleep` with SIGTERM blocked would never stop).
 /// sigprocmask is async-signal-safe, so pre_exec may call it.
@@ -86,7 +86,7 @@ fn spawn(cmdline: &[String], piped: bool) -> Result<std::process::Child> {
 }
 
 // ---------------------------------------------------------------------------
-// v0: run — spawn, wait, mirror (stdio inherited, no capture).
+// v0 (run): spawn, wait, mirror (stdio inherited, no capture).
 // ---------------------------------------------------------------------------
 
 fn cmd_run(cmdline: &[String]) -> Result<i32> {
@@ -257,7 +257,7 @@ fn status_from_waitid(w: rustix::process::WaitIdStatus) -> ChildStatus {
     }
 }
 
-/// waitid(P_PIDFD) reaps the process the fd refers to — never a recycled pid.
+/// waitid(P_PIDFD) reaps the process the fd refers to; never a recycled pid.
 fn reap_pidfd(pidfd: &impl AsFd) -> Result<ChildStatus> {
     let status = waitid(WaitId::PidFd(pidfd.as_fd()), WaitIdOptions::EXITED)
         .context("waitid(P_PIDFD)")?
@@ -373,8 +373,11 @@ fn cmd_supervise(
 
         let pidfd = match engine {
             Engine::Pidfd => {
-                let pidfd = pidfd_open(Pid::from_raw(pid).unwrap(), PidfdFlags::empty())
-                    .context("pidfd_open")?;
+                let pidfd = pidfd_open(
+                    Pid::from_raw(pid).expect("child.id() is always a positive pid"),
+                    PidfdFlags::empty(),
+                )
+                .context("pidfd_open")?;
                 eprintln!("pmon: engine=pidfd child={pid} pidfd={}", pidfd.as_raw_fd());
                 Some(pidfd)
             }
@@ -435,7 +438,7 @@ fn cmd_supervise(
 }
 
 // ---------------------------------------------------------------------------
-// v4: tail — follow the log, relay into a FIFO, survive reader churn.
+// v4 (tail): follow the log, relay into a FIFO, survive reader churn.
 // ---------------------------------------------------------------------------
 
 static STOP: AtomicBool = AtomicBool::new(false);
@@ -481,7 +484,7 @@ enum Relay {
 
 /// splice(2) fast path: move log bytes kernel-side into the pipe. The file
 /// offset only advances on success, so a detached reader (EPIPE) loses
-/// nothing — the same bytes are respliced for the next reader.
+/// nothing; the same bytes are respliced for the next reader.
 fn relay_splice(log: &File, w: &OwnedFd) -> Result<Relay> {
     match splice(log, None, w, None, CHUNK, SpliceFlags::empty()) {
         Ok(0) => Ok(Relay::Idle),

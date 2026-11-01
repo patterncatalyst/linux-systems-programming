@@ -1,4 +1,4 @@
-// fwatch v2 — batched sync engine (chapter 10: io_uring).
+// fwatch v2: batched sync engine (chapter 10: io_uring).
 //
 // Subcommands:
 //   fwatch scan DIR                                 (v0: polling snapshot)

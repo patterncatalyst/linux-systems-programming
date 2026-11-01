@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 480" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
 <rect x="20" y="55" width="900" height="130" rx="12" fill="#fafafa" stroke="#ddd"/>
-<text x="32" y="75" font-size="12" font-weight="700" fill="#1d1d1d">store.kv — 1034 bytes = 10-byte header + 4 x 256-byte slots</text>
+<text x="32" y="75" font-size="12" font-weight="700" fill="#1d1d1d">store.kv: 1034 bytes = 10-byte header + 4 x 256-byte slots</text>
 <rect x="190" y="235" width="560" height="120" rx="12" fill="#fff8ef" stroke="#ddd"/>
 <text x="202" y="255" font-size="12" font-weight="700" fill="#1d1d1d">one slot, 256 bytes</text>
 <rect x="40" y="90" width="150" height="75" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
@@ -44,6 +44,6 @@
 <path d="M165,400 L300,358" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <path d="M470,400 L470,358" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <path d="M775,400 L650,358" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
-<text x="40" y="45" font-size="11" fill="#555555" text-anchor="start" font-weight="700">Every field is bytes with a stated width and order (u32 little-endian) — no language repr, padding, or endianness can leak in</text>
+<text x="40" y="45" font-size="11" fill="#555555" text-anchor="start" font-weight="700">Every field is bytes with a stated width and order (u32 little-endian): no language repr, padding, or endianness can leak in</text>
 <text x="40" y="385" font-size="11" fill="#b8650a" text-anchor="start">cmp(1) proves it: a store built by the Rust binary and one built by the C++ binary are byte-identical</text>
 </svg>

@@ -46,7 +46,7 @@ the stack is not up rather than failing.
 
 Examples deployed to the lab VM (`TARGET=...` with `deploy-to-vm.sh`) cannot
 reach `localhost` on the host. From a libvirt guest on the default NAT network,
-the host is reachable at the network's gateway IP — on this lab that is
+the host is reachable at the network's gateway IP: on this lab that is
 `192.168.124.1` (libvirt's stock default is `192.168.122.1`; check yours with
 `ip route show default` inside the guest). Pass the endpoint through
 `OTEL_ENDPOINT`:

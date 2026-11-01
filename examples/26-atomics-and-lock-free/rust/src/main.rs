@@ -7,7 +7,7 @@
 //! A producer thread pushes N u64 values (0..N-1) through a bounded ring of K
 //! slots; the consumer (main thread) pops and sums them. head and tail are
 //! `AtomicU64` monotonic counters synchronised with explicit
-//! `Ordering::{Acquire, Release}` (Lamport's SPSC queue) — no mutex, no lock.
+//! `Ordering::{Acquire, Release}` (Lamport's SPSC queue): no mutex, no lock.
 //! The ring slots are themselves `AtomicU64` accessed `Relaxed`; the head/tail
 //! acquire/release pair is what publishes each slot to the other thread, so the
 //! data race is ruled out at the type level rather than by `unsafe`.

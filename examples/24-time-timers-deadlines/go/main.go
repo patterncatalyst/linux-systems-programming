@@ -1,4 +1,4 @@
-// chatterd v3 — heartbeats + deadlines (chapter 24: time, timers, deadlines).
+// chatterd v3: heartbeats + deadlines (chapter 24: time, timers, deadlines).
 //
 //	chatterd clockprobe
 //	chatterd listen  --name N --addr HOST:PORT     [opts]
@@ -12,7 +12,7 @@
 // ctx.Done(). time.Now carries a monotonic reading, so "silence" is measured
 // on the monotonic clock, never the wall clock.
 //
-// Wire format — this is THE canonical chatterd chat frame, unchanged since it
+// Wire format: this is THE canonical chatterd chat frame, unchanged since it
 // was introduced in chapter 21 and extended only by adding TYPE values in
 // later chapters; the header never changes. All integers big-endian:
 //
@@ -24,7 +24,7 @@
 //	byte 6.. PAYLOAD N bytes: JOIN/MSG/WELCOME/PING are UTF-8 text (PING
 //	                          empty); DELIVER is name + 0x00 (NUL) + text.
 //
-// This v3 (chapter 24) peer only ever emits JOIN, MSG, and PING — DELIVER and
+// This v3 (chapter 24) peer only ever emits JOIN, MSG, and PING; DELIVER and
 // WELCOME belong to the server-broadcast versions (ch22/ch27) and, since the
 // header is shared, are simply treated as liveness traffic here if ever seen.
 // PING is the v3 addition over v0/v1. Any received frame is "traffic" and

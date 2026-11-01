@@ -1,4 +1,4 @@
-// pmon.rs — the book's recurring process supervisor (ch11-14, 18-19, 32,
+// pmon.rs: the book's recurring process supervisor (ch11-14, 18-19, 32,
 // 34), grown here into the capstone's fleet init: it drops the capability
 // bounding set once (caps.rs), then fork/execs (self-re-exec via
 // /proc/self/exe, the same technique ch34's container entrypoint uses)
@@ -87,7 +87,7 @@ fn describe_wait_status(status: nix::Result<WaitStatus>) -> String {
 }
 
 // run_child_supervisor: fork+exec `self_exe args...` in a loop, restarting on
-// unexpected exit — the per-service goroutine from go/pmon.go, one OS thread
+// unexpected exit: the per-service goroutine from go/pmon.go, one OS thread
 // per service here too.
 fn run_child_supervisor(
     self_exe: &CString,
@@ -148,25 +148,15 @@ fn run_child_supervisor(
 }
 
 fn print_health(order: &[&str], states: &HashMap<&str, Arc<ChildState>>) {
-    let mut line = String::from("pmon: health ");
-    for (i, name) in order.iter().enumerate() {
-        if i > 0 {
-            line.push(' ');
-        }
-        line.push_str(name);
-        line.push('=');
-        line.push_str(states[name].get_state().name());
-    }
-    line.push_str(" restarts=");
-    for (i, name) in order.iter().enumerate() {
-        if i > 0 {
-            line.push(',');
-        }
-        line.push_str(name);
-        line.push(':');
-        line.push_str(&states[name].restarts.load(Ordering::Relaxed).to_string());
-    }
-    println!("{line}");
+    let health: Vec<String> = order
+        .iter()
+        .map(|name| format!("{name}={}", states[name].get_state().name()))
+        .collect();
+    let restarts: Vec<String> = order
+        .iter()
+        .map(|name| format!("{name}:{}", states[name].restarts.load(Ordering::Relaxed)))
+        .collect();
+    println!("pmon: health {} restarts={}", health.join(" "), restarts.join(","));
 }
 
 pub fn run(

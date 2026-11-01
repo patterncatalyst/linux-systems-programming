@@ -7,7 +7,7 @@
 --      command (process-tree check via /proc)
 --   3. SO_PEERCRED: the supervisor logs the CALLING uid for every ctl connect
 --   4. logfd: pmctl's "via-fd:" output equals `tail -3` of the log file byte
---      for byte — proof the fd crossed the socket and was read directly
+--      for byte: proof the fd crossed the socket and was read directly
 --   5. restarts: a short-lived child drives restarts=N>0 in status, restart
 --      lines on stderr, and one "pmon: start child" log line per (re)start
 --   6. stop: reply is exactly "stopping"; supervisor exits, removes the
@@ -29,7 +29,7 @@ end
 local demo = "./demo.sh " .. lang .. " run"
 
 -- Scratch area. NB: sun_path caps UNIX socket paths at ~107 bytes, so this
--- must stay short — mktemp -d under /tmp is fine, deep CI workspaces are not.
+-- must stay short: mktemp -d under /tmp is fine, deep CI workspaces are not.
 local wd = checks.run("mktemp -d").out:gsub("%s+$", "")
 if wd == "" or not wd:match("^/") then
   checks.skip("mktemp -d did not yield a directory")

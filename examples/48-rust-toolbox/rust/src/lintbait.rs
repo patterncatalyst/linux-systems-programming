@@ -5,7 +5,7 @@
 //!
 //! `trip_needless_return` trips the stable `clippy::needless_return` lint:
 //! an explicit `return x;` as a function's last statement, where a bare
-//! trailing expression `x` would do. Left un-`#[allow]`-ed on purpose --
+//! trailing expression `x` would do. Left un-`#[allow]`-ed on purpose:
 //! allowing the lint would defeat the point of the gate.
 
 pub fn trip_needless_return(x: i64) -> i64 {

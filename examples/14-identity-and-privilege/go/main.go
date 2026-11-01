@@ -1,11 +1,11 @@
-// pmon v3 — identity & privilege (chapter 14).
+// pmon v3: identity & privilege (chapter 14).
 //
 // Subcommands:
 //
 //	pmon drop --user <name> [--keep-cap net_bind_service] -- CMD [args...]
 //	pmon bindprobe [--port 80]
 //
-// Go note — why this differs from the C++/Rust in-process drop:
+// Go note: why this differs from the C++/Rust in-process drop.
 //
 // A Go program is multithreaded before main() runs, and setresuid(2) /
 // capset(2) act on the CALLING thread only. There is no portable way to make
@@ -15,7 +15,7 @@
 // Credential (the setgid/setgroups/setresuid) and AmbientCaps (the
 // PR_SET_KEEPCAPS -> capset -> PR_CAP_AMBIENT_RAISE sequence) which the fork/exec
 // child applies in the correct order for us. Same observable result as the raw
-// C++/Rust path — the ordering lives in the standard library instead of here.
+// C++/Rust path; the ordering lives in the standard library instead of here.
 package main
 
 import (

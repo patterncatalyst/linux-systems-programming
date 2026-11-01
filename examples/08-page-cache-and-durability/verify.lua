@@ -1,5 +1,5 @@
 -- Verify 08-page-cache-and-durability: run iobench in buffered, fsync-every,
--- and direct modes and assert the observable behavior — report line shapes,
+-- and direct modes and assert the observable behavior: report line shapes,
 -- exact byte counts, the on-disk file size (stat), and exit codes. Timing
 -- values are asserted for shape only (numbers flake).
 -- Invoked from the example directory with LSP_LANG (cpp|go|rust) and EXAMPLE_DIR set.

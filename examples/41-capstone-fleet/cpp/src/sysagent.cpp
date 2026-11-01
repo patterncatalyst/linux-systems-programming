@@ -1,4 +1,4 @@
-// sysagent.cpp — /proc/stat, /proc/meminfo, /proc/loadavg readers and the
+// sysagent.cpp: /proc/stat, /proc/meminfo, /proc/loadavg readers and the
 // sample loop, ported field-for-field from go/sysagent.go so the printed
 // cpu_pct/mem_pct/load1 numbers are computed by the identical formula (not
 // just "close enough"): idle is specifically the 4th space-separated value
@@ -138,7 +138,7 @@ std::expected<Sample, std::string> take_sample(CpuTimes& prev) {
 }
 
 // ---------------------------------------------------------------------------
-// OTel observable gauges — one shared, atomically-updated snapshot the
+// OTel observable gauges: one shared, atomically-updated snapshot the
 // meter's periodic collection callbacks read from, the same shape as the Go
 // reference's mutex-guarded `latest sample` plus RegisterCallback closure.
 // ---------------------------------------------------------------------------
@@ -248,7 +248,7 @@ int run(const std::string& node, int interval_ms, bool once, telemetry::Handle& 
     return rc;
 }
 
-// saturate — chaos helper: busy-spin threads (cpu) or hold allocated, touched
+// saturate: chaos helper: busy-spin threads (cpu) or hold allocated, touched
 // memory (mem) for --seconds, so a concurrently-running sysagent's
 // cpu_pct/mem_pct visibly rises (this fleet's USE-method callback).
 int saturate(const std::string& resource, int seconds, int workers, int mb) {

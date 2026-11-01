@@ -7,7 +7,7 @@ import "testing"
 // loop for the profiler to attribute self-time to instead. It exists so
 // `go tool pprof -top` reliably names "hotLoop" in the top few frames of a
 // CPU profile taken from BenchmarkHotLoop, independent of host noise or
-// exact timings -- the pprof gate (verify.lua gate E) asserts the NAME, not
+// exact timings; the pprof gate (verify.lua gate E) asserts the NAME, not
 // a duration.
 func hotLoop(n int) uint64 {
 	var x uint64 = 0x9e3779b97f4a7c15

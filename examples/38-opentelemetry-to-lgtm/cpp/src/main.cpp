@@ -1,4 +1,4 @@
-// lsp-otel-cpp — a traced request/response loop (chapter 38: OpenTelemetry
+// lsp-otel-cpp: a traced request/response loop (chapter 38: OpenTelemetry
 // to LGTM).
 //
 //	app serve --port PORT [--otel-endpoint URL]
@@ -9,14 +9,14 @@
 // ("work", "respond"), a monotonic counter (requests_total) is incremented,
 // and a histogram (request_duration, milliseconds) records the parent
 // span's wall time. drive is an untraced TCP client that sends N requests
-// down one connection and waits for N replies -- the load generator for
+// down one connection and waits for N replies: the load generator for
 // serve's telemetry, not a telemetry source itself.
 //
 // Every signal appears exactly once in the OTLP stream: serve's own
 // SIGINT/SIGTERM handling flushes and shuts down the SDK before exit, the
 // C++ way of RAII (an explicit flush_and_shutdown() call from the signal
 // path, since a detached accept thread and a process-ending exit give no
-// destructor a guaranteed chance to run -- the same reasoning the Rust port
+// destructor a guaranteed chance to run: the same reasoning the Rust port
 // documents for its own explicit shutdown() call).
 #include "telemetry.hpp"
 
@@ -73,7 +73,7 @@ std::string_view trim(std::string_view s) {
 }
 
 // write_all loops over write(2) so short writes (always possible on a
-// socket) never truncate a reply -- the syscall-level equivalent of Go's
+// socket) never truncate a reply: the syscall-level equivalent of Go's
 // bufio.Writer.Flush() / Rust's Write::write_all().
 bool write_all(int fd, std::string_view data) {
     std::size_t off = 0;
@@ -211,8 +211,8 @@ void serve_conn(const telemetry::Handle& t, int fd) {
     ::close(fd);
 }
 
-// Event unifies the two sources serve waits on -- an incoming connection
-// and a shutdown signal -- into the single queue a Go select over
+// Event unifies the two sources serve waits on (an incoming connection
+// and a shutdown signal) into the single queue a Go select over
 // sigCh/connCh, or the Rust port's mpsc::channel over its Event enum, would
 // use.
 struct Event {
@@ -280,12 +280,12 @@ int run_serve(const std::vector<std::string>& args) {
 
     // A shell running "app serve ... &" as a background job (the exact
     // pattern demo.sh/verify.lua use) sets SIGINT (and SIGQUIT) to SIG_IGN
-    // in the child before exec -- standard POSIX shell behavior, inherited
+    // in the child before exec: standard POSIX shell behavior, inherited
     // across exec. Blocking + sigwait() alone does not override an
     // inherited "ignore" disposition; installing a real handler does, which
     // is exactly what Go's signal.Notify and Rust's signal-hook do under
     // the hood. The handler itself never runs (the signal stays blocked
-    // below, so sigwait() -- not the handler -- is what actually consumes
+    // below, so sigwait() (not the handler) is what actually consumes
     // it); this call exists purely to force the disposition away from
     // SIG_IGN.
     struct sigaction sa {};
@@ -295,9 +295,9 @@ int run_serve(const std::vector<std::string>& args) {
     ::sigaction(SIGTERM, &sa, nullptr);
 
     // Block SIGINT/SIGTERM in this thread BEFORE spawning (or triggering
-    // the SDK to spawn) any others: every thread created from here on --
-    // including the BatchSpanProcessor/PeriodicExportingMetricReader
-    // background threads telemetry::init() starts -- inherits the blocked
+    // the SDK to spawn) any others: every thread created from here on
+    // (including the BatchSpanProcessor/PeriodicExportingMetricReader
+    // background threads telemetry::init() starts) inherits the blocked
     // mask, so only the dedicated sigwait() thread below ever consumes
     // them. Doing this BEFORE telemetry::init() matters: those SDK threads
     // would otherwise start with the signal unblocked and the kernel could
@@ -334,7 +334,7 @@ int run_serve(const std::vector<std::string>& args) {
 
     // Signal watcher: sigwait() blocks (in this thread only) until one of
     // the blocked signals is pending, then forwards it onto the shared
-    // event queue -- the same role Go's signal.Notify channel and the
+    // event queue: the same role Go's signal.Notify channel and the
     // Rust port's signal-hook thread play.
     std::thread signal_thread([&channel, mask] {
         int sig = 0;
@@ -347,7 +347,7 @@ int run_serve(const std::vector<std::string>& args) {
 
     // Accept loop: forwards each accepted connection onto the same event
     // queue. The process exits by returning all the way out of main, not
-    // by joining this thread -- same lifecycle as Go's accept goroutine
+    // by joining this thread: same lifecycle as Go's accept goroutine
     // (cut short by os.Exit) and the Rust port's accept thread (never
     // joined).
     std::thread accept_thread([&channel, listen_fd] {
@@ -382,7 +382,7 @@ int run_serve(const std::vector<std::string>& args) {
 // ------------------------------------------------------------------- drive
 
 // run_drive is a plain, untraced TCP client: it generates the load that
-// makes serve's telemetry interesting, but emits none of its own -- the
+// makes serve's telemetry interesting, but emits none of its own: the
 // service under observation is serve, not drive.
 int run_drive(const std::vector<std::string>& args) {
     std::int64_t n = 0;

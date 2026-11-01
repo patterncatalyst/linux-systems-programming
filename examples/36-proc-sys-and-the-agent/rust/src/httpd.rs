@@ -1,4 +1,4 @@
-//! sysagent: a hand-rolled, single-endpoint HTTP/1.1 server. No framework —
+//! sysagent: a hand-rolled, single-endpoint HTTP/1.1 server. No framework:
 //! same philosophy as the raw-socket chatterd examples earlier in the book,
 //! and the same poll(2) + signalfd(2) shutdown doorbell as their Rust code.
 

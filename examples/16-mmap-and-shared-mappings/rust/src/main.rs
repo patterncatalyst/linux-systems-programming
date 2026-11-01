@@ -1,4 +1,4 @@
-// shmkv v0 — a tiny mmap-backed key/value store (Rust, edition 2024).
+// shmkv v0: a tiny mmap-backed key/value store (Rust, edition 2024).
 //
 // On-disk format, byte-exact and shared with the C++ and Go implementations:
 //
@@ -44,7 +44,7 @@ impl Fail {
 type Result<T> = std::result::Result<T, Fail>;
 
 /// An open store. `file` is a std::fs::File, which owns the descriptor as an
-/// OwnedFd — dropping the Store unmaps (MmapMut's Drop runs munmap) and then
+/// OwnedFd; dropping the Store unmaps (MmapMut's Drop runs munmap) and then
 /// closes the fd, in that order (fields drop in declaration order).
 struct Store {
     map: MmapMut,
@@ -65,7 +65,7 @@ struct Store {
 ///   * we size the mapping from ftruncate/fstat in the same process and
 ///     no shmkv command ever shrinks an existing store file;
 ///   * the demo runs shmkv commands sequentially, so cross-process writes
-///     are ordered by process exit (and each writer msyncs before exit) —
+///     are ordered by process exit (and each writer msyncs before exit);
 ///     the concurrent-writer race the type system cannot rule out is
 ///     excluded by the tool's usage model, not by the compiler.
 /// Everything outside this function stays in safe Rust.
@@ -114,7 +114,11 @@ impl Store {
         if map[..MAGIC.len()] != MAGIC {
             return Err(bad());
         }
-        let slots = u32::from_le_bytes(map[MAGIC.len()..HEADER_SIZE].try_into().unwrap());
+        let slots = u32::from_le_bytes(
+            map[MAGIC.len()..HEADER_SIZE]
+                .try_into()
+                .expect("slice is exactly 4 bytes (HEADER_SIZE - MAGIC.len())"),
+        );
         if len != HEADER_SIZE + slots as usize * SLOT_SIZE {
             return Err(bad());
         }
@@ -173,7 +177,7 @@ fn field(bytes: &[u8]) -> &[u8] {
     }
 }
 
-/// Digits only, in range [1, u32 max] — identical rules in all three
+/// Digits only, in range [1, u32 max]: identical rules in all three
 /// languages so the CLIs reject exactly the same inputs.
 fn parse_slots(text: &str) -> Result<u32> {
     if text.is_empty() || text.len() > 10 || !text.bytes().all(|b| b.is_ascii_digit()) {

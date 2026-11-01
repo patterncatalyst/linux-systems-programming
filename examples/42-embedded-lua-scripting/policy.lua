@@ -1,4 +1,4 @@
--- policy.lua -- pmon restart/backoff policy.
+-- policy.lua: pmon restart/backoff policy.
 --
 -- Loaded once at startup and again on every SIGHUP. The host (C++/sol2 and
 -- Rust/mlua on Lua 5.4, Go/gopher-lua on Lua 5.1) calls on_exit() after each
@@ -8,14 +8,14 @@
 -- the exact same file drives all three hosts.
 --
 -- Contract:
---   on_exit(info) -> decision      -- required
---   on_load()                      -- optional, called once right after (re)load
---   host.log(msg)                  -- host callback, available inside this file
---   host.now_ms()                  -- host callback, monotonic-ish wall clock ms
+--   on_exit(info) -> decision      : required
+--   on_load()                      : optional, called once right after (re)load
+--   host.log(msg)                  : host callback, available inside this file
+--   host.now_ms()                  : host callback, monotonic-ish wall clock ms
 --
 -- The host sandboxes this script: os, io, package and debug are NOT loaded,
 -- and load/loadfile/dofile/require are removed, so a policy cannot touch the
--- filesystem, spawn processes, or pull in new code -- see the chapter.
+-- filesystem, spawn processes, or pull in new code; see the chapter.
 
 -- Tunables. Nothing outside this table needs to change to retune the policy,
 -- which is the whole point of shipping it as data-shaped Lua instead of a
@@ -31,7 +31,7 @@ local CONFIG = {
 POLICY_VERSION = "1.0.0"
 
 -- Compute the next backoff delay from the delay the host actually used last
--- time (info.last_backoff_ms), not from a restart counter -- the host doesn't
+-- time (info.last_backoff_ms), not from a restart counter: the host doesn't
 -- need to know the policy's math, and the policy doesn't need the host's
 -- counters to stay in lockstep with its own. It just doubles whatever it is
 -- handed back, with a floor and a cap.
@@ -92,7 +92,7 @@ function on_exit(info)
   end
 
   -- Crash-looping: several failures in a row, each dying almost immediately.
-  -- This is the case a flat restart counter misses -- 8 restarts spread over
+  -- This is the case a flat restart counter misses: 8 restarts spread over
   -- an hour is normal churn, 3 restarts in 3 seconds is a broken binary.
   local fast = uptime_ms >= 0 and uptime_ms < CONFIG.fast_crash_ms
   if fast and consecutive_failures >= CONFIG.fast_crash_streak then

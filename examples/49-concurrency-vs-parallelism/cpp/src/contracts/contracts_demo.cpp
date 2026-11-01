@@ -1,9 +1,9 @@
-// contracts_demo -- C++26 Contracts (P2900), built four times, once per
+// contracts_demo: C++26 Contracts (P2900), built four times, once per
 // evaluation semantic, for ch49's gate E.
 //
 // GCC 16 implements P2900 behind -fcontracts, and selects the semantic with
 // -fcontract-evaluation-semantic=[ignore|observe|enforce|quick_enforce].
-// The same source, the same violation, four different observable behaviors --
+// The same source, the same violation, four different observable behaviors,
 // which is the whole point of the proposal: whether a contract is checked is
 // a build-time policy, not a property of the code.
 //

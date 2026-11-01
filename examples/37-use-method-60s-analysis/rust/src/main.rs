@@ -9,14 +9,14 @@
 // mpstat, pidstat, iostat, free, sar, ss, top) exactly as a human running the
 // checklist would, parses their plain-text tables generically (by column
 // *name*, read from each tool's own header row, never a hardcoded position),
-// and for each of the four resources reports which USE signals -- Utilization
-// and Saturation -- fired against a fixed threshold. Errors is reported too,
+// and for each of the four resources reports which USE signals (Utilization
+// and Saturation) fired against a fixed threshold. Errors is reported too,
 // fixed false: this chapter induces load, not kernel-logged faults, so a
 // real checklist run finds none.
 //
 // Rust idioms used throughout, in place of the C++ reference's jthread pools,
 // std::atomic counters, and std::expected: std::thread::scope (the jthread
-// analogue -- worker threads are RAII-joined when the scope block ends),
+// analogue: worker threads are RAII-joined when the scope block ends),
 // AtomicU64 counters shared across them by reference, std::process::Command
 // for every subprocess capture and spawn, and OpenOptionsExt::custom_flags
 // plus FileExt::write_at for the O_DSYNC pwrite path. Every observable line
@@ -66,7 +66,7 @@ fn split_lines(text: &str) -> Vec<String> {
 
 // A parsed table row: column names (from a tool's own header line) zipped
 // with this row's values, so every parser below reads fields *by name*
-// rather than by a hardcoded position -- robust to sysstat/procps column
+// rather than by a hardcoded position: robust to sysstat/procps column
 // reordering across versions.
 struct Row {
     names: Vec<String>,
@@ -103,7 +103,7 @@ fn make_row(
 // std::expected here).
 fn run_capture(cmd: &str) -> io::Result<String> {
     // Grouped in a subshell so a single trailing "2>&1" captures every stage
-    // of a pipeline (e.g. "dmesg | tail -n 5") -- without the parens, 2>&1
+    // of a pipeline (e.g. "dmesg | tail -n 5"): without the parens, 2>&1
     // binds only to the pipeline's last stage and an earlier stage's stderr
     // (e.g. dmesg's own permission-denied message) leaks past the capture.
     let full = format!("( env LC_ALL=C LANG=C {cmd} ) 2>&1");
@@ -113,7 +113,7 @@ fn run_capture(cmd: &str) -> io::Result<String> {
 
 // Start `env LC_ALL=C LANG=C <argv...>` in the background, stdout+stderr
 // redirected to outfile; returns the child (or None on spawn failure). Used
-// for the five interval samplers so they run *concurrently* -- a 12s analyze
+// for the five interval samplers so they run *concurrently*: a 12s analyze
 // window costs ~12s wall-clock, not 5x that from running them one at a time.
 fn spawn_to_file(argv: &[&str], outfile: &Path) -> Option<Child> {
     let out = File::create(outfile).ok()?;
@@ -140,7 +140,7 @@ fn read_all(path: &str) -> String {
 
 // ------------------------------------------------------- checklist parsers --
 // Each parser reads a header line's column names from the tool's own output
-// and zips subsequent data lines against that name list -- see Row::get
+// and zips subsequent data lines against that name list: see Row::get
 // above.
 
 #[derive(Default)]
@@ -150,7 +150,7 @@ struct VmstatResult {
 }
 
 // vmstat has no aggregate "Average:" line (unlike mpstat/pidstat), and its
-// *first* sample is a since-boot average, not a live interval -- both quirks
+// *first* sample is a since-boot average, not a live interval; both quirks
 // are handled here: we scan every data row after the header, skip row 0, and
 // take the max across the rest (the steady-state saturation signal, not
 // diluted by an average across the whole window).
@@ -191,7 +191,7 @@ struct MpstatResult {
 }
 
 // mpstat -P ALL's own "Average:" row over the whole window (excludes the
-// since-boot first report automatically -- sysstat's job, not ours).
+// since-boot first report automatically: sysstat's job, not ours).
 fn parse_mpstat(text: &str) -> MpstatResult {
     let mut res = MpstatResult::default();
     let mut header: Vec<String> = Vec::new();
@@ -250,7 +250,7 @@ struct IostatResult {
 }
 
 // iostat -xz has no Average line either, AND -z hides idle devices entirely
-// (they just don't appear in a quiet interval) -- so we scan every per-second
+// (they just don't appear in a quiet interval), so we scan every per-second
 // block, skip block 0 (since-boot), skip loopback/removable/compressed
 // pseudo-devices, and take the max over the guest's real block device.
 fn parse_iostat(text: &str) -> IostatResult {
@@ -331,7 +331,7 @@ fn sat_cpu(seconds: u64, workers: usize) -> (u64, u64) {
                 checksum.fetch_add(x, Ordering::Relaxed); // keeps x provably live (no DCE)
             });
         }
-    }); // worker threads join here -- thread::scope is the jthread analogue
+    }); // worker threads join here: thread::scope is the jthread analogue
     (
         total_iters.load(Ordering::Relaxed),
         checksum.load(Ordering::Relaxed),
@@ -649,7 +649,7 @@ fn cmd_analyze(seconds: i32) -> i32 {
     println!("analyze: metric resource=net name=pkts value={net_pkts:.2} unit=per_s");
 
     // signal thresholds: Utilization/Saturation pair per resource. cpu's
-    // saturation threshold scales with this guest's own core count -- a run
+    // saturation threshold scales with this guest's own core count: a run
     // queue longer than (cpus + headroom) means threads are waiting for a
     // CPU, the textbook USE definition of saturation.
     struct Candidate {

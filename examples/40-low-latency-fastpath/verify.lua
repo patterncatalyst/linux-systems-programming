@@ -1,20 +1,20 @@
 -- Verify chatterd-fastpath (40-low-latency-fastpath) for LSP_LANG. A vm-mode
 -- example: driven directly against systems-target via plain scp/ssh to
--- /tmp/lsp40-<lang>/, never `demo.sh <lang> run` under TARGET --
+-- /tmp/lsp40-<lang>/, never `demo.sh <lang> run` under TARGET:
 -- deploy-to-vm.sh's `ssh -t` injects CRLF that breaks Lua patterns, and its
 -- fixed /home/fedora/app path can be poisoned by a stale binary left over
 -- from an unrelated example (this happened once during golden capture).
 -- Every remote invocation below uses the full absolute remote_bin /
--- remote_driver path -- never a leading `cd` relied on to apply across a
+-- remote_driver path: never a leading `cd` relied on to apply across a
 -- later `;`-separated command in the same string. Every multi-statement
--- remote script here is joined with "\n", never "; " -- a line ending in
+-- remote script here is joined with "\n", never "; ": a line ending in
 -- `&` (backgrounding) followed by `; ` produces `cmd & ; next`, a bash
 -- syntax error that silently makes the whole remote script a no-op parse
 -- (a real bug hit while writing example 37's verify.lua).
 --
 -- Asserts observable behavior, identical in shape across cpp/go/rust:
 --   1. build, then stage app + run-latency-bench.sh to /tmp/lsp40-<lang>/,
---      chmod 755 both -- both must exit 0.
+--      chmod 755 both, both must exit 0.
 --   2. error shapes: no args / frobnicate / fastpath without --pin / naive
 --      without --port / measure without --n all exit 2 with the 3-line
 --      "usage: app fastpath ..." usage text.
@@ -26,20 +26,20 @@
 --   5. the real run-latency-bench.sh (N=20000, WARMUP=500): exit 0, and its
 --      output proves --pin actually restricts scheduling AT THE KERNEL
 --      LEVEL (read from /proc/<pid>/status by the driver script, not the
---      program's own claim) -- fastpath-cpus-allowed is exactly the single
+--      program's own claim): fastpath-cpus-allowed is exactly the single
 --      pinned CPU while naive-cpus-allowed is the full online set.
 --   6. all six percentiles_ns lines (naive-1..3, fastpath-1..3) parse, each
 --      with n=20000, a monotonic min<=p50<=p90<=p99<=p99.9<=max, a mean that
 --      parses as a float, and every value > 0.
 --   7. median-of-three per variant: median(fastpath p50) < median(naive p50)
---      * 0.90 -- a conservative 10% requirement against an observed ~30-33%
+--      * 0.90, a conservative 10% requirement against an observed ~30-33%
 --      margin across three independent golden-capture bench runs (1.425x -
---      1.488x, never marginal or inverted) -- both medians are always
+--      1.488x, never marginal or inverted); both medians are always
 --      printed so a marginal run is diagnosable from the log even when this
 --      assertion passes.
 --   8. SIGINT shutdown, tested separately per server with a bounded
 --      (10s) wait via `timeout 10 tail --pid=$PID -f /dev/null` so a hung
---      server surfaces as a clear FAIL rather than a runner-level timeout --
+--      server surfaces as a clear FAIL rather than a runner-level timeout:
 --      this is the assertion Go is most likely to fail, since Go's runtime
 --      installs SA_RESTART handlers and a blocking read will not see EINTR
 --      on its own. naive --port P: "app: naive shutting down", exit 0.
@@ -48,7 +48,7 @@
 --      "app: fastpath shutting down", exit 0.
 --
 -- Never compares formatted decimals across languages (C++, Go, and Rust
--- disagree on halfway rounding) -- only shapes and numeric ranges/ratios are
+-- disagree on halfway rounding), only shapes and numeric ranges/ratios are
 -- asserted; percentile values (p50 etc.) are plain integers so they ARE
 -- compared numerically across the naive/fastpath medians, but never against
 -- a fixed expected number.
@@ -101,7 +101,7 @@ end
 
 -- Boolean assertion via the checks.lua pattern-match API: match "ok" against
 -- "ok" when true, or force a mismatch (with the real detail in the label)
--- when false -- same helper as examples 37/39's verify.lua.
+-- when false, same helper as examples 37/39's verify.lua.
 local function expect_true(cond, label, detail)
   if cond then
     checks.expect_match("ok", "ok", label)
@@ -141,7 +141,7 @@ local nproc_r = ssh_run("nproc")
 local nproc = tonumber(nproc_r.out:match("%d+")) or 1
 
 -- ---------------------------------------------------------------------------
--- 2. error shapes -- exit 2, "usage: app fastpath ..." on stderr.
+-- 2. error shapes: exit 2, "usage: app fastpath ..." on stderr.
 -- ---------------------------------------------------------------------------
 
 local function expect_usage(args, label)
@@ -157,7 +157,7 @@ expect_usage("naive", "naive (no port)")
 expect_usage("measure --target 127.0.0.1:9999", "measure --target ... (no --n)")
 
 -- ---------------------------------------------------------------------------
--- 3. fastpath --pin out of range -- exit 1, cpu N out of range.
+-- 3. fastpath --pin out of range: exit 1, cpu N out of range.
 -- ---------------------------------------------------------------------------
 
 local bad_cpu = nproc + 50
@@ -167,7 +167,7 @@ checks.expect_match(pin_r.out, "app: error: cpu %d+ out of range",
   lang .. ": out-of-range --pin prints the cpu-out-of-range error")
 
 -- ---------------------------------------------------------------------------
--- 4. measure error shapes -- connect refused, non-IPv4 host.
+-- 4. measure error shapes: connect refused, non-IPv4 host.
 -- ---------------------------------------------------------------------------
 
 local connect_r = ssh_run(remote_bin .. " measure --target 127.0.0.1:1 --n 10")
@@ -200,7 +200,7 @@ expect_true(bench_exit == 0,
   tostring(bench_exit))
 
 -- 5. Kernel-level pinning proof (phase A of the driver script), read from
--- /proc/<pid>/status by the driver -- not the program's own printed claim.
+-- /proc/<pid>/status by the driver, not the program's own printed claim.
 local naive_allowed = br.out:match("app: naive%-cpus%-allowed (%S+)")
 local fast_allowed = br.out:match("app: fastpath%-cpus%-allowed (%S+)")
 
@@ -245,8 +245,8 @@ expect_true(matched == 6,
 
 -- 7. Median-of-three per variant, conservative threshold, both medians
 -- always printed (per the golden-capture calibration: observed ratio
--- 1.425x-1.488x across 3 independent runs, so a 0.90 factor -- a 10%
--- requirement -- has comfortable headroom against a noisier CI run without
+-- 1.425x-1.488x across 3 independent runs, so a 0.90 factor (a 10%
+-- requirement) has comfortable headroom against a noisier CI run without
 -- being a tautology).
 local function median3(t)
   if #t ~= 3 then return nil end

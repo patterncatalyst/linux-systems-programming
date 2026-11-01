@@ -1,7 +1,7 @@
-// chatterd v1 — a peer-to-peer chat daemon growing chapter by chapter.
+// chatterd v1: a peer-to-peer chat daemon growing chapter by chapter.
 //
 // ch21 introduced the length-prefixed frame protocol and a threaded server
-// (one thread per connection). ch22 — "scaling the server" — keeps that
+// (one thread per connection). ch22 ("scaling the server") keeps that
 // threaded engine working and adds a single-threaded epoll engine, built with
 // mio: one thread, many connections, nonblocking accept plus a per-connection
 // read/write state machine with an outbound queue and real backpressure
@@ -105,7 +105,7 @@ fn take_frame(buf: &mut Vec<u8>) -> Option<(u8, Vec<u8>)> {
 }
 
 // ---------------------------------------------------------------------------
-// Signals — SIGINT/SIGTERM blocked process-wide, delivered as readable data.
+// Signals: SIGINT/SIGTERM blocked process-wide, delivered as readable data.
 // ---------------------------------------------------------------------------
 
 fn block_signals() -> Result<SignalFd> {
@@ -118,7 +118,7 @@ fn block_signals() -> Result<SignalFd> {
 }
 
 // ---------------------------------------------------------------------------
-// Threaded engine — one std thread per connection, a shared broadcast registry.
+// Threaded engine: one std thread per connection, a shared broadcast registry.
 // ---------------------------------------------------------------------------
 
 struct ConnHandle {
@@ -251,7 +251,7 @@ fn serve_threaded(port: u16) -> Result<()> {
 }
 
 // ---------------------------------------------------------------------------
-// Epoll engine — one thread, mio-driven, per-connection state machines.
+// Epoll engine: one thread, mio-driven, per-connection state machines.
 // ---------------------------------------------------------------------------
 
 struct EConn {
@@ -590,7 +590,7 @@ fn cmd_flood(port: u16, n: usize, text: &str) -> Result<ExitCode> {
             if k == 0 {
                 let _ = w.write_all(&encode(TYPE_MSG, text.as_bytes()));
             }
-            // Exactly one broadcast is expected — conn0's message reaches all.
+            // Exactly one broadcast is expected: conn0's message reaches all.
             loop {
                 match fs.next() {
                     Ok(Some((typ, _))) if typ == TYPE_DELIVER => {

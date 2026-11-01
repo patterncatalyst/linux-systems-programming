@@ -1,4 +1,4 @@
-// pmon v3 — identity & privilege (chapter 14).
+// pmon v3: identity & privilege (chapter 14).
 //
 // Subcommands:
 //   pmon drop --user <name> [--keep-cap net_bind_service] -- CMD [args...]
@@ -9,19 +9,16 @@
 // change and the following execve(2) via the ambient-capability mechanism.
 // The whole lesson is the ORDER of operations:
 //
-//   1. prctl(PR_SET_KEEPCAPS, 1)   — before the uid change, so the permitted
-//                                    set survives setresuid(2) instead of
-//                                    being scrubbed when uid goes 0 -> !0.
-//   2. setgroups / setresgid / setresuid   — become the target user.
-//   3. capset(2)                   — pin CAP_NET_BIND_SERVICE into the
-//                                    permitted AND inheritable sets (ambient
-//                                    requires both), dropping everything else.
-//   4. prctl(PR_CAP_AMBIENT_RAISE) — raise it into the ambient set, the only
-//                                    set that a non-root, non-file-cap execve
-//                                    preserves.
-//   5. execvp(2)                   — CMD now runs as <name> yet keeps :80.
+//   1. prctl(PR_SET_KEEPCAPS, 1): before the uid change, so the permitted set
+//      survives setresuid(2) instead of being scrubbed when uid goes 0 -> !0.
+//   2. setgroups / setresgid / setresuid: become the target user.
+//   3. capset(2): pin CAP_NET_BIND_SERVICE into the permitted AND inheritable
+//      sets (ambient requires both), dropping everything else.
+//   4. prctl(PR_CAP_AMBIENT_RAISE): raise it into the ambient set, the only
+//      set that a non-root, non-file-cap execve preserves.
+//   5. execvp(2): CMD now runs as <name> yet keeps :80.
 //
-// Raw prctl(2) / capset(2) / setres*id(2) on purpose — no libcap. RAII owns
+// Raw prctl(2) / capset(2) / setres*id(2) on purpose, no libcap. RAII owns
 // the socket; std::expected carries syscall failures; nothing is handled the
 // C way (no scattered perror/exit). Deliberately single-threaded: a privilege
 // drop must touch every task, and execve() only makes sense from one thread.
@@ -64,7 +61,7 @@ std::expected<void, SysErr> checked(long rc, std::string_view what) {
   return {};
 }
 
-// RAII owner for a file descriptor — closed exactly once on scope exit.
+// RAII owner for a file descriptor: closed exactly once on scope exit.
 class Fd {
  public:
   explicit Fd(int fd) noexcept : fd_(fd) {}
@@ -129,14 +126,14 @@ int cmd_bindprobe(std::span<char*> args) {
 std::expected<void, SysErr> arrange_and_exec(const passwd& pw, bool keep_cap,
                                              std::span<char*> cmd) {
   // (1) Retain the permitted set across the coming uid change. Must precede
-  //     setresuid — after it, it is too late.
+  //     setresuid: after it, it is too late.
   if (keep_cap) {
     if (auto r = checked(::prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0), "PR_SET_KEEPCAPS");
         !r)
       return r;
   }
 
-  // (2) Become the target user: groups first, gid before uid — once uid drops
+  // (2) Become the target user: groups first, gid before uid: once uid drops
   //     we can no longer change gids.
   gid_t gid = pw.pw_gid;
   if (auto r = checked(::setgroups(1, &gid), "setgroups"); !r) return r;
@@ -159,7 +156,7 @@ std::expected<void, SysErr> arrange_and_exec(const passwd& pw, bool keep_cap,
     if (auto r = checked(::syscall(SYS_capset, &hdr, data.data()), "capset"); !r)
       return r;
 
-    // (4) Raise it into the ambient set — the only set an unprivileged execve
+    // (4) Raise it into the ambient set: the only set an unprivileged execve
     //     of a file without file-caps carries forward.
     if (auto r = checked(::prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_RAISE,
                                  CAP_NET_BIND_SERVICE, 0, 0),

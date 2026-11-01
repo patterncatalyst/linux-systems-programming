@@ -1,4 +1,4 @@
-// util.go — small helpers shared across the fleet's subcommands.
+// util.go: small helpers shared across the fleet's subcommands.
 package main
 
 import (

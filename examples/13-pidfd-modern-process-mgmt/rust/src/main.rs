@@ -1,4 +1,4 @@
-// pmon v2 — a tiny process supervisor grown chapter by chapter.
+// pmon v2: a tiny process supervisor grown chapter by chapter.
 //
 // v0 (`run`) spawns a command, waits, and mirrors its exit status.
 // v1 (`supervise --engine sigchld`) restarts a crashing child, driven by
@@ -7,7 +7,7 @@
 //     entirely: rustix::process::pidfd_open turns the child into a pollable
 //     OwnedFd, rustix::event::poll reports the exit as ordinary readability,
 //     waitid(WaitId::PidFd) reaps exactly that child, and the stop path
-//     signals through the fd with pidfd_send_signal — no pid-reuse race
+//     signals through the fd with pidfd_send_signal, with no pid-reuse race
 //     anywhere on the path.
 
 use std::os::fd::{AsFd, AsRawFd};
@@ -50,7 +50,7 @@ fn spawn(cmdline: &[String]) -> Result<std::process::Child> {
     let mut cmd = Command::new(&cmdline[0]);
     cmd.args(&cmdline[1..]);
     // The supervisor blocks signals for its signalfd and the child inherits
-    // that mask across fork+exec (std does NOT reset it) — a supervised
+    // that mask across fork+exec (std does NOT reset it), so a supervised
     // `sleep` with SIGTERM blocked would never stop. Clear the mask in the
     // child; sigprocmask is async-signal-safe, so pre_exec may call it.
     unsafe {
@@ -64,7 +64,7 @@ fn spawn(cmdline: &[String]) -> Result<std::process::Child> {
 }
 
 // ---------------------------------------------------------------------------
-// v0: run — spawn, wait, mirror.
+// v0 run: spawn, wait, mirror.
 // ---------------------------------------------------------------------------
 
 fn cmd_run(cmdline: &[String]) -> Result<i32> {
@@ -80,7 +80,7 @@ fn cmd_run(cmdline: &[String]) -> Result<i32> {
 }
 
 // ---------------------------------------------------------------------------
-// v1/v2: supervise — two engines, one restart policy.
+// v1/v2 supervise: two engines, one restart policy.
 // ---------------------------------------------------------------------------
 
 #[derive(Clone, Copy, PartialEq)]
@@ -126,7 +126,7 @@ fn status_from_waitid(w: rustix::process::WaitIdStatus) -> ChildStatus {
     }
 }
 
-/// waitid(P_PIDFD) reaps the process the fd refers to — never a recycled pid.
+/// waitid(P_PIDFD) reaps the process the fd refers to, never a recycled pid.
 fn reap_pidfd(pidfd: &impl AsFd) -> Result<ChildStatus> {
     let status = waitid(WaitId::PidFd(pidfd.as_fd()), WaitIdOptions::EXITED)
         .context("waitid(P_PIDFD)")?
@@ -217,7 +217,10 @@ fn cmd_supervise(
 
         let (outcome, pidfd) = match engine {
             Engine::Pidfd => {
-                let pidfd = pidfd_open(Pid::from_raw(pid).unwrap(), PidfdFlags::empty())
+                let pidfd = pidfd_open(
+                    Pid::from_raw(pid).expect("child.id() is always a positive pid"),
+                    PidfdFlags::empty(),
+                )
                     .context("pidfd_open")?;
                 eprintln!("pmon: engine=pidfd child={pid} pidfd={}", pidfd.as_raw_fd());
                 (wait_pidfd(&pidfd, &sigfd, deadline)?, Some(pidfd))

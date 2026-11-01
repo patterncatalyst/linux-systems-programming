@@ -1,7 +1,7 @@
 # 06-concurrency-three-ways
 
-Chapter 6's example: `parhash`, a parallel checksummer implemented three times
-— C++23, Go, and Rust — with each language's native concurrency toolkit, but
+Chapter 6's example: `parhash`, a parallel checksummer implemented three times,
+C++23, Go, and Rust, with each language's native concurrency toolkit, but
 one shared observable contract so a single `verify.lua` covers all three.
 
 ## The program
@@ -11,7 +11,7 @@ parhash DIR
 ```
 
 Walks every regular file under `DIR` (symlinks are never followed), hashes
-each with FNV-1a 64 (implemented inline in all three sources — no hash
+each with FNV-1a 64 (implemented inline in all three sources, no hash
 libraries), using a bounded pool of **4 workers**, then prints one line per
 file, **sorted by relative path**, followed by a summary:
 
@@ -44,7 +44,7 @@ that completed, prints `parhash: interrupted` on stderr, and exits **130**.
 | **Go** | 4 worker goroutines receiving from an unbuffered `chan string` fed by a walker goroutine; results return on a second channel | `signal.NotifyContext` cancels a `context.Context`; workers `select` `ctx.Done()` ahead of the next path |
 | **Rust** | 4 scoped threads (`std::thread::scope`) sharing one `mpsc::Receiver` behind a `Mutex`; results return on a second `mpsc` channel | `signal-hook` sets a shared `AtomicBool` that walker and workers poll between files |
 
-The Go build runs with `-race` (see `go/demo.sh`) — this is the concurrency
+The Go build runs with `-race` (see `go/demo.sh`): this is the concurrency
 chapter, so the race detector referees every verification run.
 
 ## Layout
@@ -62,15 +62,15 @@ chapter, so the race detector referees every verification run.
 
 Every language directory has a `demo.sh` with the book-wide interface:
 
-- `./demo.sh` — build then run
-- `./demo.sh build` — build only
-- `./demo.sh run [args]` — run the built binary (e.g. `./demo.sh run /etc`)
+- `./demo.sh`: build then run
+- `./demo.sh build`: build only
+- `./demo.sh run [args]`: run the built binary (e.g. `./demo.sh run /etc`)
 - With env `TARGET` set, `run` deploys the binary to that lab VM via
   `scripts/lab/deploy-to-vm.sh "$TARGET" <binary> -- [args]` instead of
   running locally.
 
 All three `run` paths `exec` the binary, so a signal sent to the `demo.sh`
-PID lands on `parhash` itself — which is exactly how `verify.lua` delivers
+PID lands on `parhash` itself, which is exactly how `verify.lua` delivers
 its `SIGINT`.
 
 ## Verification
@@ -79,7 +79,7 @@ its `SIGINT`.
 a time and asserts, per language:
 
 1. a 5-file fixture (nested dirs, a binary file, an empty file) produces
-   stdout **byte-identical** (`diff -u`) to the precomputed expected output —
+   stdout **byte-identical** (`diff -u`) to the precomputed expected output:
    the same expected bytes for all three languages;
 2. a missing argument prints the usage line and exits 2;
 3. on a big sparse tree (~6 GiB logical, ~0 on disk, seconds of hashing),

@@ -1,5 +1,5 @@
 // overheadbench: three host-local microbenchmarks used to talk about
-// virtualization/container overhead in chapter 35 —
+// virtualization/container overhead in chapter 35: 
 //   (a) syscall latency: a tight getpid(2) loop, ns/call
 //   (b) memory bandwidth: sequential read of a big buffer, GB/s
 //   (c) small-file IO: create/write/fsync/unlink loop, ops/s
@@ -7,7 +7,7 @@
 //   overheadbench [--bench syscall|mem|io|all] [--iters N]
 //
 // Prints one line per bench: "bench=<name> metric=<value> unit=<unit>".
-// This binary always measures wherever it runs (host, VM, or container) —
+// This binary always measures wherever it runs (host, VM, or container): 
 // the chapter runs the *same* binary in all three places and tabulates the
 // numbers; this example itself only asserts the host numbers are sane.
 
@@ -107,7 +107,7 @@ double bench_syscall(std::uint64_t iters) {
     const auto start = Clock::now();
     for (std::uint64_t i = 0; i < iters; ++i) {
         // A raw syscall (not the libc wrapper) so every iteration really
-        // crosses into the kernel — this is the syscall-boundary cost the
+        // crosses into the kernel: this is the syscall-boundary cost the
         // chapter contrasts against VM (vmexit trap) and container
         // (near-zero extra) overhead.
         ::syscall(SYS_getpid);

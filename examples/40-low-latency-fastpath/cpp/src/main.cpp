@@ -1,4 +1,4 @@
-// chatterd-fastpath — a stripped, pinned, allocation-free derivative of the
+// chatterd-fastpath: a stripped, pinned, allocation-free derivative of the
 // chatterd echo/pub-sub hot path (chapter 21) built purely to answer one
 // question: what does a low-latency network hot path actually cost, and what
 // does removing that cost look like at the syscall level?
@@ -20,14 +20,14 @@
 //
 //   app measure --target HOST:PORT --n N [--warmup W]
 //       Connect, then run N synchronous ping-pong round trips (send frame,
-//       block for the echo, repeat — never more than one frame in flight) and
+//       block for the echo, repeat: never more than one frame in flight) and
 //       print a p50/p90/p99/p99.9 latency table in nanoseconds. W warmup
 //       round trips are discarded before recording starts (they pay for TCP
 //       slow-start / first-touch page faults / connection setup, none of
 //       which are what this is measuring).
 //
 // THE FASTPATH FRAME (fixed 64 bytes; this example's own wire format, a
-// deliberately smaller cousin of the chatterd CHAT FRAME from ch21 — no
+// deliberately smaller cousin of the chatterd CHAT FRAME from ch21, no
 // variable-length payload, so nothing here ever needs to size a buffer at
 // runtime):
 //
@@ -36,7 +36,7 @@
 //     | 2B    | 1B      | 1B   | 8B BE     | 8B BE           | 44B     |
 //     +-------+---------+------+-----------+-----------------+---------+
 //
-// magic is "CF" (chatterd-fastpath); the server never inspects seq/send_ns —
+// magic is "CF" (chatterd-fastpath); the server never inspects seq/send_ns: 
 // it reads 64 bytes and writes the identical 64 bytes back. All timing is
 // done by the client against its own clock; seq/send_ns are echoed back only
 // so the client can confirm it got its own frame back rather than another
@@ -45,7 +45,7 @@
 // C++23: RAII Socket owns every fd; std::expected carries fallible setup
 // steps; std::atomic<bool> + a non-restarting SIGINT/SIGTERM handler unblock
 // the accept wait and the read in progress, mirroring chatterd's
-// stop_callback-via-shutdown(2) pattern without needing a second thread — the
+// stop_callback-via-shutdown(2) pattern without needing a second thread: the
 // whole point of this example is that the hot loop runs on exactly one
 // thread, so a hand-off to a jthread is deliberately not in the loop.
 
@@ -206,7 +206,7 @@ Result<Socket> connect_tcp(const std::string& host, std::uint16_t port) {
 }
 
 // Blocking read of exactly n bytes; false on EOF, hard error, or a signal
-// landing (EINTR) — the caller decides whether that means "stop".
+// landing (EINTR): the caller decides whether that means "stop".
 bool read_full_blocking(int fd, void* buf, std::size_t n) {
     auto* p = static_cast<std::uint8_t*>(buf);
     std::size_t off = 0;
@@ -224,8 +224,8 @@ bool read_full_blocking(int fd, void* buf, std::size_t n) {
 }
 
 // Non-blocking spin read: the socket must already be O_NONBLOCK. Spins on
-// EAGAIN with no syscall other than recv(2) itself — no sched_yield, no
-// nanosleep — which is the entire point of "busy-poll".
+// EAGAIN with no syscall other than recv(2) itself, no sched_yield, no
+// nanosleep, which is the entire point of "busy-poll".
 std::atomic<bool>* g_stop_for_busy_read = nullptr;
 
 bool read_full_busy(int fd, void* buf, std::size_t n) {

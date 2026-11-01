@@ -5,7 +5,7 @@
 --      the failure on stderr.
 --   2. A real two-client session over loopback TCP: start `serve` in the
 --      background, connect two chatctl clients (bob, then alice) through
---      scripted stdin fifos, and assert the actually delivered lines —
+--      scripted stdin fifos, and assert the actually delivered lines:
 --        * alice's message reaches bob as "alice: hello"
 --        * alice never sees her own message echoed back (messages go to
 --          OTHER clients only)
@@ -85,7 +85,7 @@ for _ in $(seq 1 200); do ss -ltn 2>/dev/null | grep -q ":@PORT@ " && break; sle
 
 mkfifo @WD@/afifo @WD@/bfifo
 
-# bob joins first, then alice — so bob is present to witness alice's join.
+# bob joins first, then alice, so bob is present to witness alice's join.
 @DEMO@ chatctl --port @PORT@ --name bob   < @WD@/bfifo > @WD@/b.out 2>&1 &
 B=$!
 exec 4> @WD@/bfifo

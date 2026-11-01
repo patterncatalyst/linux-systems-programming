@@ -1,4 +1,4 @@
-// pmon run -- CMD [ARGS...] — minimal process monitor for the process
+// pmon run -- CMD [ARGS...]: minimal process monitor for the process
 // lifecycle chapter: spawn CMD, wait for it, report its fate and rusage.
 //
 //	pmon: pid <p> exited status <s>              child exited normally
@@ -10,7 +10,7 @@
 // exits 127 with no report lines.
 //
 // Where C++ forks and execs by hand, Go's os/exec does the same dance
-// internally (fork/exec with a CLOEXEC status pipe — see syscall.forkExec);
+// internally (fork/exec with a CLOEXEC status pipe; see syscall.forkExec);
 // the exec failure that the C++ version ships over its self-pipe surfaces
 // here as an error from cmd.Start. The wait-side facts come from
 // os.ProcessState: Sys() is the raw wait status, SysUsage() the rusage that

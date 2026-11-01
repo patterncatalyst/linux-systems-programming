@@ -1,16 +1,16 @@
 -- Verify pmon v2 (13-pidfd-modern-process-mgmt) for LSP_LANG.
 --
 -- Asserts observable behavior, identical across cpp/go/rust:
---   1. v0 regression — `run` mirrors the child's exit status and signal
+--   1. v0 regression: `run` mirrors the child's exit status and signal
 --   2. pidfd engine (default) supervises a crashing child: per-spawn
 --      "engine=pidfd child=<pid> pidfd=<fd>" lines, restart lines in order,
 --      a giving-up line, exit 1
 --   3. sigchld engine still works and produces byte-identical restart lines
 --   4. clean child exit ends supervision with exit 0 and no restart
---   5. stop paths — SIGTERM to pmon and the overall timeout both terminate
+--   5. stop paths: SIGTERM to pmon and the overall timeout both terminate
 --      the child (killed signal=15), print the exiting line, exit 0, and
 --      leave no orphaned child behind (process-tree check via pgrep)
---   6. error shapes — usage errors exit 2, spawn failure exits 1
+--   6. error shapes: usage errors exit 2, spawn failure exits 1
 --
 -- Invoked from the example directory with LSP_LANG (cpp|go|rust) and
 -- EXAMPLE_DIR set; the interpreter may be lua or luajit.

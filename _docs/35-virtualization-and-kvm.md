@@ -2,24 +2,41 @@
 title: "Virtualization and KVM"
 order: 35
 part: "Containers and Virtualization"
-description: "How a VM actually runs — VMX root/non-root modes, EPT, and virtio devices as the host kernel moonlighting as a hypervisor — the isolation spectrum from bare process through container and microVM to full VM, the rust-vmm/Firecracker/cloud-hypervisor landscape, and overheadbench's measured syscall/mem/io deltas across all three."
+description: "How a VM actually runs: VMX root/non-root modes, EPT, and virtio devices as the host kernel moonlighting as a hypervisor, the isolation spectrum from bare process through container and microVM to full VM, the rust-vmm/Firecracker/cloud-hypervisor landscape, and overheadbench's measured syscall/mem/io deltas across all three."
 duration: "50 minutes"
 ---
+
+## Learning objectives
+
+By the end of this chapter you can:
+
+- Explain the VMX root/non-root mode split, what causes a VM exit, and why a guest syscall like `getpid(2)` never triggers one while `fsync(2)` against `virtio-blk` does
+- Describe the virtio-blk round trip (guest descriptor, kick, VM exit, QEMU backend `fsync`, VM entry) and how Extended Page Tables amortize ordinary memory access to near-native cost
+- Place the four points on the isolation spectrum, bare process, container, microVM, full KVM/QEMU VM, against escape surface and boot/overhead cost
+- Identify the rust-vmm crates (`kvm-ioctls`, `vm-memory`, `virtio-queue`) underlying both Firecracker and Cloud Hypervisor
+- Write a raw-syscall microbenchmark (`bench_syscall`, `bench_mem`, `bench_io`) with anti-dead-code guards appropriate to each language and a monotonic clock
+- Run the same binary unmodified across a bare host, a KVM guest, and a rootless Podman container, and interpret which metrics track the host and which diverge
+- Cross-check a benchmark's claimed syscall count with `strace -c`, and explain why `ptrace` overhead disqualifies it as a timing source
+
+## Why this matters
+
+Choosing between a process, a container, a microVM, and a full VM is a cost decision, not an abstract security ranking, and the cost only becomes real once you measure it in the same units this book has used throughout: nanoseconds per syscall, gigabytes per second, operations per second. `overheadbench` turns "which deployment option" into a question with a number attached, run on the exact hardware and kernel you'll ship on.
+
+The VMX mental model matters beyond benchmarking too: knowing that a VM exit is triggered by touching state the guest doesn't own, not merely by "leaving the guest", explains why a program's syscall-heavy and I/O-heavy paths can have wildly different overhead profiles inside the same guest, a distinction that shapes where to spend optimization effort.
 
 Every daemon in this book has, until now, run either directly on the host or
 inside a Podman container sharing the host's kernel. This chapter puts a
 third option on the table: a full KVM guest with its own kernel, and asks the
-one question a systems programmer actually needs answered before choosing
-between them — not "which is more secure" in the abstract, but *what does
+one question a systems programmer needs answered before choosing
+between them: not "which is more secure" in the abstract, but *what does
 each one cost*, measured in the same units this book has used throughout:
 nanoseconds per syscall, gigabytes per second, operations per second.
 `overheadbench` is a tri-language microbenchmark built for exactly this: the
 same binary, unmodified, runs on the bare host, inside the `systems-target`
 KVM guest, and inside a rootless Podman container, and the three runs land in
-one table. The isolation spectrum this chapter walks — process, container,
-microVM, full VM — is not a taxonomy exercise; it is the same spectrum every
-one of this book's daemons could be deployed onto, and this is the chapter
-that prices each rung.
+one table. The isolation spectrum spanning process, container, microVM, and
+full VM is not a taxonomy exercise; it is the same spectrum every one of
+this book's daemons could be deployed onto, and each rung gets a price here.
 
 The code is in `examples/35-virtualization-and-kvm/`. The run script there
 builds and runs it; its `README.md` covers the CLI and the sanity ranges
@@ -27,10 +44,10 @@ builds and runs it; its `README.md` covers the CLI and the sanity ranges
 
 {% include excalidraw.html
    file="35-kvm-virtio-stack"
-   alt="Three horizontal bands. Top: host, VMX root mode, showing kvm.ko and kvm_intel.ko managing EPT tables, a QEMU/VMM userspace box running the vCPU thread and virtio-blk backend, and host NVMe/btrfs where a real fsync lands. Middle: guest, VMX non-root mode, showing the guest kernel serving getpid in-guest with no host trap, overheadbench in guest ring 3 issuing the syscall bench's raw getpid loop and the io bench's open/write/fsync calls, a virtio-blk front-end driver, and a virtqueue descriptor ring. Bottom: the trapped path for fsync — fsync in the guest causes a VM exit, the KVM exit handler hands off to the QEMU vCPU thread, the virtio-blk backend issues the real host fsync and triggers VM enter back into the guest. A fourth band gives the measured overheadbench deltas: syscall about 88ns/call on both host and guest because getpid never triggers a vmexit, mem about 14 to 15 GB/s on both because the EPT walk cost is amortized after the TLB warms up, and io about 1.3k ops/s on the host against about 0.5k ops/s on the guest, the real vmexit tax."
-   caption="Figure 35.1 — the VMX root/non-root boundary, the virtio-blk round trip that fsync actually pays, and where overheadbench's own measured host-vs-guest deltas land" %}
+   alt="Three horizontal bands. Top: host, VMX root mode, showing kvm.ko and kvm_intel.ko managing EPT tables, a QEMU/VMM userspace box running the vCPU thread and virtio-blk backend, and host NVMe/btrfs where a real fsync lands. Middle: guest, VMX non-root mode, showing the guest kernel serving getpid in-guest with no host trap, overheadbench in guest ring 3 issuing the syscall bench's raw getpid loop and the io bench's open/write/fsync calls, a virtio-blk front-end driver, and a virtqueue descriptor ring. Bottom: the trapped path for fsync: fsync in the guest causes a VM exit, the KVM exit handler hands off to the QEMU vCPU thread, the virtio-blk backend issues the real host fsync and triggers VM enter back into the guest. A fourth band gives the measured overheadbench deltas: syscall about 88ns/call on both host and guest because getpid never triggers a vmexit, mem about 14 to 15 GB/s on both because the EPT walk cost is amortized after the TLB warms up, and io about 1.3k ops/s on the host against about 0.5k ops/s on the guest, the real vmexit tax."
+   caption="Figure 35.1: the VMX root/non-root boundary, the virtio-blk round trip that fsync pays, and where overheadbench's own measured host-vs-guest deltas land" %}
 
-> **Tools used** — `overheadbench` itself, `podman` (build and run, host),
+> **Tools used**: `overheadbench` itself, `podman` (build and run, host),
 > `ssh`/`scp` via `scripts/lab/deploy-to-vm.sh` and the Python runner
 > (`scripts/test-all-examples.py`) (host), `virsh` (host, confirming the lab
 > is up), `lscpu` (host and `systems-target` guest), `strace -c` (host and
@@ -38,34 +55,34 @@ builds and runs it; its `README.md` covers the CLI and the sanity ranges
 > checked by `scripts/check-host.sh` or ship with Fedora's cloud image on the
 > lab VMs.
 
-## What actually runs a VM
+## What runs a VM
 
 A container's isolation is namespaces and cgroups layered over *one* kernel;
 every syscall a containerized process makes is a syscall the host kernel
 itself serves, at host cost. A KVM guest is a different animal: it has its
-own kernel, its own page tables, its own idea of what hardware exists — and
+own kernel, its own page tables, its own idea of what hardware exists, and
 the host kernel is the thing making that illusion real. Since 2006, Intel and
 AMD CPUs have shipped hardware virtualization extensions (VMX on Intel,
 confirmed on this host by `lscpu`'s `Virtualization: VT-x` line) that add a
 second CPU mode dimension alongside ring 0/ring 3: **VMX root mode**, where
 the host kernel and hypervisor run, and **VMX non-root mode**, where the
-*entire* guest — its kernel at ring 0, its processes at ring 3 — runs mostly
+*entire* guest (its kernel at ring 0, its processes at ring 3) runs mostly
 unmodified. `/dev/kvm`, backed by the `kvm` and `kvm_intel` kernel modules
 (both loaded on this host, `lsmod | grep kvm` confirms `kvm_intel`, `kvm`,
 and `irqbypass`), is the interface QEMU drives: it calls `ioctl(KVM_RUN, ...)`
 on a vCPU file descriptor, the CPU drops into non-root mode, and guest
-instructions execute directly on the real CPU — no instruction-level
-emulation — until something the guest cannot handle itself forces a **VM
+instructions execute directly on the real CPU (no instruction-level
+emulation) until something the guest cannot handle itself forces a **VM
 exit** back to root mode.
 
-The key fact this chapter measures is *what actually causes an exit*.
-Ordinary instructions — arithmetic, memory loads and stores, and crucially
-**syscalls the guest kernel can serve itself**, like `getpid(2)` — never
+The key fact this chapter measures is *what causes an exit*.
+Ordinary instructions (arithmetic, memory loads and stores, and
+**syscalls the guest kernel can serve itself**, like `getpid(2)`) never
 leave non-root mode at all. The guest kernel's syscall entry point runs
 exactly like it would on bare metal; there is no hypervisor in that path to
 trap into. What *does* exit are instructions that touch state the guest does
-not really own: port I/O, certain MSR accesses, and — the one this chapter's
-`io` bench hits on every iteration — an access to an emulated device like
+not own: port I/O, certain MSR accesses, and, the one this chapter's
+`io` bench hits on every iteration, an access to an emulated device like
 `virtio-blk`, the paravirtualized block device virtio defines so guest I/O
 doesn't have to trap on every disk instruction the way full hardware
 emulation would. `virtio-blk` still requires a round trip: the guest driver
@@ -75,7 +92,7 @@ mode again) issues the *real* `fsync(2)` against the host filesystem, and a
 VM entry resumes the guest. Extended Page Tables (EPT) are the third piece:
 they let the guest maintain its own page tables while the CPU walks a second,
 hardware-managed table translating guest-physical to host-physical addresses,
-so ordinary memory access needs no hypervisor involvement either — only the
+so ordinary memory access needs no hypervisor involvement either: only the
 first touch of a page, which fills the EPT-backed TLB entry, costs anything
 beyond native.
 
@@ -84,56 +101,56 @@ beyond native.
 {% include excalidraw.html
    file="35-isolation-spectrum"
    alt="Four boxes left to right along a spectrum from shared host kernel to separate guest kernel. Bare process: no isolation boundary, syscall equals host syscall, escape equals root on host. Podman container: namespaces plus cgroup v2 plus seccomp, one host kernel and one syscall table, syscall and mem about equal host and io about equal host on a bind mount, escape equals a kernel bug in namespace or cgroup code. MicroVM, Firecracker or cloud-hypervisor built on rust-vmm: own guest kernel with a minimal virtio device set, about 125 milliseconds boot and under 5 MiB overhead for Firecracker, escape equals a bug in the roughly five devices the VMM exposes or in KVM itself. Full KVM/QEMU VM, the systems-target lab guest: own guest kernel with a full device model, syscall about equal host and io about three times slower due to virtio-blk, escape equals a bug in the full emulated device model or in KVM. A note below cites that rust-vmm crates such as kvm-ioctls, virtio-queue, and vm-memory underpin both Firecracker v1.16.1 and Cloud Hypervisor v53.0."
-   caption="Figure 35.2 — process, container, microVM, and full VM, each priced by escape surface and by this chapter's measured overheadbench numbers" %}
+   caption="Figure 35.2: process, container, microVM, and full VM, each priced by escape surface and by this chapter's measured overheadbench numbers" %}
 
-Four points, not two. A **bare process** has no isolation boundary at all — a
-syscall it makes *is* a host syscall, full stop, and an escape is simply
+Four points, not two. A **bare process** has no isolation boundary at all: a
+syscall it makes *is* a host syscall, and an escape is
 "you are already root, or you exploit a bug to become root." A **container**
-(Chapter 34's Podman UBI images) adds namespaces and cgroup v2 as a soft
+(the Podman UBI images built in the containers chapter) adds namespaces and cgroup v2 as a soft
 boundary layered over the *same* kernel: still one syscall table, so
 `overheadbench`'s `syscall` and `mem` numbers inside a container should track
-the host almost exactly — and the `io` bench, run against a directory bind-
+the host almost exactly, and the `io` bench, run against a directory bind-
 mounted from the host's real filesystem rather than the container's overlay
 storage, does too, because it is still the host's block layer doing the
 work. The escape surface for a container is a kernel bug in the
-namespace/cgroup/seccomp code path itself — the code the shared kernel runs
+namespace/cgroup/seccomp code path itself: the code the shared kernel runs
 on the container's behalf.
 
 A **full KVM/QEMU VM** (`systems-target`, this book's lab guest) is the
 opposite end: its own kernel, its own process table, its own view of
-hardware, with a full emulated device model — network, block, USB, ACPI,
-BIOS. The escape surface shrinks to "a bug in that entire device model, or in
-KVM's guest/host boundary itself" — a much smaller, better-audited attack
+hardware, with a full emulated device model (network, block, USB, ACPI,
+BIOS). The escape surface shrinks to "a bug in that entire device model, or in
+KVM's guest/host boundary itself", a much smaller, better-audited attack
 surface than "the whole host kernel," at the cost of a full second kernel to
 boot, patch, and pay overhead for on every path that has to leave the guest.
 
-Between them sits the **microVM** — Firecracker and cloud-hypervisor's
+Between them sits the **microVM**: Firecracker and cloud-hypervisor's
 answer to "a real second kernel, but priced like a container." A microVM
 still runs its own guest kernel under KVM, so the escape surface is the same
-category as a full VM, but the device model is deliberately reduced: no
-BIOS, no ACPI, no graphics, no USB — Firecracker (v1.16.1 as of this
+category as a full VM, but the device model is reduced by design: no
+BIOS, no ACPI, no graphics, no USB. Firecracker (v1.16.1 as of this
 writing) implements exactly five devices: virtio-net, virtio-block,
 virtio-vsock, a serial console, and a minimal keyboard controller. That
 minimalism is why Firecracker boots a guest in roughly 125 ms with under
 5 MiB of per-instance memory overhead, and why AWS runs it under Lambda and
 Fargate at up to 150 microVMs per second per host. Both Firecracker and
 Cloud Hypervisor (v53.0, which added VFIO passthrough, CPU/memory hotplug,
-and — recently — Windows guest support) are built from **rust-vmm**: a
-community of reusable, independently audited Rust crates —
+and, recently, Windows guest support) are built from **rust-vmm**: a
+community of reusable, independently audited Rust crates:
 `kvm-ioctls`/`kvm-bindings` for the `/dev/kvm` ioctl surface,
 `vm-memory` for guest address space management, `virtio-queue` and
 per-device crates for the virtio transport. Firecracker (AWS) helped seed
 rust-vmm; Cloud Hypervisor (originally Intel, now Linux Foundation-governed)
 leans on the same crates for a broader feature set. The microVM's promise is
 literally this chapter's spectrum collapsed to one point: KVM's isolation
-guarantee at closer to container startup cost — which is why it is the
+guarantee at closer to container startup cost, which is why it is the
 answer teams reach for when "container" isn't isolated enough and "full VM"
 is too slow to spin up per request.
 
 ## How the code works
 
-`overheadbench`'s three benches are intentionally tiny and identical across
-languages, because the *comparison* is the content, not the algorithm. The
+`overheadbench`'s three benches are small and identical across
+languages by design, because the *comparison* is the content, not the algorithm. The
 one worth walking in detail is `syscall`, since it is the bench whose result
 this chapter's whole VMX argument hinges on:
 
@@ -197,33 +214,34 @@ fn bench_syscall(iters: u64) -> f64 {
 }
 ```
 
-Three deliberate choices, identical in all three: the loop calls a **raw**
+Three choices repeat, identical in all three: the loop calls a **raw**
 syscall rather than a libc-cached identity (glibc does not cache `getpid`
 today, but the explicit `syscall(SYS_getpid)`/`unix.Getpid`/`rustix::getpid`
 spelling makes that guarantee visible in the source, not implicit in a libc
 version); the clock (`std::chrono::steady_clock`, `time.Now`/`Since`,
-`Instant::now`) is a **monotonic** one, because Chapter 24 already
-established that a wall-clock read can step backward mid-measurement; and
-each language guards the compiler from proving the loop is dead —
+`Instant::now`) is a **monotonic** one, because the time-and-deadlines
+material already established that a wall-clock read can step backward
+mid-measurement; and
+each language guards the compiler from proving the loop is dead:
 `black_box` in Rust wraps the return value, C++ takes no extra step here
 because the syscall itself is an unremovable side effect, and the Go build
 relies on the same property. The `mem` bench needs an explicit anti-dead-code
 guard because summing a buffer *is* pure, elidable computation: C++ stashes
 the sum in a `volatile` sink, Rust calls `black_box(sum)`, Go checks the sum
-against an unreachable sentinel inside an `if` whose body writes to stderr —
+against an unreachable sentinel inside an `if` whose body writes to stderr:
 three different languages' answer to the same compiler-optimizer problem.
 The `io` bench's fragile-but-deliberate choice is documented in its own
 comment: the scratch directory is created **relative to the current working
 directory**, not the system temp directory, because on this host (and many
-dev hosts) `/tmp` is `tmpfs` — `fsync` there is nearly free, and the number
+dev hosts) `/tmp` is `tmpfs`: `fsync` there is nearly free, and the number
 stops measuring storage at all. `examples/` sits on real NVMe-backed btrfs,
 which is what makes the `io` numbers below meaningful as a storage-overhead
 comparison rather than a memcpy benchmark in disguise.
 
 The other half of "how the code works" for this chapter is the multi-stage
 `Containerfile` that gets the same Go binary into a rootless Podman
-container — `examples/35-virtualization-and-kvm/go/Containerfile`,
-reproduced verbatim:
+container (`examples/35-virtualization-and-kvm/go/Containerfile`,
+reproduced verbatim):
 
 ```
 # Multi-stage build for overheadbench (chapter 35). Build stage compiles a
@@ -252,25 +270,25 @@ ENTRYPOINT ["/usr/local/bin/overheadbench"]
 CMD ["--bench", "all"]
 ```
 
-The build stage is `ubi10/go-toolset` — Red Hat's s2i-flavored Go 1.26.5
+The build stage is `ubi10/go-toolset`, Red Hat's s2i-flavored Go 1.26.5
 image, the exact same toolchain pin this book uses on the host, so the
 container's binary is not just architecturally comparable to the host's, it
 is a build of the identical source with the identical compiler version. It
 compiles with `CGO_ENABLED=0`: `getpid(2)` needs no libc, so the result is a
 fully static binary that runs unmodified on `ubi10/ubi-micro`, a runtime
 image so minimal it has no shell, no package manager, nothing but the
-handful of files UBI's licensing and CA-bundle policy require. The one
-build-time trap worth stating plainly: setting an explicit `WORKDIR` before
+handful of files UBI's licensing and CA-bundle policy require. One
+build-time trap deserves a direct look: setting an explicit `WORKDIR` before
 the `COPY`/`RUN` steps would have the directory created root-owned at the
 point the instruction runs, and every later `RUN` in a rootless build
-executes as the image's own non-root user (uid 1001) — the fix is to stay in
+executes as the image's own non-root user (uid 1001); the fix is to stay in
 the s2i image's pre-existing `/opt/app-root/src`, which the base image
 already made writable for that uid.
 
 ## Errors, three ways
 
 `overheadbench`'s error contract is the same shape this book has used since
-Chapter 5: **argument-parsing failures exit 2** with the usage line on
+the errors-three-ways chapter: **argument-parsing failures exit 2** with the usage line on
 stderr, and **bench-execution failures exit 1** without it, kept as two
 distinct exit codes so a caller can tell "you asked wrong" from "it tried and
 the environment failed." An unknown `--bench` value, a flag missing its
@@ -280,22 +298,22 @@ the first bucket in all three languages: C++'s `parse_args` returns
 `cfg.error()` then `kUsage` before returning 2; Go's `parseArgs` returns a
 plain `error` that `main` prints beside the same `usage` constant; Rust's
 `parse_args` returns `Result<Config, ArgError>` and the `main` match arm
-does the identical two-line print. The second bucket — the `io` bench's
-`open`/`write`/`fsync` calls actually failing, which none of the runs in
+does the identical two-line print. The second bucket (the `io` bench's
+`open`/`write`/`fsync` calls failing, which none of the runs in
 this chapter hit but which a full disk or a read-only bind mount would
-trigger — propagates through `std::expected<double, std::string>`,
+trigger) propagates through `std::expected<double, std::string>`,
 `(float64, error)`, and `Result<f64, String>` respectively, each wrapped one
 more time (`"io bench failed: " + ...`) so the message names which of the
 three phases failed, and exits 1 with no usage line, because the arguments
-were fine — the environment was not.
+were fine; the environment was not.
 
 ## Concurrency lens
 
 This chapter's isolation spectrum is built entirely from **per-thread kernel
 state**, and that constraint shows up on both the container and the VM side
-in the same shape Chapter 14 already met with capabilities. On the VM side:
+in the same shape identity and privilege already met with capabilities. On the VM side:
 a vCPU file descriptor returned by `KVM_CREATE_VCPU` is only valid to drive
-with `ioctl(KVM_RUN, ...)` **from the thread that created it** — call it from
+with `ioctl(KVM_RUN, ...)` **from the thread that created it**: call it from
 any other thread and the ioctl fails. That is why QEMU pins exactly one host
 thread per vCPU rather than dispatching `KVM_RUN` calls from a thread pool;
 the vCPU's register state, its `KVM_RUN` mmap'd shared page, and its
@@ -303,20 +321,20 @@ in-kernel scheduling context are thread-local, not process-wide. On the
 container side, entering an existing set of namespaces with `setns(2)` has
 the *identical* constraint: namespace membership is per-thread state in the
 kernel's `task_struct`, not a process-wide property, exactly like the uids
-and capability sets Chapter 14 walked. A single-threaded C++ or Rust build
+and capability sets identity and privilege walked. A single-threaded C++ or Rust build
 that calls `setns` then immediately does its namespaced work never notices;
 a Go program is the case that bites, because the Go runtime is
-multi-threaded and goroutines migrate between OS threads by default — a
+multi-threaded and goroutines migrate between OS threads by default: a
 goroutine that calls `setns` and then, without more, tries to act as though
 it is still in the new namespace can be rescheduled onto a *different* OS
-thread that never made that call. The fix is the same shape as Chapter 14's
-Go build pushing the capability dance into the fork/exec child:
+thread that never made that call. The fix is the same shape as identity and
+privilege's Go build pushing the capability dance into the fork/exec child:
 `runtime.LockOSThread()` before `setns`, pinning the calling goroutine to its
 current OS thread for the rest of its life (or until `UnlockOSThread`), so
 the namespace membership and the goroutine that believes it holds it stay
-attached to the same kernel thread. The general rule repeats from Chapter
-14: whenever a kernel API's state lives on the thread rather than the
-process — credentials, capabilities, namespace membership, a KVM vCPU — a
+attached to the same kernel thread. The general rule repeats from identity
+and privilege: whenever a kernel API's state lives on the thread rather than the
+process (credentials, capabilities, namespace membership, a KVM vCPU), a
 runtime that hides its threading from you (Go's goroutines, but the same
 risk applies to any green-thread or fiber scheduler) needs an explicit pin,
 or the state and the code that thinks it owns the state quietly drift apart.
@@ -366,12 +384,12 @@ Three repeats of each (host: 84.8–91.8 ns/call, 12.6–15.5 GB/s, 1105–1505
 ops/s; guest: 87.7–88.1 ns/call, 14.3–15.0 GB/s, 463–521 ops/s; container:
 94.0–102.8 ns/call, 13.5–15.4 GB/s, 1474–1524 ops/s) put the pattern beyond
 noise: **`syscall` and `mem` land in the same band across all three
-environments** — a container shares the host's syscall table entirely, and
+environments**: a container shares the host's syscall table entirely, and
 the guest's `getpid` never triggers a VM exit at all, matching Figure 35.1's
-claim exactly. **`io` is where the VM actually pays**: roughly 2.9–3× slower
+claim exactly. **`io` is where the VM pays**: roughly 2.9–3× slower
 in the guest than on the host or in the container, the measured cost of
 every `fsync` taking the virtio-blk round trip this chapter's diagram walks
-— VM exit, QEMU's backend thread, the real host `fsync`, VM entry — instead
+(VM exit, QEMU's backend thread, the real host `fsync`, VM entry) instead
 of running straight through in-kernel like the container's bind-mounted
 write does. The full cross-language sweep on the host, run through this
 book's standard runner, confirms the three languages track each other:
@@ -387,7 +405,7 @@ example                    cpp   go    rust
 ## Cross-check
 
 `overheadbench` prints its own timing, so an independent check has to verify
-the printed numbers correspond to real syscalls actually made — not just
+the printed numbers correspond to real syscalls made, not just
 trust the arithmetic. `strace -c`, run on both sides of the VMX boundary,
 does exactly that by counting syscalls a second way. On the host, wrapping
 `--bench io --iters 50`:
@@ -405,8 +423,8 @@ bench=io metric=1233.15 unit=ops/s
 100.00    0.006032          28       210           total
 ```
 
-Exactly 50 `fsync` calls for `--iters 50` — the count `overheadbench` claims
-to have run is the count the kernel actually saw, independent of the
+Exactly 50 `fsync` calls for `--iters 50`: the count `overheadbench` claims
+to have run is the count the kernel saw, independent of the
 program's own bookkeeping. Run identically on `systems-target`:
 
 ```bash
@@ -419,50 +437,50 @@ bench=io metric=512.96 unit=ops/s
 
 Same 50 `fsync` calls, and the *unstraced* metric it printed (512.96 ops/s)
 falls right inside the guest's 463–521 ops/s band from the build/run/observe
-section above — the trace confirms the count without disturbing the
+section above; the trace confirms the count without disturbing the
 comparison this chapter is making. Note what `strace` cannot show, on either
 side: it observes the syscall the guest kernel serves, never the VM exit
 that syscall may or may not trigger underneath. `strace -c`'s own reported
-`usecs/call` for `getpid` under tracing was 9,139 ns — two orders of
-magnitude above the untraced ~85 ns this chapter reports — because `ptrace`
+`usecs/call` for `getpid` under tracing was 9,139 ns, two orders of
+magnitude above the untraced ~85 ns this chapter reports, because `ptrace`
 stops the tracee on every syscall entry and exit; that overhead is exactly
 why `overheadbench` times itself with its own monotonic clock instead of
 trusting a tracer's numbers, the same "the observation tool changes what it
-measures" caveat Chapter 14 hit with `strace` across a privilege drop. There
-is no dashboard panel for this chapter's numbers by design — `overheadbench`
+measures" caveat identity and privilege hit with `strace` across a privilege drop. There
+is no dashboard panel for this chapter's numbers by design: `overheadbench`
 is a one-shot CLI, and the table above *is* the observation surface.
 
 ## What you learned
 
 - A VM exit is not triggered by "leaving the guest," it is triggered by
-  the guest touching state it does not itself own — `getpid(2)` never
+  the guest touching state it does not itself own: `getpid(2)` never
   exits, but `fsync(2)` against `virtio-blk` does, which is exactly why
   `overheadbench`'s `syscall`/`mem` numbers track the host across all three
   environments while `io` is the one that is measurably ~3× slower in a full
   KVM guest.
 - The isolation spectrum has four rungs, not two: bare process, container
   (shared kernel, namespaces/cgroups as a soft boundary), microVM
-  (rust-vmm-built Firecracker v1.16.1 / Cloud Hypervisor v53.0 — a real
-  guest kernel behind a deliberately minimal device model), and full
-  KVM/QEMU VM — each trading escape-surface size against boot time and
+  (rust-vmm-built Firecracker v1.16.1 / Cloud Hypervisor v53.0, a real
+  guest kernel behind a minimal-by-design device model), and full
+  KVM/QEMU VM, each trading escape-surface size against boot time and
   per-path overhead.
 - Kernel state that lives per-thread, not per-process, is a recurring trap:
   a KVM vCPU fd must be driven from the thread that created it, and
-  `setns(2)` namespace membership is equally per-thread — a Go program must
-  call `runtime.LockOSThread()` before either, the same lesson Chapter 14's
-  capability drop taught for uids and capability sets.
+  `setns(2)` namespace membership is equally per-thread: a Go program must
+  call `runtime.LockOSThread()` before either, the same lesson identity and
+  privilege's capability drop taught for uids and capability sets.
 - A benchmark's own numbers need an independent check: `strace -c`'s exact
   syscall counts confirmed `overheadbench`'s claimed iteration counts on
   both host and guest, while also showing where that same tool's overhead
   (`ptrace`'s stop-on-every-syscall cost) makes it unfit to trust for timing.
 
-Next, Part 10 opens with **observability** — turning `/proc`, `/sys`, and
-cgroup statistics into the kind of live picture this chapter had to build by
+Next, Part 10 opens with **observability**: turning `/proc`, `/sys`, and
+cgroup statistics into the kind of live picture this chapter built by
 hand, one `overheadbench` run at a time.
 
 ---
 
-<p><span class="status status--verified">verified</span> — every transcript
+<p><span class="status status--verified">verified</span>: every transcript
 and number above was produced this session. Host: Fedora 44, kernel
 7.1, Intel 8-core/16-thread laptop CPU, <code>lscpu</code> reporting
 <code>Virtualization: VT-x</code>, <code>lsmod</code> showing

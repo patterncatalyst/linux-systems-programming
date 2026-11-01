@@ -1,8 +1,8 @@
 -- Verify 52-boost-thread (C++ only): what is left in Boost.Thread that the
 -- C++ standard did not take.
 --
--- Boost.Thread is where std::thread came from -- C++11 standardized it almost
--- wholesale -- so the question worth asking in 2026 is what survived the
+-- Boost.Thread is where std::thread came from: C++11 standardized it almost
+-- wholesale, so the question worth asking in 2026 is what survived the
 -- standardization. Every gate below asserts a capability std:: does not have
 -- on this toolchain, verified rather than claimed.
 --
@@ -10,7 +10,7 @@
 -- system Boost only.
 --
 -- Hard-gated (A-F):
---   A. Every pillar computes the same digest, 0x481984990deee5ff -- the value
+--   A. Every pillar computes the same digest, 0x481984990deee5ff, the value
 --      ch46's C++, ch47's Go, ch48's Rust, ch49's conc, ch50's pthreads, and
 --      ch51's stdthread all produce.
 --   B. Continuations: boost::future::then() chains async(21) into 42, and
@@ -22,10 +22,10 @@
 --      once.
 --   D. Upgrade lock: a thread holding boost::upgrade_lock promotes to unique
 --      WITHOUT releasing, while a concurrent reader could still take a shared
---      lock beforehand. std::shared_mutex has no upgrade path at all -- the
+--      lock beforehand. std::shared_mutex has no upgrade path at all: the
 --      name std::upgrade_lock does not exist, which is why this gate has no
 --      std-side half to compare against.
---   E. Interruption -- THE THREE-WAY PAYOFF. boost::thread::interrupt()
+--   E. Interruption: THE THREE-WAY PAYOFF. boost::thread::interrupt()
 --      throws an ordinary C++ exception at a defined interruption point, so:
 --        * a worker catches boost::thread_interrupted and joins normally, AND
 --        * a worker that swallows it with catch (...) and does not rethrow
@@ -35,7 +35,7 @@
 --      between ch50's forced unwind and ch51's flag, and this gate is what
 --      proves it rather than asserting it.
 --   F. Attributes: a Boost thread created with a 256 KiB attribute observes
---      at least that much via pthread_getattr_np -- the same 262144 ch50
+--      at least that much via pthread_getattr_np, the same 262144 ch50
 --      measured through the POSIX API directly.
 --
 -- Gated-if-present (G): clang++ parity on the digest.
@@ -114,15 +114,15 @@ checks.expect_match(out["upgrade"], "promoted shared%->unique without releasing"
   "cpp: upgrade_to_unique_lock promotes in place -- no window for another writer, " ..
   "which is exactly what std::shared_mutex cannot offer")
 
--- ── E. cancellation, three ways -- the payoff ────────────────────────────
+-- ── E. cancellation, three ways: the payoff ────────────────────────────
 
 checks.expect_match(out["interrupt"], "caught boost::thread_interrupted",
   "cpp: interrupt() delivered an ordinary C++ exception at a defined interruption point")
 checks.expect_match(out["interrupt"], "caught=yes joined_normally=yes",
   "cpp: and the worker returned normally afterwards")
 
--- The decisive one. In ch50 this exact shape -- catch everything, rethrow
--- nothing -- killed the process. Here it must NOT.
+-- The decisive one. In ch50 this exact shape (catch everything, rethrow
+-- nothing) killed the process. Here it must NOT.
 local swallow = checks.run("./demo.sh cpp run interrupt-swallow 2>&1; echo exit=$?")
 checks.expect_match(swallow.out, "exit=0",
   "cpp: swallowing a Boost interruption leaves the process ALIVE (exit 0) -- " ..

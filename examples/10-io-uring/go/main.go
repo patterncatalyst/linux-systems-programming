@@ -1,4 +1,4 @@
-// fwatch v2 — batched sync engine (chapter 10: io_uring).
+// fwatch v2: batched sync engine (chapter 10: io_uring).
 //
 // Subcommands:
 //
@@ -9,7 +9,7 @@
 // Go has no supported io_uring story: the runtime already multiplexes
 // goroutines over epoll in the netpoller, and the io_uring proposal
 // (golang/go#31908) has been on hold for years. So the uring engine is
-// deliberately absent here — "fwatch sync ... --engine uring" reports it
+// deliberately absent here: "fwatch sync ... --engine uring" reports it
 // unsupported and exits 64. That asymmetry IS the chapter's point.
 package main
 

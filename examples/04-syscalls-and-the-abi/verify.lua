@@ -1,5 +1,5 @@
 -- Verify sysprobe: run the demo for LSP_LANG and assert the labeled syscall
--- sequence — four "step=<name> ok" lines plus the summary, in order.
+-- sequence: four "step=<name> ok" lines plus the summary, in order.
 -- Invoked from the example directory with LSP_LANG (cpp|go|rust) and EXAMPLE_DIR set.
 
 local script_dir = arg[0]:match("(.*/)") or "./"

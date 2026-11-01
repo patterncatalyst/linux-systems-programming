@@ -7,6 +7,7 @@ labels), and free notes. emit() writes a clean themed SVG (what the site embeds)
 and a valid Excalidraw source (editable companion) into assets/diagrams/.
 """
 import json, random, html
+from pathlib import Path
 
 OUT = "."  # output dir; callers set: generate_diagram.OUT = "assets/diagrams"
 
@@ -120,9 +121,11 @@ def _exc(bands, nodes, edges, notes):
 
 def emit(name, width, height, bands=None, nodes=None, edges=None, notes=None):
     bands=bands or []; nodes=nodes or []; edges=edges or []; notes=notes or []
-    open(f"{OUT}/{name}.svg","w").write(_svg(width,height,bands,nodes,edges,notes))
-    json.dump(_exc(bands,nodes,edges,notes), open(f"{OUT}/{name}.excalidraw","w"), indent=1)
+    svg_path = Path(OUT) / f"{name}.svg"
+    exc_path = Path(OUT) / f"{name}.excalidraw"
+    svg_path.write_text(_svg(width,height,bands,nodes,edges,notes))
+    exc_path.write_text(json.dumps(_exc(bands,nodes,edges,notes), indent=1))
     # validate
-    import xml.dom.minidom as m; m.parseString(open(f"{OUT}/{name}.svg").read())
-    json.load(open(f"{OUT}/{name}.excalidraw"))
+    import xml.dom.minidom as m; m.parseString(svg_path.read_text())
+    json.loads(exc_path.read_text())
     print("emit", name)

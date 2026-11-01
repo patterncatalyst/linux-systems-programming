@@ -1,13 +1,13 @@
-// fwatch.cpp — the book's recurring file watcher (ch07 polling -> ch09
+// fwatch.cpp: the book's recurring file watcher (ch07 polling -> ch09
 // inotify/epoll -> ch33 Landlock+seccomp), reduced here to what the fleet
 // needs: watch a directory, print one line per raw create/write/delete
-// inotify event (no debounce/merge — go/fwatch.go prints every event as it
+// inotify event (no debounce/merge: go/fwatch.go prints every event as it
 // arrives, and this port matches that exactly), and optionally run under a
 // Landlock ruleset restricting reads to that directory. The raw
 // landlock_create_ruleset/add_rule/restrict_self syscalls and the RAII Fd
 // pattern are carried over verbatim from ch33's main.cpp (<linux/landlock.h>
 // has no libc wrapper); full seccomp allow-listing was proven once there and
-// is not re-derived here — capability-bounding-set drop (caps.cpp) plus
+// is not re-derived here: capability-bounding-set drop (caps.cpp) plus
 // Landlock are this capstone's sandboxing layers, applied by pmon before it
 // execs fwatch.
 #include "fwatch.hpp"
@@ -41,7 +41,7 @@ namespace fs = std::filesystem;
 
 [[nodiscard]] std::string errno_msg() { return std::string(std::strerror(errno)); }
 
-// RAII file descriptor — same shape as every other example's Fd/Socket type.
+// RAII file descriptor: same shape as every other example's Fd/Socket type.
 class Fd {
 public:
     Fd() = default;
@@ -72,7 +72,7 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// Landlock — raw syscalls, no libc wrapper exists (ch33's technique).
+// Landlock: raw syscalls, no libc wrapper exists (ch33's technique).
 // ---------------------------------------------------------------------------
 
 [[nodiscard]] long sys_landlock_create_ruleset(const landlock_ruleset_attr* attr, std::size_t size,
@@ -98,7 +98,7 @@ private:
 
 // Creates a ruleset handling READ_FILE + READ_DIR, adds one path-beneath rule
 // granting exactly those rights under `dir`, then restrict_self. On success
-// this process — and everything it execs from here on — can only read
+// this process, and everything it execs from here on, can only read
 // inside `dir`.
 [[nodiscard]] bool apply_landlock(const std::string& dir, std::string& err) {
     constexpr std::uint64_t access = LANDLOCK_ACCESS_FS_READ_FILE | LANDLOCK_ACCESS_FS_READ_DIR;
@@ -137,7 +137,7 @@ private:
 }
 
 // classify mirrors go/fwatch.go's eventName: create, then delete, then
-// modify (CLOSE_WRITE or MODIFY), else "other" — checked in that priority
+// modify (CLOSE_WRITE or MODIFY), else "other": checked in that priority
 // order because a single inotify event's mask can carry more than one bit.
 [[nodiscard]] std::string_view classify(std::uint32_t mask) {
     if (mask & IN_CREATE) return "create";

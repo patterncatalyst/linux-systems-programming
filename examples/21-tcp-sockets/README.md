@@ -1,4 +1,4 @@
-# 21-tcp-sockets — chatterd v0
+# 21-tcp-sockets: chatterd v0
 
 `chatterd` is the book's peer-to-peer chat program. This first cut is a
 thread-per-connection TCP **chat room**: one binary is both the daemon and the
@@ -32,10 +32,10 @@ that arrives as `<name>: <text>`.
 
 ## The wire protocol (fixed for the whole book)
 
-This chapter introduces **the** chatterd chat frame: chapters 22, 24, and 27
+This chapter introduces **the** chatterd chat frame: later chatterd versions
 reuse this exact header and only ever *add* frame types, never change it. A
 frame that a `chatctl` from this chapter reads or writes is byte-identical to
-the one a v1 (ch22), v3 (ch24), or v4 (ch27) build would produce.
+the one a later chatterd build would produce.
 
 ```
  byte:  0    1    2      3      4    5      6                6+L-1
@@ -45,12 +45,12 @@ the one a v1 (ch22), v3 (ch24), or v4 (ch27) build would produce.
        +----+----+------+------+----+----+---------------------------+
 ```
 
-- **magic** — the two bytes `0x43 0x48` (ASCII `"CH"`). Any other value means
+- **magic**: the two bytes `0x43 0x48` (ASCII `"CH"`). Any other value means
   "not a chatterd frame"; the reader closes the connection.
-- **version** — one byte, `0x01`. This chapter is version 0 of the *program*
+- **version**: one byte, `0x01`. This chapter is version 0 of the *program*
   but the wire's version byte has always been `1`; only the frame *header*
   would ever bump it, and it never has.
-- **type** — one byte selecting the payload's shape. This chapter uses three
+- **type**: one byte selecting the payload's shape. This chapter uses three
   of the five book-wide types:
 
   | Type | Value | Payload | Who sends it | Meaning |
@@ -59,13 +59,14 @@ the one a v1 (ch22), v3 (ch24), or v4 (ch27) build would produce.
   | **MSG** | `2` | `text` | client, per stdin line | "I say `text`" |
   | **DELIVER** | `3` | `name` `00` `text` | server, to every client | a broadcast |
 
-  `WELCOME` (`4`) and `PING` (`5`) are reserved for chapters 22 and 24; this
-  program never sends either, and a `chatctl` reader here skips any frame type
-  it does not recognize instead of erroring out — which is exactly what lets a
-  ch21 client stay connected to a newer server that does send them.
-- **length** — a 2-byte unsigned payload length in **big-endian** order,
+  `WELCOME` (`4`) and `PING` (`5`) are reserved for later chatterd versions;
+  this program never sends either, and a `chatctl` reader here skips any
+  frame type it does not recognize instead of erroring out, which is exactly
+  what lets a ch21 client stay connected to a newer server that does send
+  them.
+- **length**: a 2-byte unsigned payload length in **big-endian** order,
   `0..65535`. It counts the payload only, never the 6 header bytes.
-- **payload** — `length` bytes of UTF-8, shaped per the `type` above. A
+- **payload**: `length` bytes of UTF-8, shaped per the `type` above. A
   `DELIVER` payload's `name` and `text` are separated by a single `0x00` NUL
   byte; neither field may itself contain a NUL.
 
@@ -79,8 +80,8 @@ the reserved string `server`:
 
 So a client that reads a `DELIVER` payload `server\0alice joined` prints
 `server: alice joined`, and one that reads `alice\0hello bob` prints
-`alice: hello bob`. That is the whole protocol for this chapter; chapters
-22–24 and 27 add `WELCOME`/`PING` and new engines around it, never a new
+`alice: hello bob`. That is the whole protocol for this chapter; later
+chapters add `WELCOME`/`PING` and new engines around it, never a new
 header.
 
 ### Worked bytes
@@ -129,7 +130,7 @@ second JOIN).
 
 ## The three implementations
 
-Identical CLI, identical stdout/stderr shapes, identical exit codes — one
+Identical CLI, identical stdout/stderr shapes, identical exit codes: one
 `verify.lua` covers all three.
 
 | | connection model | listener shutdown | fd ownership |
@@ -138,10 +139,10 @@ Identical CLI, identical stdout/stderr shapes, identical exit codes — one
 | **Go 1.26** | one goroutine per client + a per-client writer goroutine draining a channel; a `select` over send/`done`/`ctx` never wedges a broadcaster | a `context` cancelled on SIGINT; `ln.Close()` unblocks `Accept` | `net.Conn` / `net.Listener` |
 | **Rust 2024** | one `std::thread` per client; broadcasts write to `try_clone`d `TcpStream`s under a `Mutex` | `AtomicBool` set by the SIGINT handler, polled by a non-blocking `accept` loop | listener built via `nix` and taken as an `OwnedFd`; `TcpStream` owns each connection |
 
-No async runtime here on purpose — this chapter is about blocking sockets and
-threads. Chapter 27 is where `chatterd` meets tokio.
+This chapter covers blocking sockets and threads; an async runtime comes
+later, when `chatterd` meets tokio.
 
-## Gotchas worth remembering
+## Details worth remembering
 
 - **Length prefix, not newline.** TCP is a byte stream with no message
   boundaries; a single `read` may return half a frame or two frames. Every
@@ -150,7 +151,7 @@ threads. Chapter 27 is where `chatterd` meets tokio.
   do.
 - **Broadcast excludes the sender; join notices do not.** A speaker already
   sees what they typed, so their own message is not echoed back. A join,
-  though, goes to every member — which is why both clients in a two-party room
+  though, goes to every member, which is why both clients in a two-party room
   each see a join line.
 - **SIGINT and a blocking accept.** A flag set in the handler is invisible to a
   thread parked in `accept`. C++ interrupts `poll` with the signal; Go closes
@@ -173,7 +174,7 @@ cpp/ go/ rust/ # one chatterd each; binary always ./…/app; demo.sh contract id
 `python3 scripts/test-all-examples.py --only 21-tcp-sockets` builds all three
 and runs `verify.lua` per language. The checks are behavioral: two real
 `chatctl` clients are driven over loopback through scripted stdin fifos, and the
-test asserts the **actually delivered lines** — bob receives `alice: hello`,
+test asserts the **delivered lines**: bob receives `alice: hello`,
 alice sees no echo of her own message, both clients see a join notice from the
 `server` sender, the daemon logs each join, and SIGINT leaves the listener
 closed with exit `0`.

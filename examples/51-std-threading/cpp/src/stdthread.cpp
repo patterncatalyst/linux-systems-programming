@@ -1,4 +1,4 @@
-// stdthread -- the reference program for ch51.
+// stdthread: the reference program for ch51.
 //
 // ch50 showed what a std::thread IS on Linux (a pthread). This program asks
 // what the standard library's SYNCHRONIZATION primitives are, and the answer
@@ -50,7 +50,7 @@ std::uint64_t fnv1a(const std::uint8_t* data, std::size_t len) {
     std::uint64_t h = kFnvOffsetBasis;
     for (std::size_t i = 0; i < len; ++i) {
         h ^= data[i];
-        h *= kFnvPrime;  // uint64_t wraps by definition -- no UB to sanitize
+        h *= kFnvPrime;  // uint64_t wraps by definition, no UB to sanitize
     }
     return h;
 }
@@ -60,8 +60,8 @@ void report(const char* what, long acc) {
                 static_cast<unsigned long long>(fnv1a(kPayload, sizeof kPayload)));
 }
 
-// The three cost cases below all perform EXACTLY the same amount of work --
-// kTotalOps increments -- so the only variable between them is how many
+// The three cost cases below all perform EXACTLY the same amount of work
+// (kTotalOps increments), so the only variable between them is how many
 // threads are contending for the lock. That is what makes the futex counts
 // comparable: same operations, same result, different kernel involvement.
 constexpr long kTotalOps = 200000;
@@ -125,14 +125,14 @@ void case_contended() {
 // ── the blocking primitives ──────────────────────────────────────────────
 //
 // Each of these makes a thread WAIT for something another thread will do.
-// There is no way to do that in user space alone -- a thread that must sleep
+// There is no way to do that in user space alone: a thread that must sleep
 // until further notice has to tell the kernel. So each one reaches futex(2),
 // and the point of these cases is that they are all the same mechanism
 // wearing different type names.
 //
 // Each spawns a waiter, lets it reach the blocking call, then satisfies it.
 // The main thread's brief sleep is scaffolding to make the waiter reach its
-// wait before the signal arrives -- it is not being measured, and no
+// wait before the signal arrives: it is not being measured, and no
 // assertion anywhere depends on its length.
 
 void settle() {
@@ -262,7 +262,7 @@ void case_stoptoken() {
 // std::scoped_lock takes all its mutexes at once using a deadlock-avoidance
 // algorithm (try, back off, retry) rather than locking them in argument
 // order. So scoped_lock(a,b) on one thread and scoped_lock(b,a) on the other
-// is SAFE -- the argument order does not matter, which is exactly the
+// is SAFE: the argument order does not matter, which is exactly the
 // property lock_guard cannot give you.
 
 constexpr long kDeadlockIters = 50000;

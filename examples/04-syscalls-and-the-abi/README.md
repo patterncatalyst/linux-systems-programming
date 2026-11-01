@@ -1,16 +1,16 @@
-# 04-syscalls-and-the-abi — sysprobe
+# 04-syscalls-and-the-abi: sysprobe
 
-A syscall specimen: the same small program three times — C++23, Go, and
-Rust — performing a fixed, labeled sequence of system calls so you can watch
+A syscall specimen: the same small program three times, in C++23, Go, and
+Rust, performing a fixed, labeled sequence of system calls so you can watch
 each language's runtime hit the kernel ABI under `strace(1)`:
 
-1. **open** — `openat(2)` of a scratch file in `$TMPDIR` (default `/tmp`),
+1. **open**: `openat(2)` of a scratch file in `$TMPDIR` (default `/tmp`),
    preferring an anonymous `O_TMPFILE` inode, with a `mkstemp`-style
    create+unlink fallback on filesystems without `O_TMPFILE` support
-2. **write** — `write(2)` of a 25-byte payload to that fd, then `close(2)`
+2. **write**: `write(2)` of a 25-byte payload to that fd, then `close(2)`
    (RAII scope exit in C++, checked `unix.Close` in Go, `OwnedFd` drop in Rust)
-3. **sleep** — `nanosleep(2)` for 10 ms, resuming on `EINTR`
-4. **random** — `getrandom(2)` for 16 bytes, looping over partial reads
+3. **sleep**: `nanosleep(2)` for 10 ms, resuming on `EINTR`
+4. **random**: `getrandom(2)` for 16 bytes, looping over partial reads
 
 ## CLI and output
 
@@ -37,18 +37,18 @@ The point of the program. For example:
 strace -e trace=openat,write,close,nanosleep,getrandom ./cpp/build/release/app
 ```
 
-shows the labeled sequence — `openat(... O_TMPFILE|O_RDWR|O_CLOEXEC)`, the
+shows the labeled sequence: `openat(... O_TMPFILE|O_RDWR|O_CLOEXEC)`, the
 25-byte `write`, the `close`, `nanosleep({tv_sec=0, tv_nsec=10000000})`, and
-`getrandom(..., 16, 0) = 16` — interleaved with each runtime's own startup
-syscalls, which is exactly the contrast the chapter is about.
+`getrandom(..., 16, 0) = 16`, interleaved with each runtime's own startup
+syscalls, which is the contrast the chapter is about.
 
 ## The demo contract
 
 Every language directory has a `demo.sh` with the same interface:
 
-- `./demo.sh` — build then run
-- `./demo.sh build` — build only
-- `./demo.sh run [args]` — run the built binary
+- `./demo.sh`: build then run
+- `./demo.sh build`: build only
+- `./demo.sh run [args]`: run the built binary
 - With env `TARGET` set, `run` deploys the binary to that lab VM via
   `scripts/lab/deploy-to-vm.sh "$TARGET" <binary> -- [args]` instead of
   running locally.

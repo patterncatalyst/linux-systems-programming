@@ -1,13 +1,13 @@
--- Verify pmon v6 (namespaces & cgroups) — a VM example. Behavioral assertions:
+-- Verify pmon v6 (namespaces & cgroups), a VM example. Behavioral assertions:
 --
---   1. PID NAMESPACE — `containerize -- /usr/bin/echo cmd-ran` must print
+--   1. PID NAMESPACE: `containerize -- /usr/bin/echo cmd-ran` must print
 --      "pmon: child sees pid 1": the child only sees itself as pid 1 because
 --      it is the first (and only) task in a fresh PID namespace.
---   2. UTS NAMESPACE — the same run must print "pmon: hostname=<name>" with
+--   2. UTS NAMESPACE: the same run must print "pmon: hostname=<name>" with
 --      the hostname we asked for, and that name must be DIFFERENT from the
---      guest's real hostname (fetched independently over ssh) — proof the
+--      guest's real hostname (fetched independently over ssh): proof the
 --      change landed in a private UTS namespace, not the host's.
---   3. CGROUP MEMORY LIMIT (negative control) — a real memory hog started
+--   3. CGROUP MEMORY LIMIT (negative control): a real memory hog started
 --      under `--mem-max` far below what it tries to allocate must be
 --      OOM-killed (SIGKILL, exit 137), not merely slowed down. Without the
 --      cgroup limit doing real work, the same hog would run to completion;
@@ -20,7 +20,7 @@
 -- transit. We route around that: the pid/hostname check uses a CMD of
 -- plain, space-free tokens (`/usr/bin/echo cmd-ran`), and the memory hog is
 -- staged as a real script file on the guest first, then invoked as
--- `sh /tmp/pmon-hog.sh` — two more plain tokens.
+-- `sh /tmp/pmon-hog.sh`, two more plain tokens.
 
 local script_dir = arg[0]:match("(.*/)") or "./"
 local repo_root = os.getenv("REPO_ROOT") or (script_dir .. "../..")
@@ -86,10 +86,10 @@ else
 end
 
 -- ---------------------------------------------------------------------------
--- 3: cgroup memory.max negative control — a real hog gets OOM-killed.
+-- 3: cgroup memory.max negative control, a real hog gets OOM-killed.
 -- ---------------------------------------------------------------------------
 
--- Stage the hog as a file (not a `bash -c '...'` argument — see file header)
+-- Stage the hog as a file (not a `bash -c '...'` argument, see file header)
 -- so deploy-to-vm.sh's flattening never sees its internal spaces/pipe/`;`.
 local hog_path = "/tmp/pmon-hog.sh"
 local stage = checks.run(string.format(
@@ -104,7 +104,7 @@ checks.expect_exit(stage, 0, lang .. ": stage memory-hog script on guest")
 
 -- 64 MiB ceiling, no swap (containerize disables memory.swap.max itself):
 -- comfortably above any of the three runtimes' own baseline RSS, but far
--- below the ~190 MiB the hog tries to hold, so the hog — not pmon itself —
+-- below the ~190 MiB the hog tries to hold, so the hog (not pmon itself)
 -- is what the cgroup OOM killer picks.
 local neg = checks.run(string.format(
   "SUDO=1 ./demo.sh %s run containerize --mem-max 67108864 --cgroup pmon-hog-%s -- sh %s",

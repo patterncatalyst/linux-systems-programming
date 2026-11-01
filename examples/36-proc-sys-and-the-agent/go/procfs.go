@@ -28,7 +28,7 @@ type NetStat struct {
 
 // Snapshot is one fully-formed sample. Field names here are the canonical,
 // deterministic names shared with the C++ and Rust implementations (see
-// README.md) — only the encoding (Go struct vs C++ struct vs Rust struct)
+// README.md); only the encoding (Go struct vs C++ struct vs Rust struct)
 // differs.
 type Snapshot struct {
 	CPUUtilPct   float64
@@ -299,7 +299,7 @@ type namedErr struct {
 
 // TakeSnapshot takes two /proc/stat readings intervalMs apart and fills in
 // every other field concurrently in between, via goroutines fanned in over a
-// channel — the Go analogue of the C++ jthread pool and the Rust scoped
+// channel, the Go analogue of the C++ jthread pool and the Rust scoped
 // threads.
 func TakeSnapshot(intervalMs int) (Snapshot, error) {
 	t0, err := readCPUTicks()

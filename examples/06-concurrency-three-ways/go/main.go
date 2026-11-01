@@ -1,4 +1,4 @@
-// parhash: parallel FNV-1a 64 checksummer — Go flavor.
+// parhash: parallel FNV-1a 64 checksummer, Go flavor.
 //
 // Concurrency shape: 4 worker goroutines receive relative paths from an
 // unbuffered channel fed by a walker goroutine; results flow back on a second

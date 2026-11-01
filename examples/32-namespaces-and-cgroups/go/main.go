@@ -1,4 +1,4 @@
-// pmon v6 — namespaces & cgroups (chapter 32).
+// pmon v6: namespaces & cgroups (chapter 32).
 //
 // Subcommand:
 //
@@ -6,31 +6,31 @@
 //	                  [--cpu-max "QUOTA PERIOD"|max] [--cgroup NAME]
 //	                  -- CMD [ARGS...]
 //
-// Go note — why this can't be the straight-line fork(2) the C++/Rust builds
-// use:
+// Go note: why this can't be the straight-line fork(2) the C++/Rust builds
+// use.
 //
 // A Go program is multithreaded before main() runs, and unshare(2) changes
-// only the CALLING THREAD's namespaces — the first attempt below called
+// only the CALLING THREAD's namespaces; the first attempt below called
 // unix.Unshare directly on a runtime.LockOSThread()-pinned goroutine, then
 // re-exec'd the binary through os/exec so the fork would land on that same,
 // already-unshared thread. It built, and the pid/hostname proof lines were
 // real, but the memory-hog negative control failed on real hardware with
-// "fork/exec: cannot allocate memory" (see the chapter's Errors section) —
+// "fork/exec: cannot allocate memory" (see the chapter's Errors section);
 // a genuine kernel restriction: unshare(CLONE_NEWPID) lets the caller's
 // process create exactly ONE child in the fresh PID namespace before further
 // forks there return ENOMEM, and os/exec's own vfork/pidfd fast path
 // performs an internal probe fork on first use that silently consumes that
 // one shot.
 //
-// The fix — and the one actually shipped here — is the same move Chapter
+// The fix (and the one actually shipped here) is the same move Chapter
 // 14 made for capabilities: stop calling the namespace syscall directly in
 // live Go code, and instead describe it declaratively on SysProcAttr, so the
-// runtime's own fork/exec trampoline (which never has this problem — it
+// runtime's own fork/exec trampoline (which never has this problem; it
 // creates the namespaces AND the real child in the same clone(2)) applies
 // it. `Cloneflags` on the re-exec's SysProcAttr creates the child already
 // inside fresh mount/uts/net/pid namespaces, in one step, with no prior
-// unshare() and no LockOSThread needed at all. The re-exec target — pmon
-// itself, invoked with the hidden "__ns_init__" marker — is therefore where
+// unshare() and no LockOSThread needed at all. The re-exec target (pmon
+// itself, invoked with the hidden "__ns_init__" marker) is therefore where
 // the mount-private remount and sethostname now run: it is already living
 // inside the new namespaces the instant its code starts, since they were
 // established at clone(2) time and carried across its own execve.
@@ -48,7 +48,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// Hidden re-exec marker — not a public subcommand, so it stays out of usage().
+// Hidden re-exec marker: not a public subcommand, so it stays out of usage().
 const reexecMarker = "__ns_init__"
 
 // Names as printed in "killed signal=<n> (<NAME>)". A hand-rolled table
@@ -72,7 +72,7 @@ func signalName(sig int) string {
 // ---- cgroup helpers --------------------------------------------------
 
 // hasToken reports whether tokens (a whitespace-separated list, as
-// cgroupfs writes it) contains word as a whole token — "cpu" must not
+// cgroupfs writes it) contains word as a whole token; "cpu" must not
 // match inside "cpuset".
 func hasToken(tokens, word string) bool {
 	for _, t := range strings.Fields(tokens) {
@@ -85,7 +85,7 @@ func hasToken(tokens, word string) bool {
 
 // The root cgroup is exempt from the "no internal process" constraint, so
 // controllers can be enabled there even though it holds every process on
-// the box — this is how a fresh sibling cgroup gets memory/cpu control
+// the box; this is how a fresh sibling cgroup gets memory/cpu control
 // without first relocating ourselves into a leaf.
 func ensureRootControllers() error {
 	data, err := os.ReadFile("/sys/fs/cgroup/cgroup.subtree_control")
@@ -234,7 +234,7 @@ func cmdContainerize(args []string) int {
 	c.Stdin, c.Stdout, c.Stderr = os.Stdin, os.Stdout, os.Stderr
 	// Cloneflags asks the runtime's own fork/exec trampoline to create the
 	// child already inside fresh mount/uts/net/pid namespaces, atomically,
-	// in the SAME clone(2) that creates the process — no separate unshare(2)
+	// in the SAME clone(2) that creates the process, no separate unshare(2)
 	// on our side, and so none of the "one child per fresh PID namespace"
 	// restriction that broke the direct-unshare attempt.
 	c.SysProcAttr = &syscall.SysProcAttr{
@@ -282,10 +282,10 @@ func cmdContainerize(args []string) int {
 //
 // args: <hostname> -- CMD [ARGS...]. Already running inside the fresh
 // mount/uts/net/pid namespaces (Cloneflags put THIS process there at
-// clone(2) time, before this code's own execve even happened) — but the
+// clone(2) time, before this code's own execve even happened), but the
 // mount-private remount and sethostname are still ours to do, since the
 // parent process never entered these namespaces itself. Then prints the
-// proof lines and execs into the real CMD, replacing itself — CMD keeps
+// proof lines and execs into the real CMD, replacing itself; CMD keeps
 // PID 1.
 func cmdNsInit(args []string) int {
 	if len(args) < 2 || args[1] != "--" {

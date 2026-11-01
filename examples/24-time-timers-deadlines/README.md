@@ -1,7 +1,7 @@
-# 24-time-timers-deadlines — chatterd v3, heartbeats + deadlines
+# 24-time-timers-deadlines: chatterd v3, heartbeats + deadlines
 
-Chapter 24 grows `chatterd` — the peer-to-peer chat daemon introduced in
-chapter 21 — into a version that survives a peer going away. The lesson is
+This chapter grows `chatterd` (the peer-to-peer chat daemon introduced in
+the TCP sockets chapter) into a version that survives a peer going away. The lesson is
 *time*: how to keep a connection alive with a periodic heartbeat, how to
 declare a peer dead by measuring **silence on a monotonic clock**, and how to
 come back with a **jittered exponential backoff** instead of a hot reconnect
@@ -32,8 +32,8 @@ opts: --heartbeat-ms H  (default 1000)   PING interval
   `res` is `clock_getres(CLOCK_MONOTONIC)`; the two `actual` fields are the
   measured wall-time of a 1 ms `nanosleep(2)` and a 1 ms one-shot `timerfd`,
   each timed on a **monotonic/steady clock** (never `CLOCK_REALTIME`). On a
-  typical host both land near 1050–1100 µs — the overshoot is the scheduler's
-  wake-up latency, which is exactly the point.
+  typical host both land near 1050–1100 µs: the overshoot is the scheduler's
+  wake-up latency, which is the point.
 
 - **`listen`** binds, prints `chatterd: <N> listening on <ip>:<port>` (a
   `:0` port is reported as the actual ephemeral port), and accepts a peer.
@@ -49,14 +49,14 @@ opts: --heartbeat-ms H  (default 1000)   PING interval
   received frame (JOIN/MSG/PING) is "traffic" and resets a
   `--timeout-ms` deadline. When the deadline fires with no traffic the peer
   is dropped: `chatterd: peer <peer> timed out`. A closed socket (peer
-  killed) is handled the same way — reads stop, but it is the *deadline*, on
+  killed) is handled the same way: reads stop, but it is the *deadline*, on
   the monotonic clock, that declares death.
 
 - After a drop the **connector** reconnects with equal-jitter exponential
-  backoff — `delay = B/2 + rand(0..B/2)`, with `B` doubling each failed
+  backoff (`delay = B/2 + rand(0..B/2)`, with `B` doubling each failed
   attempt up to `--max-backoff-ms` and reset to the base on a fresh
-  connection — printing `chatterd: reconnecting to <peer> in <ms>ms` before
-  each wait. The **listener** simply returns to `accept()` to welcome a
+  connection), printing `chatterd: reconnecting to <peer> in <ms>ms` before
+  each wait. The **listener** returns to `accept()` to welcome a
   reconnecting peer.
 
 - **SIGINT / SIGTERM** at any point (linked, mid-backoff, or waiting to
@@ -66,11 +66,13 @@ opts: --heartbeat-ms H  (default 1000)   PING interval
 
 ## Wire format (identical across languages and every chatterd version)
 
-This is **the** chatterd chat frame: introduced in chapter 21, and extended
-in later chapters only by adding new `TYPE` values — the header itself never
-changes, so every chatterd version (thread-per-connection in ch21, epoll in
-ch22, the UDP-discovered peers of ch23, this chapter's heartbeats, the async
-runtimes of ch27) reads and writes exactly these bytes. All multi-byte
+This is **the** chatterd chat frame: introduced earlier in the series, and
+extended in later chapters only by adding new `TYPE` values. The header
+itself never changes, so every chatterd version (thread-per-connection in
+the TCP sockets chapter, epoll in the server-scaling chapter, the
+UDP-discovered peers of the peer-discovery chapter, this chapter's
+heartbeats, the async runtimes of a later chapter) reads and writes exactly
+these bytes. All multi-byte
 integers are big-endian. The header is a fixed 6 bytes:
 
 ```
@@ -96,13 +98,14 @@ Framing rules, byte-exact and version-stable:
 - `MAGIC`/`VERSION` mismatch is a protocol error and drops the connection.
 - `PING` is the frame type added in **v3** (this chapter) for heartbeating.
   `DELIVER` and `WELCOME` belong to the server-broadcast chatterd versions
-  (ch22, ch27) — this chapter's peer-to-peer `listen`/`connect` model never
-  emits them, but since the header is shared, a peer that ever receives one
-  (or any `0x06..0xFF` value) treats it as generic liveness traffic and skips
-  its `LENGTH` bytes rather than erroring. `JOIN` (the peer-name handshake)
-  and `MSG` (chat text) are unchanged since ch21, so a v3 peer here still
+  (the server-scaling and async-runtimes chapters); this chapter's
+  peer-to-peer `listen`/`connect` model never emits them, but since the
+  header is shared, a peer that ever receives one (or any `0x06..0xFF`
+  value) treats it as generic liveness traffic and skips its `LENGTH` bytes
+  rather than erroring. `JOIN` (the peer-name handshake) and `MSG` (chat
+  text) are unchanged since the earliest version, so a v3 peer here still
   links with older or newer chatterd peers for everything except
-  heartbeating — dropping a silent peer is the only thing PING adds.
+  heartbeating: dropping a silent peer is the only thing PING adds.
 
 Example: a JOIN announcing the name `A` is the 7 bytes
 `43 48 01 01 00 01 41`; a PING is the 6 bytes `43 48 01 05 00 00`.
@@ -112,24 +115,24 @@ Example: a JOIN announcing the name `A` is the 7 bytes
 The protocol and the observable lines are identical; how each language builds
 the heartbeat/deadline loop is the lesson.
 
-- **C++ — `timerfd_create(CLOCK_MONOTONIC)` + `poll(2)`.** A periodic timerfd
+- **C++: `timerfd_create(CLOCK_MONOTONIC)` + `poll(2)`.** A periodic timerfd
   is the heartbeat; a `std::chrono::steady_clock` deadline is peer liveness
   (the poll timeout is the time left until it). The peer socket, the heartbeat
   timerfd, and a `signalfd(2)` shutdown doorbell share one `poll` loop. Every
   fd is owned by a RAII `UniqueFd`; sends use `MSG_NOSIGNAL`, and errors flow
   through `std::expected`.
-- **Go — `time.Ticker` + `time.Timer` + `context`.** A `Ticker` fires the
+- **Go: `time.Ticker` + `time.Timer` + `context`.** A `Ticker` fires the
   heartbeat, a `Timer` is the deadline (`Reset` on every frame), and the
   context from `signal.NotifyContext` is shutdown. A per-connection reader
   goroutine turns the socket into a channel of frames, so the session is one
   `select` over ticker / deadline / frames / `ctx.Done()`. `time.Now` carries
   a monotonic reading, so `time.Since` never sees a wall-clock step.
-- **Rust — `nix` timerfd + `std::time::Instant` + `poll`.** A periodic
+- **Rust: `nix` timerfd + `std::time::Instant` + `poll`.** A periodic
   `nix::sys::timerfd::TimerFd` is the heartbeat, an `Instant` deadline is peer
-  liveness, and a `nix` `SignalFd` is shutdown — all three in one
+  liveness, and a `nix` `SignalFd` is shutdown: all three in one
   `nix::poll::poll` loop over `std` `TcpStream`/`TcpListener` fds (`OwnedFd`
-  ownership throughout). Errors flow through `Result`/`?`. No tokio here —
-  async is chapter 27.
+  ownership throughout). Errors flow through `Result`/`?`. No tokio here;
+  async is covered in a later chapter.
 
 ## Layout
 
@@ -144,7 +147,7 @@ the heartbeat/deadline loop is the lesson.
 
 Each language directory has a `demo.sh` with the identical interface used
 book-wide: `./demo.sh build`, `./demo.sh run [args]`, and a bare `./demo.sh`
-that builds then runs. With `TARGET` set, `run` deploys to that lab VM — but
+that builds then runs. With `TARGET` set, `run` deploys to that lab VM, but
 this chapter runs purely on the host (loopback), so `TARGET` is unused here.
 
 Try it by hand:

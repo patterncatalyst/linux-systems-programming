@@ -1,4 +1,4 @@
-// fwatch.go — the book's recurring file watcher (ch07 polling -> ch09
+// fwatch.go: the book's recurring file watcher (ch07 polling -> ch09
 // inotify/epoll -> ch33 Landlock+seccomp), reduced here to what the fleet
 // needs: watch a directory, print one line per create/write/delete event,
 // and optionally run under a Landlock ruleset that restricts reads to that
@@ -18,7 +18,7 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// Landlock — raw syscalls; x/sys/unix has the SYS_LANDLOCK_* numbers but no
+// Landlock: raw syscalls; x/sys/unix has the SYS_LANDLOCK_* numbers but no
 // wrapper. Read-only ruleset scoped to one directory (ch33's technique).
 // ---------------------------------------------------------------------------
 
@@ -94,7 +94,7 @@ func applyLandlock(dir string) error {
 }
 
 // ---------------------------------------------------------------------------
-// watch loop — inotify on the directory (non-recursive, matches ch09).
+// watch loop: inotify on the directory (non-recursive, matches ch09).
 // ---------------------------------------------------------------------------
 
 func fwatchWatch(dir string, sandbox bool, timeoutMs int) int {

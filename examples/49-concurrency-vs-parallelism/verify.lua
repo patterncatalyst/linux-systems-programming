@@ -1,39 +1,39 @@
 -- Verify 49-concurrency-vs-parallelism (C++ only): the framing chapter that
 -- opens Part 14, the C++ concurrency compendium. Concurrency is structure
 -- (many tasks in flight); parallelism is execution (many CPUs occupied).
--- Every assertion below checks a real, program-produced structural fact --
--- a count or a set cardinality -- never a duration and never a bare exit code.
+-- Every assertion below checks a real, program-produced structural fact
+-- (a count or a set cardinality), never a duration and never a bare exit code.
 --
 -- NOTHING HERE IS TIMED. Wall-clock numbers are not reproducible across hosts
 -- or runs and this book does not gate on them (see ch39). The observables are:
---   cpus_allowed   -- CPU_COUNT(sched_getaffinity), a permission
---   distinct_cpus  -- popcount of every CPU any worker was seen on, an outcome
---   max_inflight   -- high-water mark of live workers, "tasks in flight"
---   interleaves    -- ticket-sequence gaps, i.e. observed worker handoffs
+--   cpus_allowed   : CPU_COUNT(sched_getaffinity), a permission
+--   distinct_cpus  : popcount of every CPU any worker was seen on, an outcome
+--   max_inflight   : high-water mark of live workers, "tasks in flight"
+--   interleaves    : ticket-sequence gaps, i.e. observed worker handoffs
 --
 -- Hard-gated (A-F), all offline, stdlib + Linux scheduler syscalls only:
---   A. All four models compute the identical digest (0x481984990deee5ff --
+--   A. All four models compute the identical digest (0x481984990deee5ff,
 --      the same value as ch46's C++, ch47's Go, and ch48's Rust toolbox),
 --      and all four report consensus=yes. The answer does not depend on the
 --      execution model; that is the chapter's thesis.
 --   B. parallel: distinct_cpus > 1 with cpus_allowed = all CPUs. Parallelism
 --      is real and observed, not merely permitted.
 --   C. concurrent: cpus_allowed = 1 AND distinct_cpus = 1 AND max_inflight > 1
---      AND interleaves > 0 -- many tasks in flight on exactly one CPU. This
+--      AND interleaves > 0, many tasks in flight on exactly one CPU. This
 --      is the chapter's central case and no single one of those four facts
 --      proves it alone.
---   D. sequential: max_inflight = 1 AND interleaves = 0 -- neither concurrent
+--   D. sequential: max_inflight = 1 AND interleaves = 0, neither concurrent
 --      nor parallel. both: distinct_cpus > 1 AND interleaves > 0 AND
 --      max_inflight > cpus_allowed (genuinely oversubscribed).
 --   E. C++26 Contracts (P2900) on GCC 16: one source, four binaries, one per
 --      -fcontract-evaluation-semantic. Four DISTINCT observable behaviors are
---      asserted -- diagnostic present/absent crossed with terminating/not --
+--      asserted (diagnostic present/absent crossed with terminating/not),
 --      never four exit codes.
 --   F. Safety hardening: the same source built with and without
 --      _GLIBCXX_ASSERTIONS. The hardened build traps and names the failed
 --      predicate; the unchecked build is asserted STATICALLY to contain no
 --      bounds check at all (its runtime behavior is undefined and is never
---      asserted on -- gating on the output of UB would be unsound).
+--      asserted on, gating on the output of UB would be unsound).
 --
 -- Gated-if-present (G): clang++ parity. If clang is installed, a
 -- clang-built conc must produce the identical digest. Absent -> informational

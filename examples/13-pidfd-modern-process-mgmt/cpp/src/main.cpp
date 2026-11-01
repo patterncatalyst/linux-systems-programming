@@ -1,14 +1,14 @@
-// pmon v2 — a tiny process supervisor grown chapter by chapter.
+// pmon v2: a tiny process supervisor grown chapter by chapter.
 //
 // v0 (`run`) spawns a command, waits, and mirrors its exit status.
 // v1 (`supervise --engine sigchld`) restarts a crashing child, driven by
 //     SIGCHLD delivered as readable data through a signalfd.
 // v2 (`supervise --engine pidfd`, the DEFAULT) drops the SIGCHLD dependence
 //     entirely: pidfd_open(2) turns the child into a pollable file
-//     descriptor (raw SYS_pidfd_open on purpose — the glibc wrapper is
+//     descriptor (raw SYS_pidfd_open on purpose: the glibc wrapper is
 //     recent), poll(2) reports the exit as ordinary readability,
 //     waitid(P_PIDFD) reaps exactly that child, and the stop path signals
-//     through the pidfd with pidfd_send_signal(2) — no pid-reuse race
+//     through the pidfd with pidfd_send_signal(2), no pid-reuse race
 //     anywhere on the path.
 
 #include <algorithm>
@@ -48,7 +48,7 @@ using std::chrono::steady_clock;
 }
 
 // ---------------------------------------------------------------------------
-// RAII owners — every fd and every spawn attribute has exactly one.
+// RAII owners: every fd and every spawn attribute has exactly one.
 // ---------------------------------------------------------------------------
 
 class Fd {
@@ -166,7 +166,7 @@ make_signalfd(std::initializer_list<int> sigs) {
 }
 
 // ---------------------------------------------------------------------------
-// v0: run — spawn, wait, mirror.
+// v0: run: spawn, wait, mirror.
 // ---------------------------------------------------------------------------
 
 int cmd_run(const std::vector<std::string>& cmd) {
@@ -187,7 +187,7 @@ int cmd_run(const std::vector<std::string>& cmd) {
 }
 
 // ---------------------------------------------------------------------------
-// v1/v2: supervise — two engines, one restart policy.
+// v1/v2: supervise: two engines, one restart policy.
 // ---------------------------------------------------------------------------
 
 enum class Engine : std::uint8_t { pidfd, sigchld };
@@ -200,7 +200,7 @@ using Outcome = std::variant<ChildStatus, Stop>;
     return left < 0 ? 0 : static_cast<int>(left);
 }
 
-// waitid(P_PIDFD) reaps the process the fd refers to — never a recycled pid.
+// waitid(P_PIDFD) reaps the process the fd refers to: never a recycled pid.
 [[nodiscard]] std::expected<ChildStatus, std::error_code> reap_pidfd(const Fd& pidfd) {
     siginfo_t si{};
     while (::waitid(P_PIDFD, static_cast<id_t>(pidfd.get()), &si, WEXITED) != 0) {

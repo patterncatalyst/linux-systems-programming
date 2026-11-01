@@ -53,7 +53,7 @@ bool Handle::flush_and_shutdown(std::chrono::milliseconds timeout) {
 
 Handle init(const std::string& endpoint) {
     // The SDK's default log handler writes Warning/Error to stderr and
-    // Info/Debug to stdout -- the latter would corrupt serve's stdout
+    // Info/Debug to stdout: the latter would corrupt serve's stdout
     // contract (exactly two lines, ever). A no-op handler keeps this build
     // as quiet as the Go and Rust ports, which have no internal SDK logging
     // to begin with.

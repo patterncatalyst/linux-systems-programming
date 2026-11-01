@@ -1,12 +1,13 @@
-# 23-udp-and-peer-discovery — chatterd v2
+# 23-udp-and-peer-discovery: chatterd v2
 
-chatterd grows peer discovery. Where chapters 21–22 built the TCP side (the
-canonical chatterd chat frame between two known endpoints), `chatterd
-discover` adds the missing half: finding peers you were never told about. It
-sends periodic **UDP multicast beacons**, listens for everyone else's, and the
-first time it hears a new peer it opens a TCP connection to that peer's
-advertised port and exchanges one chat frame each way — the same canonical
-wire frame every chatterd version speaks, reused here for JOIN/DELIVER.
+chatterd grows peer discovery. The TCP side built earlier in the book
+established the canonical chatterd chat frame between two known endpoints;
+`chatterd discover` adds the missing half: finding peers you were never told
+about. It sends periodic **UDP multicast beacons**, listens for everyone
+else's, and the first time it hears a new peer it opens a TCP connection to
+that peer's advertised port and exchanges one chat frame each way, the same
+canonical wire frame every chatterd version speaks, reused here for
+JOIN/DELIVER.
 
 ```
 $ ./demo.sh go run discover --group 239.23.7.1 --port 51823 \
@@ -28,24 +29,24 @@ Each process announces on stderr (`chatterd: announcing as <name> on
 `--announce-ms` apart, then exits 0 after an 800 ms grace window so in-flight
 exchanges finish.
 
-## What the chapter is really about
+## What the chapter is about
 
 UDP multicast is the one-to-many primitive. A beacon sent once to a group
 address (`239.0.0.0/8`, the administratively-scoped block) reaches every
 member on the interface without the sender knowing who or how many they are.
 Discovery is: **join the group, announce yourself, and learn from what you
-hear.** The three implementations exercise the same setsockopt dance —
+hear.** The three implementations exercise the same setsockopt dance:
 
 - **`IP_ADD_MEMBERSHIP`** (`ip_mreq { imr_multiaddr = group, imr_interface =
-  iface }`) — join the group on a specific interface. Without this the kernel
+  iface }`): join the group on a specific interface. Without this the kernel
   drops group traffic before it reaches the socket.
-- **`IP_MULTICAST_IF`** — pin *outgoing* multicast to the same interface, so a
+- **`IP_MULTICAST_IF`**: pin *outgoing* multicast to the same interface, so a
   multi-homed host sends the beacon where its peers are listening.
-- **`IP_MULTICAST_LOOP`** — deliver our own multicast to other sockets **on
+- **`IP_MULTICAST_LOOP`**: deliver our own multicast to other sockets **on
   this host**. This is what makes the local two-process verify work over the
   loopback interface; across two machines it is irrelevant (the packet is on
   the wire either way).
-- **`IP_MULTICAST_TTL = 1`** — keep beacons on the local link; do not let a
+- **`IP_MULTICAST_TTL = 1`**: keep beacons on the local link; do not let a
   router forward them.
 
 The receive side dedupes by peer name, so "discovered peer …" prints exactly
@@ -58,11 +59,11 @@ loops group traffic **when the multicast interface is set to `127.0.0.1`**.
 That is why the local verify passes `--iface 127.0.0.1`: both processes join
 and send on the loopback address and the kernel loops each beacon to the
 other. On the VMs the interface is the guest's `enp1s0` address and the
-beacons cross the `virbr0` bridge for real.
+beacons cross the `virbr0` bridge between the two guests.
 
 ## Wire formats (byte-exact, identical across all three languages)
 
-### 1. Discovery beacon — UDP datagram to `<group>:<port>`
+### 1. Discovery beacon: UDP datagram to `<group>:<port>`
 
 An ASCII text datagram, no framing (UDP preserves message boundaries):
 
@@ -70,16 +71,16 @@ An ASCII text datagram, no framing (UDP preserves message boundaries):
 CHATTERD1 <name> <tcp-port> <host-ip>
 ```
 
-- `CHATTERD1` — literal magic / version tag (9 bytes).
+- `CHATTERD1`: literal magic / version tag (9 bytes).
 - single ASCII spaces separate the four fields; `<name>` contains no space.
-- `<tcp-port>` — decimal, the TCP port this peer accepts chat frames on.
-- `<host-ip>` — dotted-quad the peer wants to be dialed at (its `--iface`).
+- `<tcp-port>`: decimal, the TCP port this peer accepts chat frames on.
+- `<host-ip>`: dotted-quad the peer wants to be dialed at (its `--iface`).
 
 A receiver splits on whitespace, requires exactly 4 fields with `tok[0] ==
 "CHATTERD1"`, and ignores a beacon whose `<name>` equals its own.
 
 Captured on the peer guest's `enp1s0` during the two-host run (`tcpdump -X`),
-a beacon from systems-target — 35 payload bytes:
+a beacon from systems-target, 35 payload bytes:
 
 ```
 IP 192.168.124.7.40516 > 239.23.7.1.51824: UDP, length 35
@@ -89,12 +90,12 @@ IP 192.168.124.7.40516 > 239.23.7.1.51824: UDP, length 35
 =  "CHATTERD1 target 9241 192.168.124.7"
 ```
 
-### 2. Chat frame — TCP, the canonical chatterd frame (reused, not this chapter's invention)
+### 2. Chat frame: TCP, the canonical chatterd frame (reused, not this chapter's invention)
 
-This is **not** a ch23-specific format — it is the one wire frame every
-chatterd version (ch21's thread-per-connection server, ch22's epoll engine,
-ch24's heartbeat client, ch27's async transport) reads and writes. ch23 just
-dials it peer-to-peer instead of client-to-server. The UDP beacon above is a
+This wire frame is shared across every chatterd version (the
+thread-per-connection server, the epoll engine, the heartbeat client, and the
+async transport covered elsewhere in the book); ch23 dials it peer-to-peer
+instead of client-to-server. The UDP beacon above is a
 completely separate object; this frame only ever travels over the TCP
 connection opened *after* discovery.
 
@@ -117,8 +118,8 @@ header. ch23's post-discovery exchange uses two of the five types, one frame
 each way:
 
 1. the discoverer dials `<host-ip>:<tcp-port>` and sends a **JOIN** frame
-   whose payload is its own name (`<self>`) — the same "announce on connect"
-   JOIN chapters 21/22/24/27 use;
+   whose payload is its own name (`<self>`), the same "announce on connect"
+   JOIN pattern used by every other chatterd version;
 2. the listener reads that frame, replies with a **DELIVER** frame whose
    payload is `<self>\0hello from <self>` (name, then a NUL byte, then the
    greeting text), and closes;
@@ -126,10 +127,10 @@ each way:
    byte, and prints `peer <name> says: <text>`.
 
 Both peers discover each other independently, so each dials the other once and
-each prints one `peer … says:` line — the message crossed the network. Because
-the header is shared, a ch23 peer's JOIN/DELIVER exchange is wire-compatible
-with a ch21/ch22/ch24/ch27 chatterd speaking the same frame; the newer-only
-types (WELCOME, PING) simply never appear in this chapter's exchange.
+each prints one `peer … says:` line, confirming the message crossed the
+network. Because the header is shared, a ch23 peer's JOIN/DELIVER exchange is
+wire-compatible with any other chatterd version speaking the same frame; the
+newer-only types (WELCOME, PING) never appear in this chapter's exchange.
 
 ## The three implementations
 
@@ -159,7 +160,7 @@ Flags: `--group <ip>` and `--port <n>` and `--name <s>` are required;
 ## Verification
 
 `verify.lua` (mode `vm-peer`) runs the **local** two-process assertion on
-loopback multicast — it clears `TARGET` so `demo.sh run` executes on the host,
+loopback multicast: it clears `TARGET` so `demo.sh run` executes on the host,
 starts `alice` and `bob` with distinct names and TCP ports, and asserts each
 discovers the other exactly once, exchanges the chat frame, and exits 0, plus
 the usage/exit-code shapes. Distinct ports per language keep back-to-back

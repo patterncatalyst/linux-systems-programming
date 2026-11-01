@@ -1,4 +1,4 @@
-// parhash: parallel FNV-1a 64 checksummer — C++23 flavor.
+// parhash: parallel FNV-1a 64 checksummer: C++23 flavor.
 //
 // Concurrency shape: 4 std::jthread workers pull paths from a mutex-guarded
 // queue (condition_variable_any so waits are stop_token-aware). A dedicated

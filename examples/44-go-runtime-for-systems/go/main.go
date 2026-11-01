@@ -1,6 +1,6 @@
 // go-runtime-for-systems: a program that observes its own Go runtime across
-// four themes -- scheduler (GMP), GC pacing, netpoller/syscalls, and effective
-// knobs -- printing self-computed verdict lines so the behavior is checkable,
+// four themes: scheduler (GMP), GC pacing, netpoller/syscalls, and effective
+// knobs; printing self-computed verdict lines so the behavior is checkable,
 // not just describable. Every "<label> ok"/"<label> FAIL" line is a fixed
 // string the program always prints; only the numeric fields and the trailing
 // verdict word vary by run. Stdlib only.
@@ -31,8 +31,8 @@ func verdict(ok bool) string {
 
 // pollNumGoroutine polls runtime.NumGoroutine(), yielding the current
 // goroutine via runtime.Gosched() between samples, until cond is satisfied or
-// maxTries is exhausted. It never sleeps or waits on a wall clock -- only
-// cooperative scheduler yields -- so it is bounded in iteration count, not in
+// maxTries is exhausted. It never sleeps or waits on a wall clock, only
+// cooperative scheduler yields, so it is bounded in iteration count, not in
 // time. If cond is never satisfied, the last-observed value is returned and
 // the caller's own comparison correctly reports FAIL.
 func pollNumGoroutine(cond func(int) bool, maxTries int) int {
@@ -45,7 +45,7 @@ func pollNumGoroutine(cond func(int) bool, maxTries int) int {
 }
 
 // readThreadCount reads this process's own OS thread count from
-// /proc/self/status's "Threads:" field. Self-observation only -- no external
+// /proc/self/status's "Threads:" field. Self-observation only; no external
 // tool is shelled out to.
 func readThreadCount() int {
 	f, err := os.Open("/proc/self/status")
@@ -160,7 +160,7 @@ func runSched() bool {
 	var tick int64
 
 	// The ticker goroutine is launched first and the spinner second so that
-	// the spinner -- the most recently spawned goroutine -- claims the P's
+	// the spinner (the most recently spawned goroutine) claims the P's
 	// single-slot "runnext" fast path and is what the scheduler runs first
 	// when main below yields. This keeps the outcome deterministic instead
 	// of depending on which of two equally non-yielding goroutines happens

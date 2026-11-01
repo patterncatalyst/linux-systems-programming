@@ -1,4 +1,4 @@
-// pmon v5 — a process supervisor with a UNIX-socket control plane.
+// pmon v5: a process supervisor with a UNIX-socket control plane.
 //
 // `pmon supervise` spawns a child command (its own process group,
 // stdout+stderr appended to a log file), restarts it 300 ms after every
@@ -13,7 +13,7 @@
 //              the path.
 //
 // The cmsg plumbing is nix::sys::socket sendmsg/recvmsg with
-// ControlMessage::ScmRights — explicit, not a convenience crate — and the
+// ControlMessage::ScmRights (explicit, not a convenience crate), and the
 // received fd is wrapped in an OwnedFd immediately so it closes on drop.
 
 use std::fs::File;
@@ -58,7 +58,7 @@ struct State {
 type Shared = Arc<(Mutex<State>, Condvar)>;
 
 /// Spawn argv in its own process group with stdout+stderr appended to the
-/// log file — the fd is inherited directly, no pipe thread.
+/// log file: the fd is inherited directly, no pipe thread.
 fn spawn_child(argv: &[String], log: &File) -> Result<Child> {
     let mut cmd = Command::new(&argv[0]);
     cmd.args(&argv[1..])

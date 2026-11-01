@@ -1,4 +1,4 @@
-// chatterd.hpp — the book's recurring peer-to-peer chat daemon (ch21-27),
+// chatterd.hpp: the book's recurring peer-to-peer chat daemon (ch21-27),
 // reduced to what the capstone needs: serve local clients, and bridge two
 // chatterd instances across hosts so a message sent on one node is delivered
 // to clients on the other. See chatterd.cpp for the bridging design (mirrors

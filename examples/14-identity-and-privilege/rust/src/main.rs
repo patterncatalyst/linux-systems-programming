@@ -1,4 +1,4 @@
-//! pmon v3 — identity & privilege (chapter 14).
+//! pmon v3: identity & privilege (chapter 14).
 //!
 //! Subcommands:
 //!   pmon drop --user <name> [--keep-cap net_bind_service] -- CMD [args...]
@@ -14,7 +14,7 @@
 //! 2. setgroups / setresgid / setresuid become the target user.
 //! 3. capset(2) pins CAP_NET_BIND_SERVICE into permitted + inheritable
 //!    (ambient requires both).
-//! 4. prctl(PR_CAP_AMBIENT_RAISE) raises it into the ambient set — the only
+//! 4. prctl(PR_CAP_AMBIENT_RAISE) raises it into the ambient set, the only
 //!    set a non-root, no-file-cap execve keeps.
 //! 5. execvp(3): CMD runs as <name>, keeping :80 iff the cap was raised.
 //!

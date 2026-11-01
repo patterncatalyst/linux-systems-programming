@@ -1,4 +1,4 @@
-// fwatch v2 — batched sync engine (chapter 10: io_uring).
+// fwatch v2: batched sync engine (chapter 10: io_uring).
 //
 // Subcommands:
 //   fwatch scan DIR                                 (v0: polling snapshot)
@@ -102,8 +102,8 @@ fn copy_file_uring(ring: &mut IoUring, src: &Path, dst: &Path) -> Result<u64> {
                 let len = CHUNK.min(size - off) as u32;
                 lens[pairs] = len;
                 let buf = bufs[pairs].as_mut_ptr();
-                // READ this chunk into the pair's buffer, then — only if it
-                // fully succeeded (IO_LINK) — WRITE it at the same offset.
+                // READ this chunk into the pair's buffer, then, only if it
+                // fully succeeded (IO_LINK), WRITE it at the same offset.
                 let read = opcode::Read::new(types::Fd(input.as_raw_fd()), buf, len)
                     .offset(off)
                     .build()

@@ -12,7 +12,7 @@ pub struct Digest {
 
 /// ch46/ch47's exact 16-byte payload (`"The quick brown."`), reused
 /// byte-for-byte so the C++, Go, and Rust toolbox chapters land on the
-/// identical FNV-1a digest (`0x481984990deee5ff`) -- a cross-appendix
+/// identical FNV-1a digest (`0x481984990deee5ff`), a cross-appendix
 /// easter egg, not a coincidence. FNV-1a is language-independent: any
 /// conforming implementation over the same bytes produces the same 64-bit
 /// value.
@@ -21,7 +21,7 @@ pub const PAYLOAD: [u8; 16] = [
 ];
 
 /// FNV-1a over `data`. Integer-only, no floats, addresses, timing, or
-/// hash-map iteration -- the same input bytes produce the same digest
+/// hash-map iteration: the same input bytes produce the same digest
 /// bit-for-bit on every conforming Rust toolchain, every architecture,
 /// every run.
 pub fn fnv1a(data: &[u8]) -> Digest {

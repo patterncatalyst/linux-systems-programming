@@ -1,4 +1,4 @@
-//! app work --seconds N — a small, observable workload for the eBPF
+//! app work --seconds N: a small, observable workload for the eBPF
 //! observation toolkit (chapter 30). It does four things in a loop, each one
 //! deliberate bait for a specific bcc-tools/bpftrace probe:
 //!
@@ -13,7 +13,7 @@
 //!
 //! Rust idioms: every fallible call flows through Result and `?`; the bait
 //! file's descriptor is a rustix OwnedFd, closed by its Drop impl the moment
-//! it goes out of scope — no explicit close(2).
+//! it goes out of scope: no explicit close(2).
 
 use std::time::{Duration, Instant};
 
@@ -45,7 +45,7 @@ pub extern "C" fn busy_hash(mut x: u64) -> u64 {
 /// fresh open(2) on the same path; the OwnedFd's Drop does the close(2).
 fn open_bait(iter: u64) -> Result<()> {
     // 0666: the bait file may get created by a root-run observe.sh one time
-    // and an unprivileged demo.sh run the next — world-writable avoids a
+    // and an unprivileged demo.sh run the next: world-writable avoids a
     // permission mismatch between those two ownership scenarios.
     let fd = open(
         BAIT_PATH,
@@ -76,7 +76,7 @@ struct Counters {
     // The accumulated busy_hash() result, printed in the summary line. LLVM
     // can prove a #[no_mangle]/#[inline(never)] function is still pure and
     // dead-code-eliminate a whole call chain whose final result is never
-    // observed — keeping this value alive here is what guarantees every call
+    // observed: keeping this value alive here is what guarantees every call
     // really executed, not just that the symbol exists in the binary.
     busy_hash: u64,
 }

@@ -1,4 +1,4 @@
-// app — a tiny PID-1 container entrypoint (chapter 34: our programs in
+// app: a tiny PID-1 container entrypoint (chapter 34: our programs in
 // containers).
 //
 //   app serve   run as the container's PID 1: reap children, forward SIGTERM
@@ -9,7 +9,7 @@
 //               which it has installed no explicit handler is dropped
 //               instead of running that signal's default action. Only
 //               SIGKILL (and SIGSTOP) still work. `naive` never registers a
-//               handler, so `podman stop` cannot end it gracefully -- the
+//               handler, so `podman stop` cannot end it gracefully: the
 //               engine has to wait out the stop timeout and fall back to
 //               SIGKILL.
 //   app worker  the long-running child `serve` supervises (self-reexec).
@@ -19,12 +19,12 @@
 // is no signalfd/SIGCHLD anywhere here. std::process::Child::wait() calls
 // waitpid(2) for you; parking one std::thread per spawned child in wait() is
 // the reap loop. signal_hook::iterator::Signals turns SIGTERM/SIGINT into a
-// blocking iterator on the main thread -- ordinary code, nothing async-
+// blocking iterator on the main thread: ordinary code, nothing async-
 // signal-unsafe runs in a handler.
 //
 // Container-aware resource detection: std::thread::available_parallelism()
 // on Linux divides the cgroup's cpu.max quota/period when it is lower than
-// the affinity mask count -- cgroup-aware, like Go's GOMAXPROCS. Compare
+// the affinity mask count: cgroup-aware, like Go's GOMAXPROCS. Compare
 // this program's number against the C++ version's hardware_concurrency()
 // (which reports the host's cpu count no matter what `--cpus` says).
 
@@ -53,7 +53,7 @@ fn die(err: anyhow::Error) -> ! {
 }
 
 /// Read a whole file, trailing whitespace trimmed. Empty string (not an
-/// error) if the file cannot be opened -- cgroup files may be absent on
+/// error) if the file cannot be opened: cgroup files may be absent on
 /// unusual hosts, and callers fall back to "unknown".
 fn read_trim(path: &str) -> String {
     let mut buf = String::new();
@@ -134,7 +134,7 @@ fn job_run(seq: &str) -> i32 {
 }
 
 /// Resolve the running binary's own path so serve can re-exec it as
-/// "worker"/"job" -- like Go, Rust avoids fork(2)-without-exec (the
+/// "worker"/"job": like Go, Rust avoids fork(2)-without-exec (the
 /// allocator and runtime are not fork-safe once threads exist), so this is
 /// the idiomatic way to spawn "more of this program" as a real child
 /// process.
@@ -157,7 +157,7 @@ fn serve() -> Result<i32> {
     println!("app: worker started pid={worker_pid}");
 
     // The job spawner: a background thread that periodically re-execs
-    // "app job <seq>" and, in its own thread per child, waits for it --
+    // "app job <seq>" and, in its own thread per child, waits for it:
     // that wait() call IS the reap. `stop` lets shutdown cancel the loop
     // cooperatively instead of detaching a thread that outlives serve().
     let stop = Arc::new(AtomicBool::new(false));
@@ -209,7 +209,7 @@ fn serve() -> Result<i32> {
 
 // THE OTHER HALF OF THE TRAP: naive installs no signal handling whatsoever.
 // As this container's PID 1, the kernel will not run SIGTERM's default
-// action (terminate) for it -- there is no handler, so the signal is simply
+// action (terminate) for it: there is no handler, so the signal is simply
 // dropped. `podman stop` has no way to ask it to leave; only SIGKILL ends it.
 fn naive_run() -> i32 {
     print_container_line();

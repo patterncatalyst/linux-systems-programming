@@ -1,5 +1,5 @@
 -- Verify fwatch v2: build a fixture tree, then assert observable behavior of
--- every subcommand — exact scan/sync counters, byte-equal copies (diff -r),
+-- every subcommand: exact scan/sync counters, byte-equal copies (diff -r),
 -- inotify event lines from watch, and the Go uring refusal (exit 64).
 -- Invoked from the example directory with LSP_LANG (cpp|go|rust) and EXAMPLE_DIR set.
 
@@ -42,7 +42,7 @@ r = demo("scan " .. src)
 checks.expect_exit(r, 0, lang .. ": scan exits 0")
 checks.expect_match(r.out, "scanned 5 files 1348634 bytes", lang .. ": scan totals")
 
--- v2: sync with the rw engine — counters plus a byte-identical tree.
+-- v2: sync with the rw engine (counters plus a byte-identical tree).
 local dst_rw = ws .. "/dst-rw"
 r = demo("sync " .. src .. " " .. dst_rw .. " --engine rw")
 checks.expect_exit(r, 0, lang .. ": sync rw exits 0")

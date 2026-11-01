@@ -3,7 +3,7 @@
 -- --allocs must be 200000. Go alone must additionally report gc_cycles=<n>
 -- (its collector is the chapter's point; C++/Rust must NOT print it).
 -- Timing/RSS ordering between variants is measured and printed for the log
--- but deliberately not asserted — it can flake on a loaded host.
+-- but deliberately not asserted: it can flake on a loaded host.
 -- Invoked from the example directory with LSP_LANG (cpp|go|rust) and EXAMPLE_DIR set.
 
 local script_dir = arg[0]:match("(.*/)") or "./"

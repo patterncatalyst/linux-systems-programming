@@ -1,5 +1,6 @@
-// iobench: page cache vs durability — buffered writes, periodic fdatasync(2),
-// and O_DIRECT, with identical CLI and output across the three languages.
+// iobench: page cache vs durability, comparing buffered writes, periodic
+// fdatasync(2), and O_DIRECT, with identical CLI and output across the three
+// languages.
 //
 //   iobench --mode buffered|fsync-every|direct [--every N] [--size-mb M] FILE
 //

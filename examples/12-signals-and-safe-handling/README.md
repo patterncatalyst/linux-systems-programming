@@ -1,8 +1,8 @@
-# 12-signals-and-safe-handling — pmon v1, the supervising loop
+# 12-signals-and-safe-handling: pmon v1, the supervising loop
 
-Chapter 12 grows `pmon` from "run one child and report" into a real
-supervisor — and uses the restart loop as a vehicle for the chapter's actual
-subject: how to consume signals *safely*. Each language deliberately uses a
+This chapter grows `pmon` from "run one child and report" into a real
+supervisor, using the restart loop as a vehicle for its actual
+subject: how to consume signals *safely*. Each language uses a
 different mechanism, because the three mechanisms together are the lesson.
 
 ```
@@ -34,36 +34,36 @@ pmon supervise [--max-restarts N] [--backoff-ms B] -- CMD  # v1: restart on fail
 ## Three signal mechanisms, one contract
 
 The restart loop is identical; how each language *hears* a signal is not.
-None of them runs meaningful code in signal context — that is the point.
+None of them runs meaningful code in signal context: that is the point.
 
-- **C++ — signalfd(2) + poll(2), zero handlers.** SIGTERM/SIGINT/SIGHUP/
+- **C++: signalfd(2) + poll(2), zero handlers.** SIGTERM/SIGINT/SIGHUP/
   SIGCHLD are blocked with `sigprocmask(2)` and read as `signalfd_siginfo`
   records from a file descriptor inside a `poll` loop (the backoff is just
   the poll timeout). Nothing ever executes asynchronously, so the
-  async-signal-safe function list stops mattering — except between `fork()`
+  async-signal-safe function list stops mattering, except between `fork()`
   and `execvp()`, where the child restores an empty mask (an inherited
   blocked SIGTERM survives exec and would make the child unkillable) using
   only async-signal-safe calls.
-- **Go — signal.Notify + select.** The runtime owns the actual handlers and
+- **Go: signal.Notify + select.** The runtime owns the actual handlers and
   turns delivery into channel sends. Supervision is one `select` over three
   channels: signals, child exits from a `cmd.Wait()` goroutine, and the
   backoff `time.Timer`. Child liveness and signal forwarding go through
   `golang.org/x/sys/unix`.
-- **Rust — the self-pipe trick via signal-hook.** Each signal is registered
+- **Rust: the self-pipe trick via signal-hook.** Each signal is registered
   twice: `signal_hook::flag::register` sets a per-signal `AtomicBool`, and
   `low_level::pipe::register_raw` (which takes its dup of the pipe's write
-  end as an `OwnedFd` and makes it non-blocking) writes a doorbell byte —
+  end as an `OwnedFd` and makes it non-blocking) writes a doorbell byte:
   `write(2)` is async-signal-safe. The main loop polls the doorbell's read
   end with `nix::poll`, drains it, checks the flags, and asks
-  `waitpid(WNOHANG)` what actually happened. SIGCHLD needs no flag: the
+  `waitpid(WNOHANG)` what happened. SIGCHLD needs no flag: the
   wait status is the source of truth.
 
 ## Demo contract
 
 Each language directory has a `demo.sh` with the book-wide interface:
 
-- `./demo.sh build` — build only
-- `./demo.sh run [args]` — run the built binary (builds first if needed)
+- `./demo.sh build`: build only
+- `./demo.sh run [args]`: run the built binary (builds first if needed)
 - With env `TARGET` set, `run` deploys the binary to that lab VM via
   `scripts/lab/deploy-to-vm.sh` instead of running locally.
 
@@ -94,7 +94,7 @@ exit codes alone:
 - SIGTERM and SIGINT to a live supervisor produce the shutdown line, exit
   0, and a reaped child (`kill -0` on the child pid fails afterwards);
 - SIGHUP produces the reload line and a replacement child whose pid
-  differs, with the old pid dead and the replacement alive — and a
+  differs, with the old pid dead and the replacement alive, and a
   follow-up SIGTERM still shuts everything down cleanly.
 
 Run it standalone from this directory:

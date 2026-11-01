@@ -1,4 +1,4 @@
-// allocbench — allocation-heavy index build/query (chapter 17: allocators
+// allocbench: allocation-heavy index build/query (chapter 17: allocators
 // and GC runtimes).
 //
 //	allocbench [--allocs N] [--variant default|arena]
@@ -9,7 +9,7 @@
 // the intermediates:
 //
 //   - default: every key/frag/value is a freshly allocated string. All of
-//     that garbage is the GC's problem — watch gc_cycles climb with N.
+//     that garbage is the GC's problem; watch gc_cycles climb with N.
 //   - arena: Go has no std::pmr / bumpalo equivalent, so the idiom is
 //     sync.Pool: each iteration borrows a *scratch (three bytes.Buffers and
 //     a number-formatting []byte) from the pool, builds the strings in
@@ -19,7 +19,7 @@
 //
 // Reports: "allocbench: variant=<v> allocs=<n> peak_rss=<kb>KB ms=<t> gc_cycles=<c>"
 // where gc_cycles is the delta of runtime.MemStats.NumGC across the
-// build+query phase (the Go-only field — C++ and Rust have no collector),
+// build+query phase (the Go-only field; C++ and Rust have no collector),
 // and peak_rss comes from unix.Getrusage (ru_maxrss, KB).
 //
 // The GC's appetite is tunable without touching this code: GOGC scales how

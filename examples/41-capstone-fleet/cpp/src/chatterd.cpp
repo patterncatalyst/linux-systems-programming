@@ -1,4 +1,4 @@
-// chatterd.cpp — the book's recurring peer-to-peer chat daemon (ch21-27),
+// chatterd.cpp: the book's recurring peer-to-peer chat daemon (ch21-27),
 // reduced to what the capstone needs: serve local clients, and (new in this
 // chapter) bridge two chatterd instances across hosts so a message sent on
 // one node is delivered to clients on the other. The wire frame (proto.hpp)
@@ -14,7 +14,7 @@
 //
 // A local MSG is broadcast as DELIVER to every registered connection
 // (including a bridge connection dialed in from the other side) exactly like
-// any other client — no protocol change. When a bridge *worker* itself
+// any other client, no protocol change. When a bridge *worker* itself
 // receives a DELIVER over the connection it dialed, it re-broadcasts locally
 // with include_bridges=false, so the message never goes back out over any
 // bridge: no ping-pong between two nodes.
@@ -61,7 +61,7 @@ namespace trace_api = opentelemetry::trace;
 [[nodiscard]] std::string errno_msg() { return std::string(std::strerror(errno)); }
 
 // ---------------------------------------------------------------------------
-// RAII fd — same shape as every other example's.
+// RAII fd: same shape as every other example's.
 // ---------------------------------------------------------------------------
 
 class Fd {
@@ -158,7 +158,7 @@ private:
 }
 
 // ---------------------------------------------------------------------------
-// Hub — the registry of every connection (local client or bridge worker)
+// Hub: the registry of every connection (local client or bridge worker)
 // currently attached to this server.
 // ---------------------------------------------------------------------------
 
@@ -347,7 +347,7 @@ int serve(const std::string& host, int port, const std::string& node, const std:
 }
 
 // ---------------------------------------------------------------------------
-// send / listen — minimal test clients used by verify to prove cross-host
+// send / listen: minimal test clients used by verify to prove cross-host
 // delivery deterministically (this capstone trims ch27's fuller "loadtest").
 // ---------------------------------------------------------------------------
 

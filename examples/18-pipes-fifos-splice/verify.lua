@@ -2,11 +2,11 @@
 --
 -- Asserts observable behavior, identical across cpp/go/rust:
 --   1. usage errors exit 2 with the usage text
---   2. v0 `run` still mirrors exits — status 3 stays 3, SIGKILL becomes 137
+--   2. v0 `run` still mirrors exits: status 3 stays 3, SIGKILL becomes 137
 --      with "killed signal=9"
 --   3. v2 pidfd engine + v4 capture: a child that fails once and then
 --      succeeds yields two "engine=pidfd child=... pidfd=..." spawn lines,
---      "restart 1/3", exit 0 — and the log holds the child's stdout AND
+--      "restart 1/3", exit 0, and the log holds the child's stdout AND
 --      stderr as "[out] ..."/"[err] ..." lines from both runs
 --   4. v1 sigchld engine still works with the capture attached: same restart
 --      shape, no "pidfd=" anywhere, "giving up" exit 1, log filled

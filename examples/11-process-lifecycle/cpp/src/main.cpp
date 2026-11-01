@@ -1,4 +1,4 @@
-// pmon run -- CMD [ARGS...] — minimal process monitor for the process
+// pmon run -- CMD [ARGS...]: minimal process monitor for the process
 // lifecycle chapter: fork(2) + execvp(3) the command, waitpid(2) for it,
 // then report its fate and resource usage.
 //
@@ -11,8 +11,8 @@
 // exits 127 with no report lines (there was no child run to report on).
 //
 // The chapter discusses posix_spawn(3); fork/exec is used here because the
-// two-step model — and the CLOEXEC self-pipe that reports exec failure back
-// to the parent — is exactly what the chapter teaches.
+// two-step model (and the CLOEXEC self-pipe that reports exec failure back
+// to the parent) is exactly what the chapter teaches.
 
 #include <array>
 #include <cerrno>

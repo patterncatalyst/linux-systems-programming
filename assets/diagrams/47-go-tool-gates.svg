@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 620" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
 <rect x="220" y="40" width="1060" height="230" rx="12" fill="#fff8ef" stroke="#ddd"/>
-<text x="232" y="60" font-size="12" font-weight="700" fill="#1d1d1d">Hard lane — go-native, VERIFIED on this host (ships inside the go binary)</text>
+<text x="232" y="60" font-size="12" font-weight="700" fill="#1d1d1d">Hard lane: go-native, VERIFIED on this host (ships inside the go binary)</text>
 <rect x="220" y="310" width="1060" height="230" rx="12" fill="#fafafa" stroke="#ddd"/>
-<text x="232" y="330" font-size="12" font-weight="700" fill="#1d1d1d">Gated-if-present lane — reader installs; NOT verified on this host (shown as reference)</text>
+<text x="232" y="330" font-size="12" font-weight="700" fill="#1d1d1d">Gated-if-present lane: reader installs; NOT verified on this host (shown as reference)</text>
 <rect x="20" y="235" width="170" height="150" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
 <text x="105.0" y="300.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">go module</text>
 <text x="105.0" y="317.5" font-size="11.5" fill="#dddddd" text-anchor="middle">one source tree</text>
@@ -63,6 +63,6 @@
 <path d="M726,425.0 L744,425.0" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
 <path d="M894,425.0 L912,425.0" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
 <path d="M1062,425.0 L1080,425.0" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
-<text x="220" y="565" font-size="12" fill="#1d1d1d" text-anchor="start">Hard lane needs no install — it is verified this session (gofmt/go generate/go vet/pprof/digest all ship inside the go binary).</text>
-<text x="220" y="581" font-size="12" fill="#555555" text-anchor="start">Gated lane needs `go install &lt;tool&gt;@latest` (govulncheck also needs network) — not run on this host; shown as reference only.</text>
+<text x="220" y="565" font-size="12" fill="#1d1d1d" text-anchor="start">Hard lane needs no install: it is verified this session (gofmt/go generate/go vet/pprof/digest all ship inside the go binary).</text>
+<text x="220" y="581" font-size="12" fill="#555555" text-anchor="start">Gated lane needs `go install &lt;tool&gt;@latest` (govulncheck also needs network): not run on this host; shown as reference only.</text>
 </svg>

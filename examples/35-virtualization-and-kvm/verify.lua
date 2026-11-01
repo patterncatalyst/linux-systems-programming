@@ -5,7 +5,7 @@
 --   * "--bench all" (the default) prints exactly the three rows, in order
 --     syscall/mem/io, each "bench=<name> metric=<v> unit=<u>" with <v>
 --     parsing as a finite non-negative number and <u> the expected unit.
---   * Each metric lands in a generous but real sanity window — wide enough
+--   * Each metric lands in a generous but real sanity window: wide enough
 --     to tolerate a loaded CI host, narrow enough to catch "printed zero"
 --     or "printed a bogus huge/negative number" bugs.
 --   * Selecting a single bench via --bench prints only that bench's row.
@@ -13,7 +13,7 @@
 --     small explicit value still produces a sane row (guards against a
 --     divide-by-zero / elapsed==0 edge case at low iteration counts).
 --   * Bad usage (unknown --bench value, missing flag value, unknown flag,
---     non-numeric --iters) exits 2 and prints the usage line — never a
+--     non-numeric --iters) exits 2 and prints the usage line, never a
 --     silent wrong answer.
 --
 -- The chapter separately deploys this same binary to a lab VM
@@ -122,7 +122,7 @@ check_row(r.out, "io", lang)
 
 -- ---------------------------------------------------------------------------
 -- 5. Bad usage: unknown --bench value, missing flag value, unknown flag,
---    non-numeric --iters all exit 2 with the usage line -- never a silent
+--    non-numeric --iters all exit 2 with the usage line, never a silent
 --    wrong answer.
 -- ---------------------------------------------------------------------------
 r = checks.run("./demo.sh " .. lang .. " run --bench bogus")

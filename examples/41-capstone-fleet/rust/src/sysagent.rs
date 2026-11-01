@@ -1,4 +1,4 @@
-// sysagent.rs — /proc/stat, /proc/meminfo, /proc/loadavg readers and the
+// sysagent.rs: /proc/stat, /proc/meminfo, /proc/loadavg readers and the
 // sample loop, ported field-for-field from go/sysagent.go so the printed
 // cpu_pct/mem_pct/load1 numbers are computed by the identical formula (not
 // just "close enough"): idle is specifically the 4th space-separated value
@@ -151,7 +151,7 @@ pub fn run(node: &str, interval_ms: u64, once: bool, tel: &Telemetry) -> i32 {
     0
 }
 
-// saturate — chaos helper: busy-spin threads (cpu) or hold allocated,
+// saturate: chaos helper, busy-spin threads (cpu) or hold allocated,
 // touched memory (mem) for --seconds, so a concurrently-running sysagent's
 // cpu_pct/mem_pct visibly rises (this fleet's USE-method callback).
 pub fn saturate(resource: &str, seconds: i64, workers: i64, mb: i64) -> i32 {

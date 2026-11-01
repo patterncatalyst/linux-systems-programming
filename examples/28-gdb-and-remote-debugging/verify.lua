@@ -1,7 +1,7 @@
 -- Verify bugfarm scenario 1: `app run` is a normal, dual-use program;
 -- `app crash` is a debugging TARGET whose call chain is identical across
 -- languages (main -> run_supervisor -> handle_child -> deref) but whose
--- observable crash mechanism is NOT -- that difference is the chapter:
+-- observable crash mechanism is NOT; that difference is the chapter:
 --   * C++: a real SIGSEGV, exit 139, a systemd-coredump core recoverable
 --     with coredumpctl, and a scripted `gdb --batch -ex run -ex bt` backtrace
 --     naming every frame.
@@ -62,7 +62,7 @@ checks.expect_match(r.out, "pmon: child 4242 exited status=0",
 checks.expect_match(r.out, "pmon: supervisor exiting cleanly",
   lang .. ": run reaches its normal cleanup line")
 
--- 3. "crash" -- each language's real crash story.
+-- 3. "crash": each language's real crash story.
 if lang == "cpp" then
   -- 3a. A real SIGSEGV: exit 139, and the RAII ShutdownGuard's destructor
   --     never runs (a signal is not stack unwinding).
@@ -77,7 +77,7 @@ if lang == "cpp" then
   --     confirm a core was actually dropped. This host's core_pattern pipes
   --     through systemd-coredump (`cat /proc/sys/kernel/core_pattern`
   --     starts with '|'), so "drops a core file" means coredumpctl can find
-  --     and extract one into the temp dir -- not a bare `core` file
+  --     and extract one into the temp dir, not a bare `core` file
   --     appearing there on its own.
   local ws = checks.run("mktemp -d").out:gsub("%s+$", "")
   assert(ws:match("^/"), "mktemp -d must yield an absolute path")
@@ -156,7 +156,7 @@ elseif lang == "rust" then
     lang .. ": no code past the panic point runs")
 
   -- Without RUST_BACKTRACE, the same panic and exit code happen, but no
-  -- frame names are printed -- documents that the backtrace is opt-in.
+  -- frame names are printed, which documents that the backtrace is opt-in.
   r = checks.run("./" .. bin .. " crash")
   checks.expect_exit(r, 101,
     lang .. ": panic exit code is unchanged without a backtrace")

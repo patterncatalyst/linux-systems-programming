@@ -1,24 +1,24 @@
--- Verify fwatch v3 (seccomp + Landlock) — a VM example. Behavioral
+-- Verify fwatch v3 (seccomp + Landlock), a VM example. Behavioral
 -- assertions, driven by run-sandbox-checks.sh staged and run as root
 -- (SUDO=1) on the lab guest:
 --
---   1. NEGATIVE CONTROL — `probe --forbidden-syscall` installs a seccomp
+--   1. NEGATIVE CONTROL: `probe --forbidden-syscall` installs a seccomp
 --      allowlist that omits socket(2), then calls it. The bare exit code
 --      alone would prove nothing (a program that always exits nonzero would
 --      "pass"); the assertion is that socket(2) specifically returned EPERM,
 --      confirmed both by the process's own exit code (20, this program's
 --      "confirmed denied" convention) AND the printed errno text.
---   2. NEGATIVE CONTROL — `probe --sandbox DIR --outside PATH` restricts
+--   2. NEGATIVE CONTROL: `probe --sandbox DIR --outside PATH` restricts
 --      Landlock to DIR, then opens a file under a DIFFERENT directory.
 --      Same shape: exit 20 plus an explicit EACCES line.
---   3. POSITIVE CONTROL — `watch --sandbox DIR` with both layers applied
+--   3. POSITIVE CONTROL: `watch --sandbox DIR` with both layers applied
 --      still sees create/modify/delete events for a file created INSIDE
 --      DIR and exits 0 on timeout. This is what makes 1 and 2 meaningful:
 --      the sandbox denies specific things without breaking the watcher's
 --      actual job.
 --
 -- Runs under the runner's vm mode (TARGET=systems-target, deploy via a
--- custom root-run driver script — deploy-to-vm.sh only shells out a single
+-- custom root-run driver script: deploy-to-vm.sh only shells out a single
 -- binary+args, and this needs mkdir/rm scaffolding around three invocations
 -- of the same binary in one ssh round trip, same shape as example 30's
 -- observe.sh).

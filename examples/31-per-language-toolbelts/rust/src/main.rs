@@ -1,15 +1,15 @@
-//! toolbelt — three focused profiling targets, one binary per language, each
+//! toolbelt: three focused profiling targets, one binary per language, each
 //! exercised by that language's native profiler (chapter 31: per-language
 //! toolbelts).
 //!
 //!   app <hot|alloc> [--n N]
 //!
 //! hot:   counts primes in [2, n) by trial division. `spin_hot` is the only
-//!        function that does real work — it dominates a CPU profile (perf
+//!        function that does real work: it dominates a CPU profile (perf
 //!        record/report, or `cargo flamegraph` where installable).
 //! alloc: builds a 1000-key string index by round-robin overwrite from n
 //!        iterations of freshly allocated strings. `alloc_churn` is the
-//!        only allocation site — it dominates an allocation profile.
+//!        only allocation site: it dominates an allocation profile.
 //!
 //! Output: "app: mode=<hot|alloc> n=<n> result=<r> ms=<t>" on success.
 

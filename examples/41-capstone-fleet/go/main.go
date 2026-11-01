@@ -1,4 +1,4 @@
-// 41-capstone-fleet — pmon supervises chatterd + sysagent + fwatch across
+// 41-capstone-fleet: pmon supervises chatterd + sysagent + fwatch across
 // two lab hosts, capability-dropped and Landlock-sandboxed, all telemetry
 // exported to the host LGTM stack. One binary, four subcommands (the same
 // self-re-exec shape ch34's container entrypoint uses): pmon is the fleet's
@@ -110,8 +110,11 @@ func main() {
 			peer, _ := argFlag(args, "--peer", "")
 			peerNode, _ := argFlag(args, "--peer-node", "")
 			tel := initTelemetry(context.Background(), "chatterd", node)
-			defer tel.shutdown(context.Background())
-			os.Exit(chatterdServe(host, atoiOr(portS, 47100), node, peer, peerNode, tel))
+			code := chatterdServe(host, atoiOr(portS, 47100), node, peer, peerNode, tel)
+			// os.Exit below would otherwise skip a deferred shutdown entirely,
+			// dropping any telemetry batched since the last periodic export.
+			_ = tel.shutdown(context.Background())
+			os.Exit(code)
 		case "send":
 			args := rest[1:]
 			host, _ := argFlag(args, "--host", "127.0.0.1")
@@ -153,8 +156,11 @@ func main() {
 		intervalS, _ := argFlag(rest, "--interval-ms", "2000")
 		once := hasFlag(rest, "--once")
 		tel := initTelemetry(context.Background(), "sysagent", node)
-		defer tel.shutdown(context.Background())
-		os.Exit(sysagentRun(node, atoiOr(intervalS, 2000), once, tel))
+		code := sysagentRun(node, atoiOr(intervalS, 2000), once, tel)
+		// os.Exit below would otherwise skip a deferred shutdown entirely,
+		// dropping any telemetry batched since the last periodic export.
+		_ = tel.shutdown(context.Background())
+		os.Exit(code)
 
 	case "fwatch":
 		if len(rest) == 0 {

@@ -83,12 +83,12 @@ local function check_run(args, want_mode, want_n, want_result)
 end
 
 -- Defaults: identical across all three languages, including the numeric
--- result — same algorithm, same input, same answer.
+-- result: same algorithm, same input, same answer.
 check_run("hot", "hot", "3000000", "216816")
 check_run("alloc", "alloc", "200000", "5000")
 
 -- Small sizes still work (n below the 1000-entry keyspace, and a tiny hot
--- count) — the arithmetic isn't hardcoded to the defaults.
+-- count), the arithmetic isn't hardcoded to the defaults.
 check_run("hot --n 10", "hot", "10", "4")
 check_run("alloc --n 7", "alloc", "7", "7")
 

@@ -38,7 +38,7 @@
 <text x="330.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">t1 - t0, single sample</text>
 <rect x="455" y="310" width="220" height="60" rx="9" fill="#ffffff" stroke="#999999" stroke-width="1.5" stroke-dasharray="6 4"/>
 <text x="565.0" y="330.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">elapsed_ns printed</text>
-<text x="565.0" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">no percentiles —</text>
+<text x="565.0" y="347.5" font-size="11.5" fill="#555555" text-anchor="middle">no percentiles</text>
 <text x="565.0" y="362.5" font-size="11.5" fill="#555555" text-anchor="middle">nothing to compute one from</text>
 <path d="M175,100 L205,100" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <text x="196.0" y="94.0" font-size="11" fill="#ffffff" stroke="#ffffff" stroke-width="3" paint-order="stroke" text-anchor="middle">steady state</text>
@@ -50,5 +50,5 @@
 <path d="M685,145 L715,145" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M205,340 L245,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M415,340 L455,340" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
-<text x="450" y="250" font-size="11" fill="#1d1d1d" text-anchor="middle">same codec, same fixed workload — the harness, not the code under test, is what changes the story</text>
+<text x="450" y="250" font-size="11" fill="#1d1d1d" text-anchor="middle">same codec, same fixed workload: the harness, not the code under test, is what changes the story</text>
 </svg>

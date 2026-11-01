@@ -1,4 +1,4 @@
-// pmon v5 — a process supervisor with a UNIX-socket control plane.
+// pmon v5: a process supervisor with a UNIX-socket control plane.
 //
 // `pmon supervise` forks/execs a child command (its own process group,
 // stdout+stderr appended to a log file), restarts it 300 ms after every
@@ -15,7 +15,7 @@
 //
 // Every accepted connection is identified with SO_PEERCRED before a single
 // command byte is trusted. The cmsg plumbing here is done by hand with
-// sendmsg(2)/recvmsg(2) — CMSG_FIRSTHDR and friends, no wrapper library.
+// sendmsg(2)/recvmsg(2): CMSG_FIRSTHDR and friends, no wrapper library.
 
 #include <algorithm>
 #include <cerrno>
@@ -59,7 +59,7 @@ template <typename T>
 using Result = std::expected<T, std::string>;
 
 // ---------------------------------------------------------------------------
-// RAII file descriptor — the only owner of every fd in this program.
+// RAII file descriptor: the only owner of every fd in this program.
 // ---------------------------------------------------------------------------
 
 class Fd {

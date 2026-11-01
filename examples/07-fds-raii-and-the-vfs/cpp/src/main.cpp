@@ -1,4 +1,4 @@
-// fwatch v0 — snapshot/diff a directory tree with dirfd-relative syscalls.
+// fwatch v0: snapshot/diff a directory tree with dirfd-relative syscalls.
 //
 //   fwatch snapshot DIR                one "<relpath> <size> <mtime>" line per
 //                                      regular file, sorted by path

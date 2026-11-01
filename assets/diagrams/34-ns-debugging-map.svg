@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 420" font-family="'Red Hat Text', system-ui, sans-serif" role="img">
 <defs><marker id="a" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker><marker id="am" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b8650a"/></marker></defs>
 <rect x="20" y="30" width="880" height="130" rx="12" fill="#f4f4f4" stroke="#ddd"/>
-<text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">host (rootless user user, uid 1000)</text>
+<text x="32" y="50" font-size="12" font-weight="700" fill="#1d1d1d">host (rootless account `user`, uid 1000)</text>
 <rect x="20" y="190" width="880" height="200" rx="12" fill="#fff8ef" stroke="#ddd"/>
 <text x="32" y="210" font-size="12" font-weight="700" fill="#1d1d1d">podman&#x27;s user namespace (uid 0 in container == uid 1000 on host)</text>
 <rect x="44" y="66" width="260" height="70" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
@@ -33,5 +33,5 @@
 <path d="M636,101 L600,101" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
 <path d="M244,280 L380,255" fill="none" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
 <path d="M630,280 L630,300" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
-<text x="44" y="400" font-size="13" fill="#555555" text-anchor="start">Both paths independently confirm the same PID 1 identity -- podman exec from inside the container runtime, nsenter from the bare host.</text>
+<text x="44" y="400" font-size="13" fill="#555555" text-anchor="start">Both paths independently confirm the same PID 1 identity: podman exec from inside the container runtime, nsenter from the bare host.</text>
 </svg>

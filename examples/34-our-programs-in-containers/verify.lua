@@ -5,7 +5,7 @@
 -- and asserts observable effects, not merely exit 0:
 --
 --   1. container-aware resource detection: the CONSTRAINED cpu.max/mem.max
---      are reported, not the host's -- and specifically that C++'s
+--      are reported, not the host's, and specifically that C++'s
 --      effective_parallelism is the HOST cpu count (hardware_concurrency's
 --      trap) while Go's and Rust's match the cgroup quota.
 --   2. this process really is PID 1 of its own namespace (pid=1 ppid=0,
@@ -15,12 +15,12 @@
 --      `podman unshare nsenter` from the host both see the same PID 1.
 --   4. pid-1 signal duties: `serve` reacts to SIGTERM almost instantly and
 --      prints a graceful shutdown line; `naive` never prints that line
---      (proving no graceful path ran) and -- for C++/Rust, whose default
+--      (proving no graceful path ran) and, for C++/Rust (whose default
 --      SIGTERM disposition is masked out by the kernel's PID-1 special
---      case -- takes the full stop grace period and is SIGKILLed. Go's
+--      case), takes the full stop grace period and is SIGKILLed. Go's
 --      runtime is a real, verified exception: it installs its own handler
 --      for SIGTERM at startup regardless of signal.Notify, so a "naive" Go
---      binary still dies promptly -- just abruptly, with no cleanup.
+--      binary still dies promptly, just abruptly, with no cleanup.
 --
 -- Invoked from the example directory with LSP_LANG (cpp|go|rust) and
 -- EXAMPLE_DIR set; the interpreter may be lua or luajit. Images and

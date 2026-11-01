@@ -1,11 +1,11 @@
-// fwatch v1 — a file watcher growing chapter by chapter.
+// fwatch v1: a file watcher growing chapter by chapter.
 //
 // v0 subcommands (snapshot/diff) still work; v1 adds `watch`, built as ONE
 // epoll loop over three kernel file descriptors on a single thread:
 //
-//   inotify fd   — filesystem events for the watched directory
-//   timerfd      — the debounce (100 ms per path) AND the overall timeout
-//   signalfd     — SIGINT/SIGTERM delivered as ordinary readable data
+//   inotify fd: filesystem events for the watched directory
+//   timerfd: the debounce (100 ms per path) AND the overall timeout
+//   signalfd: SIGINT/SIGTERM delivered as ordinary readable data
 //
 // The readiness model is explicit: nothing here blocks except epoll_wait(2).
 
@@ -51,7 +51,7 @@ constexpr auto kDebounce = milliseconds{100};
 }
 
 // ---------------------------------------------------------------------------
-// RAII file descriptor — the only owner of every fd in this program.
+// RAII file descriptor: the only owner of every fd in this program.
 // ---------------------------------------------------------------------------
 
 class Fd {
@@ -193,7 +193,7 @@ int cmd_diff(const std::string& old_path, const std::string& new_path) {
 }
 
 // ---------------------------------------------------------------------------
-// v1: watch — one epoll loop, three fds, zero threads beyond main.
+// v1: watch: one epoll loop, three fds, zero threads beyond main.
 // ---------------------------------------------------------------------------
 
 enum class Kind : std::uint8_t { created, modified, deleted };
@@ -329,7 +329,7 @@ int cmd_watch(const std::string& dir, int timeout_ms) {
 
     for (;;) {
         // One timer covers both jobs: it is always armed to whichever comes
-        // first — the overall timeout or the earliest per-path debounce.
+        // first: the overall timeout or the earliest per-path debounce.
         auto next = deadline;
         for (const auto& [_, p] : pending) {
             next = std::min(next, p.due);

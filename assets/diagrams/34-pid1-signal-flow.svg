@@ -15,7 +15,7 @@
 <rect x="44" y="254" width="380" height="40" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
 <text x="234.0" y="279.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">print &quot;app: shutting down (SIGTERM)&quot;</text>
 <rect x="44" y="310" width="380" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
-<text x="234.0" y="338.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">exit 0 -- measured: cpp 192ms, go 60ms, rust 101ms</text>
+<text x="234.0" y="338.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">exit 0 (measured: cpp 192ms, go 60ms, rust 101ms)</text>
 <text x="234.0" y="355.0" font-size="11.5" fill="#555555" text-anchor="middle">(3000ms grace budget)</text>
 <rect x="514" y="66" width="380" height="40" rx="9" fill="#111111" stroke="#111111" stroke-width="2"/>
 <text x="704.0" y="91.5" font-size="13.5" font-weight="700" fill="#ffffff" text-anchor="middle">podman stop -t 2  -&gt;  SIGTERM to PID 1</text>
@@ -29,7 +29,7 @@
 <text x="704.0" y="281.5" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">handler at startup regardless of signal.Notify</text>
 <rect x="514" y="312" width="380" height="60" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="704.0" y="340.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">measured: cpp 2108ms, rust 2074ms (full grace, SIGKILLed)</text>
-<text x="704.0" y="357.0" font-size="11.5" fill="#555555" text-anchor="middle">go 60ms (dies anyway -- but no shutdown line, no cleanup)</text>
+<text x="704.0" y="357.0" font-size="11.5" fill="#555555" text-anchor="middle">go 60ms (dies anyway, but no shutdown line, no cleanup)</text>
 <path d="M234,106 L234,122" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <path d="M234,172 L234,188" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <path d="M234,238 L234,254" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>

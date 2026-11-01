@@ -17,7 +17,7 @@ namespace {
 
 // RAII wrapper around an ifstream: names the path (for error messages) and
 // guarantees the fd is closed when the wrapper goes out of scope, exactly
-// like every other UniqueFd-style RAII type in this book — just for the
+// like every other UniqueFd-style RAII type in this book: just for the
 // stdio-buffered stream form /proc parsing normally uses.
 class ProcFile {
   public:
@@ -153,7 +153,7 @@ std::expected<std::vector<DiskStat>, std::string> read_diskstats() {
         iss >> major >> minor >> name >> reads_completed >> reads_merged >> sectors_read >>
             ms_reading >> writes_completed >> writes_merged >> sectors_written;
         if (name.empty()) continue;
-        // Skip loop/ram devices and partitions with no traffic at all — keeps
+        // Skip loop/ram devices and partitions with no traffic at all: keeps
         // the array focused on the disks that actually matter for USE-method
         // reads, without hardcoding any device-naming scheme.
         if (name.starts_with("loop") || name.starts_with("ram")) continue;

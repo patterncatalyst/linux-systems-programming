@@ -32,18 +32,18 @@
 <rect x="140" y="220" width="400" height="100" rx="9" fill="#eef4fb" stroke="#2f6db5" stroke-width="2"/>
 <text x="340.0" y="253.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">SOUND: read_record(buf, oob=false)</text>
 <text x="340.0" y="270.0" font-size="11.5" fill="#555555" text-anchor="middle">read_unaligned::&lt;Record&gt;(ptr.add(0))</text>
-<text x="340.0" y="285.0" font-size="11.5" fill="#555555" text-anchor="middle">window [0..8) -- fully inside the 8-byte alloc</text>
+<text x="340.0" y="285.0" font-size="11.5" fill="#555555" text-anchor="middle">window [0..8): fully inside the 8-byte alloc</text>
 <text x="340.0" y="300.0" font-size="11.5" fill="#555555" text-anchor="middle">cargo +nightly miri run: exit 0, no UB</text>
 <rect x="340" y="340" width="400" height="100" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
 <text x="540.0" y="373.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">--oob-read: read_record(buf, oob=true)</text>
 <text x="540.0" y="390.0" font-size="11.5" fill="#555555" text-anchor="middle">read_unaligned::&lt;Record&gt;(ptr.add(4))</text>
-<text x="540.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">window [4..12) -- 4 bytes past the 8-byte alloc</text>
+<text x="540.0" y="405.0" font-size="11.5" fill="#555555" text-anchor="middle">window [4..12): 4 bytes past the 8-byte alloc</text>
 <text x="540.0" y="420.0" font-size="11.5" fill="#555555" text-anchor="middle">miri: &quot;...only 4 bytes from the end of the allocation&quot; (main.rs:57)</text>
 <path d="M140,220 L140,180" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
 <path d="M540,220 L540,180" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
 <path d="M340,340 L340,180" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
 <path d="M740,340 L740,180" fill="none" stroke="#b8650a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#am)"/>
-<text x="140" y="60" font-size="12" fill="#1d1d1d" text-anchor="start" font-weight="700">BUF: [u8; 8] -- one 8-byte stack allocation (miri: &quot;alloc25&quot;)</text>
+<text x="140" y="60" font-size="12" fill="#1d1d1d" text-anchor="start" font-weight="700">BUF: [u8; 8], one 8-byte stack allocation (miri: &quot;alloc25&quot;)</text>
 <text x="540" y="145" font-size="10" fill="#b8650a" text-anchor="start">end of the allocation</text>
 <text x="540" y="200" font-size="11" fill="#b8650a" text-anchor="start">past the end (never allocated)</text>
 </svg>

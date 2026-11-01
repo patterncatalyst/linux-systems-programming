@@ -11,7 +11,7 @@
 <text x="590.0" y="80.0" font-size="11.5" fill="#dddddd" text-anchor="middle">byte-identical result across all three</text>
 <rect x="40" y="130" width="320" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
 <text x="200.0" y="158.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">perf record --call-graph fp</text>
-<text x="200.0" y="175.0" font-size="11.5" fill="#555555" text-anchor="middle">external sampler, any ELF — spin_hot 99.9%</text>
+<text x="200.0" y="175.0" font-size="11.5" fill="#555555" text-anchor="middle">external sampler, any ELF: spin_hot 99.9%</text>
 <rect x="40" y="210" width="320" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="200.0" y="233.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">perf report --stdio / perf stat</text>
 <text x="200.0" y="250.0" font-size="11.5" fill="#555555" text-anchor="middle">cycles, instructions, flamegraph source</text>
@@ -41,7 +41,7 @@
 <text x="590.0" y="440.0" font-size="11.5" fill="#555555" text-anchor="middle">static correctness checks</text>
 <rect x="820" y="130" width="320" height="60" rx="9" fill="#fff8ef" stroke="#e8870c" stroke-width="2"/>
 <text x="980.0" y="158.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">perf record --call-graph fp</text>
-<text x="980.0" y="175.0" font-size="11.5" fill="#555555" text-anchor="middle">external sampler again — spin_hot inlined, ~100%</text>
+<text x="980.0" y="175.0" font-size="11.5" fill="#555555" text-anchor="middle">external sampler again: spin_hot inlined, ~100%</text>
 <rect x="820" y="210" width="320" height="50" rx="9" fill="#ffffff" stroke="#111111" stroke-width="2"/>
 <text x="980.0" y="233.0" font-size="13.5" font-weight="700" fill="#111111" text-anchor="middle">cargo flamegraph</text>
 <text x="980.0" y="250.0" font-size="11.5" fill="#555555" text-anchor="middle">inferno collapse+render, real SVG with spin_hot</text>
@@ -57,7 +57,7 @@
 <path d="M200,90 L200,128" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <path d="M590,90 L590,128" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
 <path d="M980,90 L980,128" fill="none" stroke="#b8650a" stroke-width="2" marker-end="url(#am)"/>
-<text x="590" y="22" font-size="15" fill="#b8650a" text-anchor="middle" font-weight="700">Figure 31.2 — one target, three native toolbelts</text>
+<text x="590" y="22" font-size="15" fill="#b8650a" text-anchor="middle" font-weight="700">Figure 31.2: one target, three native toolbelts</text>
 <text x="40" y="470" font-size="12" fill="#1d1d1d" text-anchor="start">Amber boxes are the CPU-profiling step this chapter cross-checks against each other: perf report / go tool pprof / perf report (or cargo flamegraph), all naming the same function.</text>
 <text x="40" y="500" font-size="12" fill="#555555" text-anchor="start">Dashed boxes are noted but out of scope here: gdb belongs to Chapter 28, tokio-console to the async runtimes of Chapter 27 (this program has no async runtime to show).</text>
 </svg>
