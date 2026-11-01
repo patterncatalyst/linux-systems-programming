@@ -11,6 +11,8 @@
          {% if page.url contains '/docs/' %}aria-current="page"{% endif %}>Chapters</a>
       <a href="{{ '/examples/' | relative_url }}"
          {% if page.url contains '/examples/' %}aria-current="page"{% endif %}>Examples</a>
+      <a href="{{ '/diagrams/' | relative_url }}"
+         {% if page.url contains '/diagrams/' %}aria-current="page"{% endif %}>Diagrams</a>
       <a href="{{ '/bibliography/' | relative_url }}"
          {% if page.url contains '/bibliography/' %}aria-current="page"{% endif %}>Bibliography</a>
       <a href="https://github.com/{{ site.github_username }}/{{ site.github_repo }}"
