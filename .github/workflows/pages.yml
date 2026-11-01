@@ -11,7 +11,7 @@ name: Build and deploy site
 
 on:
   push:
-    branches: ["**"]      # build on a push to ANY branch
+    branches: [main]      # push to main only; PRs validate via pull_request below
   pull_request:
     branches: [main]      # build on PRs targeting main
   workflow_dispatch:      # allow manual runs from the Actions UI
