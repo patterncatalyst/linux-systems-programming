@@ -10,7 +10,9 @@ are read at run time, everything else is matched by generic patterns.
     host_ids.py check   [--repo DIR]           tracked files; exit 1 on a hit (CI-safe)
     host_ids.py scrub   [--repo DIR] [PATH...]  rewrite files in place (default: tracked)
     host_ids.py scrub --dry-run ...             change nothing; exit 1 if a file would change
-    host_ids.py filter                          scrub stdin to stdout (captured logs)
+    host_ids.py filter  [--repo DIR]            scrub stdin to stdout (captured logs); the
+                                                repo path becomes <repo> (default: the git
+                                                repo holding the working directory, if any)
     host_ids.py history [--repo DIR] [--emit-rules FILE]
                                                 scan every blob and message in all refs;
                                                 optionally write git filter-repo rules
@@ -554,6 +556,18 @@ def cmd_scrub(
     return 1 if (dry_run and changed) else 0
 
 
+def filter_rules(repo_arg: str | None) -> list[Rule]:
+    """Rules for `filter`: the repo path becomes `<repo>` whenever a repo is known.
+
+    An explicit --repo must be a git repository. Without one, the repo holding the
+    working directory is used, so a log captured inside a project scrubs to `<repo>`
+    rather than `~/...`; outside any repo only the home-path rules apply.
+    """
+    if repo_arg is None and not _run("git", "rev-parse", "--show-toplevel"):
+        return all_rules(gather(None))
+    return setup(repo_arg)[2]
+
+
 def cmd_filter(rules: list[Rule]) -> int:
     sys.stdout.write(scrub_text(sys.stdin.read(), rules, Config(), "-"))
     return 0
@@ -816,6 +830,22 @@ def self_test() -> int:
         expect(
             cmd_scrub(repo, cfg, rules, [], dry_run=True) == 0, "scrub is idempotent"
         )
+        planted_repo = "/home/planted-acct/Dev/proj"
+        saved_repo, fake.repo_path = fake.repo_path, planted_repo
+        log = f"rootdir: {planted_repo}\n{planted_repo}/.venv/bin/python /home/planted-acct/x\n"
+        out = scrub_text(log, runtime_rules(fake), Config(), "-")
+        want = "rootdir: <repo>\n<repo>/.venv/bin/python ~/x\n"
+        expect(out == want, f"filter repo path -> <repo>: {out!r}")
+        fake.repo_path = saved_repo
+        cwd = os.getcwd()
+        try:
+            os.chdir(repo)
+            expect(
+                Path(gather(repo_root(Path("."))).repo_path or "") == repo.resolve(),
+                "filter finds the repo holding the working directory",
+            )
+        finally:
+            os.chdir(cwd)
     lines, dropped = format_rules(
         {
             "kernel\n`8.4.2-200.fc98": "kernel\n`8.4",
@@ -866,7 +896,8 @@ def main() -> int:
     p.add_argument("--repo")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("paths", nargs="*")
-    sub.add_parser("filter", help="scrub stdin to stdout")
+    p = sub.add_parser("filter", help="scrub stdin to stdout")
+    p.add_argument("--repo")
     p = sub.add_parser("history", help="scan all reachable blobs and messages")
     p.add_argument("--repo")
     p.add_argument("--emit-rules", metavar="FILE")
@@ -877,8 +908,7 @@ def main() -> int:
     if args.cmd == "self-test":
         return self_test()
     if args.cmd == "filter":
-        rt = gather(None)
-        return cmd_filter(all_rules(rt))
+        return cmd_filter(filter_rules(args.repo))
     repo, cfg, rules = setup(getattr(args, "repo", None))
     if args.cmd == "check":
         return cmd_check(repo, cfg, rules)
