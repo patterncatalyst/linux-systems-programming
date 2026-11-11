@@ -11,12 +11,16 @@ and the authoritative documentation it follows. They are reference works, not
 sources: no text or code from any of them is reproduced here. Where you want to
 go deeper than a chapter does, these are where to go.
 
-| Title | Author(s) | Publisher | Year | Focus |
-|---|---|---|---|---|
-| [*The Linux Programming Interface*](https://man7.org/tlpi/) | Michael Kerrisk | No Starch Press | 2010 | The comprehensive reference for the Linux and POSIX system-call API |
-| [*Advanced Programming in the UNIX Environment*, 3rd ed.](https://www.oreilly.com/library/view/advanced-programming-in/9780321638014/) | W. Richard Stevens, Stephen A. Rago | Addison-Wesley | 2013 | Files, processes, signals, and IPC at the UNIX system-call layer |
-| [*Linux Kernel Development*, 3rd ed.](https://www.oreilly.com/library/view/linux-kernel-development/9780768696974/) | Robert Love | Addison-Wesley | 2010 | How the kernel schedules, manages memory, and services system calls |
-| [*Systems Performance*, 2nd ed.](https://www.brendangregg.com/systems-performance-2nd-edition-book.html) | Brendan Gregg | Addison-Wesley | 2020 | Methodologies and tools for observing and tuning Linux performance |
+<table class="bib bib--books">
+  <colgroup><col style="width:62%"><col style="width:24%"><col style="width:14%"></colgroup>
+  <thead><tr><th>Title</th><th>Author(s)</th><th>Year</th></tr></thead>
+  <tbody>
+    <tr><td><a href="https://man7.org/tlpi/" rel="noopener"><em>The Linux Programming Interface</em></a><br><small>No Starch Press. The comprehensive reference for the Linux and POSIX system-call API</small></td><td>Michael Kerrisk</td><td>2010</td></tr>
+    <tr><td><a href="https://www.oreilly.com/library/view/advanced-programming-in/9780321638014/" rel="noopener"><em>Advanced Programming in the UNIX Environment</em>, 3rd ed.</a><br><small>Addison-Wesley. Files, processes, signals, and IPC at the UNIX system-call layer</small></td><td>W. Richard Stevens, Stephen A. Rago</td><td>2013</td></tr>
+    <tr><td><a href="https://www.oreilly.com/library/view/linux-kernel-development/9780768696974/" rel="noopener"><em>Linux Kernel Development</em>, 3rd ed.</a><br><small>Addison-Wesley. How the kernel schedules, manages memory, and services system calls</small></td><td>Robert Love</td><td>2010</td></tr>
+    <tr><td><a href="https://www.brendangregg.com/systems-performance-2nd-edition-book.html" rel="noopener"><em>Systems Performance</em>, 2nd ed.</a><br><small>Addison-Wesley. Methodologies and tools for observing and tuning Linux performance</small></td><td>Brendan Gregg</td><td>2020</td></tr>
+  </tbody>
+</table>
 
 ## Primary references
 
